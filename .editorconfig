@@ -1,0 +1,31 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+max_line_length = 100
+ktlint_standard_trailing-comma-on-call-site = enabled
+ktlint_standard_trailing-comma-on-declaration-site = enabled
+
+# @Composable functions are types by convention, not verbs, and are PascalCase across
+# the whole Compose ecosystem. Same for @Preview.
+ktlint_function_naming_ignore_when_annotated_with = Composable, Preview
+
+# Compose slot parameters routinely exceed the default, and splitting them hurts
+# readability more than the length does.
+ktlint_function_signature_body_expression_wrapping = default
+
+[*.{xml,json,yml,yaml}]
+indent_size = 4
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.sh]
+end_of_line = lf

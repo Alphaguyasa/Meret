@@ -9,12 +9,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
 
-/**
+/*
  * The handful of glyphs this app needs, drawn rather than pulled in from an icon
  * library.
  *
@@ -36,16 +36,18 @@ public fun Chevron(
     Canvas(modifier.iconSemantics(contentDescription)) {
         val w = size.width
         val h = size.height
-        val stroke = Stroke(
-            width = w * STROKE_FRACTION,
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round,
-        )
-        val path = androidx.compose.ui.graphics.Path().apply {
-            moveTo(w * 0.25f, h * 0.4f)
-            lineTo(w * 0.5f, h * 0.65f)
-            lineTo(w * 0.75f, h * 0.4f)
-        }
+        val stroke =
+            Stroke(
+                width = w * STROKE_FRACTION,
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round,
+            )
+        val path =
+            androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.25f, h * 0.4f)
+                lineTo(w * 0.5f, h * 0.65f)
+                lineTo(w * 0.75f, h * 0.4f)
+            }
         drawPath(path, tint, style = stroke)
     }
 }
@@ -64,12 +66,13 @@ public fun PinGlyph(
         val h = size.height
         val headRadius = w * 0.28f
         val headCentre = Offset(w / 2, h * 0.38f)
-        val path = androidx.compose.ui.graphics.Path().apply {
-            moveTo(w / 2, h * 0.92f)
-            lineTo(w / 2 - headRadius * 0.85f, h * 0.55f)
-            lineTo(w / 2 + headRadius * 0.85f, h * 0.55f)
-            close()
-        }
+        val path =
+            androidx.compose.ui.graphics.Path().apply {
+                moveTo(w / 2, h * 0.92f)
+                lineTo(w / 2 - headRadius * 0.85f, h * 0.55f)
+                lineTo(w / 2 + headRadius * 0.85f, h * 0.55f)
+                close()
+            }
         drawPath(path, tint)
         drawCircle(tint, radius = headRadius, center = headCentre)
         // Punch-out so the pin reads as a pin and not a lollipop at 16 dp.
@@ -139,24 +142,27 @@ public fun TrackGlyph(
     Canvas(modifier.iconSemantics(contentDescription)) {
         val w = size.width
         val h = size.height
-        val points = listOf(
-            Offset(w * 0.18f, h * 0.76f),
-            Offset(w * 0.4f, h * 0.34f),
-            Offset(w * 0.62f, h * 0.66f),
-            Offset(w * 0.84f, h * 0.24f),
-        )
-        val path = androidx.compose.ui.graphics.Path().apply {
-            moveTo(points.first().x, points.first().y)
-            points.drop(1).forEach { lineTo(it.x, it.y) }
-        }
+        val points =
+            listOf(
+                Offset(w * 0.18f, h * 0.76f),
+                Offset(w * 0.4f, h * 0.34f),
+                Offset(w * 0.62f, h * 0.66f),
+                Offset(w * 0.84f, h * 0.24f),
+            )
+        val path =
+            androidx.compose.ui.graphics.Path().apply {
+                moveTo(points.first().x, points.first().y)
+                points.drop(1).forEach { lineTo(it.x, it.y) }
+            }
         drawPath(
             path,
             tint,
-            style = Stroke(
-                width = w * STROKE_FRACTION,
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round,
-            ),
+            style =
+                Stroke(
+                    width = w * STROKE_FRACTION,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round,
+                ),
         )
         points.forEach { drawCircle(tint, radius = w * 0.075f, center = it) }
     }
@@ -172,11 +178,13 @@ public fun LayersGlyph(
     Canvas(modifier.iconSemantics(contentDescription)) {
         val w = size.width
         val h = size.height
-        val stroke = Stroke(
-            width = w * STROKE_FRACTION,
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round,
-        )
+        val stroke =
+            Stroke(
+                width = w * STROKE_FRACTION,
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round,
+            )
+
         fun diamond(centreY: Float) = androidx.compose.ui.graphics.Path().apply {
             moveTo(w / 2, centreY - h * 0.14f)
             lineTo(w * 0.85f, centreY)

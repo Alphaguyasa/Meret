@@ -28,9 +28,10 @@ public fun TrackListScreen(
         title = stringResource(R.string.tracks_empty_title),
         body = stringResource(R.string.tracks_empty_body),
         icon = { TrackGlyph(it, tint = MaterialTheme.colorScheme.outline) },
-        modifier = modifier
-            .fillMaxSize()
-            .padding(contentPadding),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(contentPadding),
     )
 }
 

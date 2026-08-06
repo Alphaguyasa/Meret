@@ -52,13 +52,14 @@ public enum class GpsQuality {
 
     /** Bars to fill, out of four. */
     internal val filledBars: Int
-        get() = when (this) {
-            Excellent -> 4
-            Good -> 3
-            Fair -> 2
-            Poor -> 1
-            NoFix -> 0
-        }
+        get() =
+            when (this) {
+                Excellent -> 4
+                Good -> 3
+                Fair -> 2
+                Poor -> 1
+                NoFix -> 0
+            }
 
     public companion object {
         /** Buckets a horizontal accuracy in metres. `null` means no fix. */
@@ -92,46 +93,48 @@ public fun GpsQualityChip(
     onClick: (() -> Unit)? = null,
 ) {
     val colors = MeretTheme.colors
-    val barColor = when (quality) {
-        GpsQuality.Excellent -> colors.gpsExcellent
-        GpsQuality.Good -> colors.gpsGood
-        GpsQuality.Fair -> colors.gpsFair
-        GpsQuality.Poor, GpsQuality.NoFix -> colors.gpsPoor
-    }
-
-    val accuracyLabel = accuracyMetres
-        ?.let { stringResource(R.string.gps_accuracy_metres, it.toInt()) }
-        ?: stringResource(R.string.gps_no_fix)
-
-    val qualityLabel = stringResource(
+    val barColor =
         when (quality) {
-            GpsQuality.Excellent -> R.string.gps_quality_excellent
-            GpsQuality.Good -> R.string.gps_quality_good
-            GpsQuality.Fair -> R.string.gps_quality_fair
-            GpsQuality.Poor -> R.string.gps_quality_poor
-            GpsQuality.NoFix -> R.string.gps_no_fix
-        },
-    )
+            GpsQuality.Excellent -> colors.gpsExcellent
+            GpsQuality.Good -> colors.gpsGood
+            GpsQuality.Fair -> colors.gpsFair
+            GpsQuality.Poor, GpsQuality.NoFix -> colors.gpsPoor
+        }
+
+    val accuracyLabel =
+        accuracyMetres
+            ?.let { stringResource(R.string.gps_accuracy_metres, it.toInt()) }
+            ?: stringResource(R.string.gps_no_fix)
+
+    val qualityLabel =
+        stringResource(
+            when (quality) {
+                GpsQuality.Excellent -> R.string.gps_quality_excellent
+                GpsQuality.Good -> R.string.gps_quality_good
+                GpsQuality.Fair -> R.string.gps_quality_fair
+                GpsQuality.Poor -> R.string.gps_quality_poor
+                GpsQuality.NoFix -> R.string.gps_no_fix
+            },
+        )
 
     Row(
-        modifier = modifier
-            .defaultMinSize(minHeight = Sizes.touchTargetMin)
-            .background(
-                MaterialTheme.colorScheme.surface.copy(alpha = SURFACE_ALPHA),
-                RoundedCornerShape(percent = FULLY_ROUNDED),
-            )
-            .border(
-                Sizes.hairline,
-                MaterialTheme.colorScheme.outlineVariant,
-                RoundedCornerShape(percent = FULLY_ROUNDED),
-            )
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-            // One announcement for the whole chip. Reading out four separate bars and a
-            // number is noise.
-            .clearAndSetSemantics {
-                contentDescription = "$qualityLabel, $accuracyLabel"
-            },
+        modifier =
+            modifier
+                .defaultMinSize(minHeight = Sizes.touchTargetMin)
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(alpha = SURFACE_ALPHA),
+                    RoundedCornerShape(percent = FULLY_ROUNDED),
+                ).border(
+                    Sizes.hairline,
+                    MaterialTheme.colorScheme.outlineVariant,
+                    RoundedCornerShape(percent = FULLY_ROUNDED),
+                ).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
+                // One announcement for the whole chip. Reading out four separate bars and a
+                // number is noise.
+                .clearAndSetSemantics {
+                    contentDescription = "$qualityLabel, $accuracyLabel"
+                },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
@@ -170,8 +173,9 @@ private fun SignalBars(
         val radius = CornerRadius(barWidth / 2, barWidth / 2)
 
         repeat(BAR_COUNT) { index ->
-            val heightFraction = SHORTEST_BAR_FRACTION +
-                (1f - SHORTEST_BAR_FRACTION) * (index / (BAR_COUNT - 1f))
+            val heightFraction =
+                SHORTEST_BAR_FRACTION +
+                    (1f - SHORTEST_BAR_FRACTION) * (index / (BAR_COUNT - 1f))
             val barHeight = size.height * heightFraction
             drawRoundRect(
                 color = if (index < filledBars) filledColor else emptyColor,

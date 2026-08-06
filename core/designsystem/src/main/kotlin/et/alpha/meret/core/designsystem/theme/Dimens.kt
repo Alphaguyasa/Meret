@@ -52,13 +52,14 @@ public object Elevations {
     public val fab: Dp = 6.dp
 }
 
-internal val MeretShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    // Cards.
-    medium = RoundedCornerShape(8.dp),
-    // Bottom sheets.
-    large = RoundedCornerShape(12.dp),
-    // Dialogs.
-    extraLarge = RoundedCornerShape(16.dp),
-)
+internal val MeretShapes =
+    Shapes(
+        extraSmall = RoundedCornerShape(4.dp),
+        small = RoundedCornerShape(8.dp),
+        // Cards.
+        medium = RoundedCornerShape(8.dp),
+        // Bottom sheets.
+        large = RoundedCornerShape(12.dp),
+        // Dialogs.
+        extraLarge = RoundedCornerShape(16.dp),
+    )

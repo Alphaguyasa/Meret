@@ -28,9 +28,10 @@ public fun TilePackScreen(
         title = stringResource(R.string.packs_empty_title),
         body = stringResource(R.string.packs_empty_body),
         icon = { LayersGlyph(it, tint = MaterialTheme.colorScheme.outline) },
-        modifier = modifier
-            .fillMaxSize()
-            .padding(contentPadding),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(contentPadding),
     )
 }
 

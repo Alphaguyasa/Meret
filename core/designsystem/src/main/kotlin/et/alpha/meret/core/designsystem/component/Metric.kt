@@ -43,11 +43,12 @@ public fun Metric(
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = value,
-                style = if (compact) {
-                    MeretTheme.typography.metricSmall
-                } else {
-                    MeretTheme.typography.metricLarge
-                },
+                style =
+                    if (compact) {
+                        MeretTheme.typography.metricSmall
+                    } else {
+                        MeretTheme.typography.metricLarge
+                    },
                 color = valueColor,
             )
             if (unit.isNotEmpty()) {
@@ -55,10 +56,11 @@ public fun Metric(
                     text = unit,
                     style = MeretTheme.typography.metricUnit,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(
-                        start = Spacing.xxs,
-                        bottom = if (compact) 1.dpAsBaselineNudge else 3.dpAsBaselineNudge,
-                    ),
+                    modifier =
+                        Modifier.padding(
+                            start = Spacing.xxs,
+                            bottom = if (compact) 1.dpAsBaselineNudge else 3.dpAsBaselineNudge,
+                        ),
                 )
             }
         }
@@ -75,7 +77,9 @@ public fun Metric(
  * Reads better at the call site than a bare `.dp` for what is an optical correction:
  * the unit sits on the value's baseline, not on its descender.
  */
-private val Int.dpAsBaselineNudge get() = androidx.compose.ui.unit.Dp(this.toFloat())
+private val Int.dpAsBaselineNudge get() =
+    androidx.compose.ui.unit
+        .Dp(this.toFloat())
 
 @Preview(name = "Metrics", showBackground = true)
 @Composable

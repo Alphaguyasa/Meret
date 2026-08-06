@@ -7,13 +7,16 @@ plugins {
 
 // Supabase credentials live in local.properties, which is gitignored. They reach the
 // code only through BuildConfig — never as a literal in a source file.
-val localProperties = Properties().apply {
-    val file = rootProject.file("local.properties")
-    if (file.exists()) file.inputStream().use { load(it) }
-}
+val localProperties =
+    Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) file.inputStream().use { load(it) }
+    }
 
-fun secret(key: String, fallback: String = ""): String =
-    (localProperties.getProperty(key) ?: System.getenv(key) ?: fallback)
+fun secret(
+    key: String,
+    fallback: String = "",
+): String = (localProperties.getProperty(key) ?: System.getenv(key) ?: fallback)
 
 android {
     namespace = "et.alpha.meret"

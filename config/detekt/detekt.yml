@@ -1,0 +1,42 @@
+# Deltas from detekt's default rule set. Everything not named here keeps its default.
+build:
+  maxIssues: 0
+
+complexity:
+  LongParameterList:
+    # Compose screens take one callback per user action, and hoisting them is the
+    # point. A long parameter list on a stateless composable is correct design.
+    ignoreAnnotated: ['Composable']
+    functionThreshold: 8
+  LongMethod:
+    # Composable layout trees are long by nature; splitting them for a line count
+    # produces worse code, not better.
+    ignoreAnnotated: ['Composable']
+    threshold: 80
+  TooManyFunctions:
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+
+naming:
+  MatchingDeclarationName:
+    # A Compose component and the type describing its state are one unit; splitting
+    # GpsQuality out of GpsQualityChip.kt would make both harder to find, not easier.
+    active: false
+  FunctionNaming:
+    ignoreAnnotated: ['Composable', 'Preview']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9]*|[A-Z][_A-Z0-9]*'
+
+style:
+  MagicNumber:
+    # Drawing code is full of geometric ratios. Named constants are used where the
+    # value carries meaning; 0.5f for "half" does not.
+    ignoreAnnotated: ['Composable', 'Preview']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+  MaxLineLength:
+    maxLineLength: 100
+    excludeCommentStatements: true
+  UnusedPrivateMember:
+    # @Preview functions are entry points for the tooling, never called from code.
+    ignoreAnnotated: ['Preview']

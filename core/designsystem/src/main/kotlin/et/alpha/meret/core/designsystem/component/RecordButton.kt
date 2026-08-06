@@ -21,6 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onLongClick
@@ -55,50 +58,58 @@ public fun RecordButton(
     reduceMotion: Boolean = false,
 ) {
     val colors = MeretTheme.colors
-    val fillColor = when (state) {
-        RecordingState.Idle -> colors.tracking
-        RecordingState.Recording -> colors.tracking
-        RecordingState.Paused -> colors.paused
-    }
-
-    val pulseScale = if (state == RecordingState.Recording && !reduceMotion) {
-        val transition = rememberInfiniteTransition(label = "record-pulse")
-        transition.animateFloat(
-            initialValue = 1f,
-            targetValue = PULSE_MAX_SCALE,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = PULSE_PERIOD_MILLIS),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "record-pulse-scale",
-        ).value
-    } else {
-        1f
-    }
-
-    val tapLabel = stringResource(
+    val fillColor =
         when (state) {
-            RecordingState.Idle -> R.string.record_start
-            RecordingState.Recording -> R.string.record_pause
-            RecordingState.Paused -> R.string.record_resume
-        },
-    )
+            RecordingState.Idle -> colors.tracking
+            RecordingState.Recording -> colors.tracking
+            RecordingState.Paused -> colors.paused
+        }
+
+    val pulseScale =
+        if (state == RecordingState.Recording && !reduceMotion) {
+            val transition = rememberInfiniteTransition(label = "record-pulse")
+            transition
+                .animateFloat(
+                    initialValue = 1f,
+                    targetValue = PULSE_MAX_SCALE,
+                    animationSpec =
+                        infiniteRepeatable(
+                            animation = tween(durationMillis = PULSE_PERIOD_MILLIS),
+                            repeatMode = RepeatMode.Reverse,
+                        ),
+                    label = "record-pulse-scale",
+                ).value
+        } else {
+            1f
+        }
+
+    val tapLabel =
+        stringResource(
+            when (state) {
+                RecordingState.Idle -> R.string.record_start
+                RecordingState.Recording -> R.string.record_pause
+                RecordingState.Paused -> R.string.record_resume
+            },
+        )
     val longPressLabel = stringResource(R.string.record_stop)
     val onSurface = MaterialTheme.colorScheme.surface
 
     Box(
-        modifier = modifier
-            .size(Sizes.recordButton)
-            .combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(bounded = false, radius = Sizes.recordButton / 2),
-                onClick = onTap,
-                onLongClick = onLongPress,
-            )
-            .semantics {
-                contentDescription = tapLabel
-                onLongClick(label = longPressLabel) { onLongPress(); true }
-            },
+        modifier =
+            modifier
+                .size(Sizes.recordButton)
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = false, radius = Sizes.recordButton / 2),
+                    onClick = onTap,
+                    onLongClick = onLongPress,
+                ).semantics {
+                    contentDescription = tapLabel
+                    onLongClick(label = longPressLabel) {
+                        onLongPress()
+                        true
+                    }
+                },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(Sizes.recordButton)) {
@@ -121,7 +132,7 @@ public fun RecordButton(
                 color = onSurface,
                 radius = bodyRadius,
                 center = centre,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = HALO_WIDTH_PX),
+                style = Stroke(width = HALO_WIDTH_PX),
             )
 
             drawGlyph(state, centre, bodyRadius, onSurface)
@@ -129,7 +140,7 @@ public fun RecordButton(
     }
 }
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGlyph(
+private fun DrawScope.drawGlyph(
     state: RecordingState,
     centre: Offset,
     bodyRadius: Float,
@@ -137,11 +148,14 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGlyph(
 ) {
     when (state) {
         // A filled dot: the universal "record".
-        RecordingState.Idle -> drawCircle(
-            color = glyphColor,
-            radius = bodyRadius * GLYPH_DOT_FRACTION,
-            center = centre,
-        )
+        RecordingState.Idle -> {
+            drawCircle(
+                color = glyphColor,
+                radius = bodyRadius * GLYPH_DOT_FRACTION,
+                center = centre,
+            )
+        }
+
         // Two bars: pressing this pauses.
         RecordingState.Recording -> {
             val barWidth = bodyRadius * PAUSE_BAR_WIDTH_FRACTION
@@ -150,23 +164,26 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGlyph(
             listOf(-1, 1).forEach { side ->
                 drawRect(
                     color = glyphColor,
-                    topLeft = Offset(
-                        centre.x + side * (gap / 2) - if (side < 0) barWidth else 0f,
-                        centre.y - barHeight / 2,
-                    ),
+                    topLeft =
+                        Offset(
+                            centre.x + side * (gap / 2) - if (side < 0) barWidth else 0f,
+                            centre.y - barHeight / 2,
+                        ),
                     size = Size(barWidth, barHeight),
                 )
             }
         }
+
         // A triangle: pressing this resumes.
         RecordingState.Paused -> {
             val half = bodyRadius * PLAY_SIZE_FRACTION
-            val path = androidx.compose.ui.graphics.Path().apply {
-                moveTo(centre.x - half * PLAY_X_OFFSET, centre.y - half)
-                lineTo(centre.x + half, centre.y)
-                lineTo(centre.x - half * PLAY_X_OFFSET, centre.y + half)
-                close()
-            }
+            val path =
+                Path().apply {
+                    moveTo(centre.x - half * PLAY_X_OFFSET, centre.y - half)
+                    lineTo(centre.x + half, centre.y)
+                    lineTo(centre.x - half * PLAY_X_OFFSET, centre.y + half)
+                    close()
+                }
             drawPath(path, glyphColor)
         }
     }

@@ -25,10 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,19 +49,22 @@ public fun StatusDot(
     modifier: Modifier = Modifier,
     pulsing: Boolean = false,
 ) {
-    val alpha = if (pulsing) {
-        rememberInfiniteTransition(label = "status-pulse").animateFloat(
-            initialValue = 1f,
-            targetValue = DOT_MIN_ALPHA,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = DOT_PULSE_MILLIS),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "status-pulse-alpha",
-        ).value
-    } else {
-        1f
-    }
+    val alpha =
+        if (pulsing) {
+            rememberInfiniteTransition(label = "status-pulse")
+                .animateFloat(
+                    initialValue = 1f,
+                    targetValue = DOT_MIN_ALPHA,
+                    animationSpec =
+                        infiniteRepeatable(
+                            animation = tween(durationMillis = DOT_PULSE_MILLIS),
+                            repeatMode = RepeatMode.Reverse,
+                        ),
+                    label = "status-pulse-alpha",
+                ).value
+        } else {
+            1f
+        }
 
     Canvas(modifier.size(Sizes.indicator)) {
         drawCircle(color = color.copy(alpha = alpha), radius = size.minDimension / 2)
@@ -87,11 +90,12 @@ public fun OfflineIndicator(
     ) {
         val label = stringResource(R.string.offline_working_locally)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                .padding(horizontal = Spacing.md, vertical = Spacing.xs)
-                .semantics { liveRegion = LiveRegionMode.Polite },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .padding(horizontal = Spacing.md, vertical = Spacing.xs)
+                    .semantics { liveRegion = LiveRegionMode.Polite },
             horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -123,32 +127,34 @@ public fun SyncBadge(
     onClick: (() -> Unit)? = null,
 ) {
     val colors = MeretTheme.colors
-    val dotColor = when (state) {
-        SyncState.Idle, SyncState.Pending -> colors.syncPending
-        SyncState.Active -> colors.syncActive
-        SyncState.Done -> colors.syncDone
-        SyncState.Conflict -> colors.syncConflict
-        SyncState.Failed -> colors.syncFailed
-    }
+    val dotColor =
+        when (state) {
+            SyncState.Idle, SyncState.Pending -> colors.syncPending
+            SyncState.Active -> colors.syncActive
+            SyncState.Done -> colors.syncDone
+            SyncState.Conflict -> colors.syncConflict
+            SyncState.Failed -> colors.syncFailed
+        }
 
-    val text = when {
-        conflictCount > 0 -> stringResource(R.string.sync_conflicts, conflictCount)
-        state == SyncState.Active -> stringResource(R.string.sync_uploading)
-        state == SyncState.Failed -> stringResource(R.string.sync_retrying)
-        pendingCount > 0 -> stringResource(R.string.sync_pending_count, pendingCount)
-        else -> stringResource(R.string.sync_up_to_date)
-    }
+    val text =
+        when {
+            conflictCount > 0 -> stringResource(R.string.sync_conflicts, conflictCount)
+            state == SyncState.Active -> stringResource(R.string.sync_uploading)
+            state == SyncState.Failed -> stringResource(R.string.sync_retrying)
+            pendingCount > 0 -> stringResource(R.string.sync_pending_count, pendingCount)
+            else -> stringResource(R.string.sync_up_to_date)
+        }
 
     Row(
-        modifier = modifier
-            .defaultMinSize(minHeight = Sizes.touchTargetMin)
-            .background(
-                MaterialTheme.colorScheme.surface.copy(alpha = BADGE_SURFACE_ALPHA),
-                RoundedCornerShape(percent = BADGE_ROUNDING),
-            )
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-            .clearAndSetSemantics { contentDescription = text },
+        modifier =
+            modifier
+                .defaultMinSize(minHeight = Sizes.touchTargetMin)
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(alpha = BADGE_SURFACE_ALPHA),
+                    RoundedCornerShape(percent = BADGE_ROUNDING),
+                ).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
+                .clearAndSetSemantics { contentDescription = text },
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {

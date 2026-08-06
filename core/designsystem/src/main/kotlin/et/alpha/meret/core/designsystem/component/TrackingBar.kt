@@ -60,18 +60,20 @@ public fun TrackingBar(
     modifier: Modifier = Modifier,
 ) {
     val colors = MeretTheme.colors
-    val statusColor = when (stats.state) {
-        RecordingState.Idle -> colors.stopped
-        RecordingState.Recording -> colors.tracking
-        RecordingState.Paused -> colors.paused
-    }
-    val statusLabel = stringResource(
+    val statusColor =
         when (stats.state) {
-            RecordingState.Idle -> R.string.tracking_state_stopped
-            RecordingState.Recording -> R.string.tracking_state_recording
-            RecordingState.Paused -> R.string.tracking_state_paused
-        },
-    )
+            RecordingState.Idle -> colors.stopped
+            RecordingState.Recording -> colors.tracking
+            RecordingState.Paused -> colors.paused
+        }
+    val statusLabel =
+        stringResource(
+            when (stats.state) {
+                RecordingState.Idle -> R.string.tracking_state_stopped
+                RecordingState.Recording -> R.string.tracking_state_recording
+                RecordingState.Paused -> R.string.tracking_state_paused
+            },
+        )
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -81,16 +83,18 @@ public fun TrackingBar(
         shape = MaterialTheme.shapes.large,
     ) {
         Column(
-            modifier = Modifier
-                .animateContentSize()
-                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            modifier =
+                Modifier
+                    .animateContentSize()
+                    .padding(horizontal = Spacing.md, vertical = Spacing.sm),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // Screen-reader users should hear the state change without having to
-                    // go looking for it.
-                    .semantics { liveRegion = LiveRegionMode.Polite },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        // Screen-reader users should hear the state change without having to
+                        // go looking for it.
+                        .semantics { liveRegion = LiveRegionMode.Polite },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             ) {
@@ -132,12 +136,14 @@ public fun TrackingBar(
                     modifier = Modifier.size(Sizes.touchTargetMin),
                 ) {
                     Chevron(
-                        modifier = Modifier
-                            .size(Sizes.icon)
-                            .rotate(chevronRotation),
-                        contentDescription = stringResource(
-                            if (expanded) R.string.action_collapse else R.string.action_expand,
-                        ),
+                        modifier =
+                            Modifier
+                                .size(Sizes.icon)
+                                .rotate(chevronRotation),
+                        contentDescription =
+                            stringResource(
+                                if (expanded) R.string.action_collapse else R.string.action_expand,
+                            ),
                     )
                 }
             }
@@ -180,15 +186,16 @@ public fun TrackingBar(
 @Preview(name = "Tracking bar", showBackground = true, widthDp = 380)
 @Composable
 private fun TrackingBarPreview() {
-    val stats = TrackingStats(
-        state = RecordingState.Recording,
-        duration = "01:42:07",
-        distance = "4.82",
-        distanceUnit = "km",
-        pointCount = "1,204",
-        segmentCount = "3",
-        accuracy = "4",
-    )
+    val stats =
+        TrackingStats(
+            state = RecordingState.Recording,
+            duration = "01:42:07",
+            distance = "4.82",
+            distanceUnit = "km",
+            pointCount = "1,204",
+            segmentCount = "3",
+            accuracy = "4",
+        )
     MeretTheme {
         Column(
             modifier = Modifier.padding(Spacing.sm),

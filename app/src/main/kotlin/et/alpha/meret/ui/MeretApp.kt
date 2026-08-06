@@ -33,11 +33,11 @@ import et.alpha.meret.feature.map.MapUiState
 import et.alpha.meret.feature.tiles.TilePackScreen
 import et.alpha.meret.feature.tracking.TrackListScreen
 import et.alpha.meret.feature.waypoint.WaypointListScreen
-import et.alpha.meret.navigation.MapRoute
-import et.alpha.meret.navigation.TilePacksRoute
+import et.alpha.meret.navigation.MAP_ROUTE
+import et.alpha.meret.navigation.TILE_PACKS_ROUTE
+import et.alpha.meret.navigation.TRACKS_ROUTE
 import et.alpha.meret.navigation.TopLevelDestination
-import et.alpha.meret.navigation.TracksRoute
-import et.alpha.meret.navigation.WaypointsRoute
+import et.alpha.meret.navigation.WAYPOINTS_ROUTE
 
 /**
  * App shell: offline strip, content, bottom bar.
@@ -69,32 +69,36 @@ fun MeretApp(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp,
                 ) {
+                    val scheme = MaterialTheme.colorScheme
                     TopLevelDestination.entries.forEach { destination ->
-                        val selected = currentDestination
-                            ?.hierarchy
-                            ?.any { it.route == destination.route } == true
+                        val selected =
+                            currentDestination
+                                ?.hierarchy
+                                ?.any { it.route == destination.route } == true
                         val label = stringResource(destination.labelRes)
 
                         NavigationBarItem(
                             selected = selected,
                             onClick = { navController.navigateToTopLevel(destination) },
                             icon = {
-                                val tint = if (selected) {
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
+                                val tint =
+                                    if (selected) {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
                                 destination.icon(Modifier.size(Sizes.icon), tint, null)
                             },
                             // Labels always shown. An icon-only bar is a guessing game
                             // in Amharic, where the glyphs carry no learned meaning.
                             label = { Text(label, maxLines = 1) },
                             alwaysShowLabel = true,
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                            ),
+                            colors =
+                                NavigationBarItemDefaults.colors(
+                                    indicatorColor = scheme.primaryContainer,
+                                    selectedIconColor = scheme.onPrimaryContainer,
+                                    selectedTextColor = scheme.onSurface,
+                                ),
                         )
                     }
                 }
@@ -103,12 +107,12 @@ fun MeretApp(
             Box(Modifier.fillMaxSize()) {
                 NavHost(
                     navController = navController,
-                    startDestination = MapRoute,
+                    startDestination = MAP_ROUTE,
                 ) {
                     // The map draws under the bottom bar on purpose — it is a map, and
                     // cropping it to a rectangle above the bar wastes the screen. It
                     // receives the padding so its own controls stay clear.
-                    composable(MapRoute) {
+                    composable(MAP_ROUTE) {
                         MapScreen(
                             state = MapUiState(),
                             onRecordTap = {},
@@ -120,17 +124,17 @@ fun MeretApp(
                             contentPadding = innerPadding,
                         )
                     }
-                    composable(TracksRoute) {
+                    composable(TRACKS_ROUTE) {
                         TrackListScreen(
                             modifier = Modifier.padding(innerPadding),
                         )
                     }
-                    composable(WaypointsRoute) {
+                    composable(WAYPOINTS_ROUTE) {
                         WaypointListScreen(
                             modifier = Modifier.padding(innerPadding),
                         )
                     }
-                    composable(TilePacksRoute) {
+                    composable(TILE_PACKS_ROUTE) {
                         TilePackScreen(
                             modifier = Modifier.padding(innerPadding),
                         )
@@ -155,7 +159,6 @@ private fun NavHostController.navigateToTopLevel(destination: TopLevelDestinatio
         restoreState = true
     }
 }
-
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 800)
 @Composable

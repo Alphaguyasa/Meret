@@ -18,14 +18,13 @@ allprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
     apply(plugin = "io.gitlab.arturbosch.detekt")
 
+    // Rule configuration lives in .editorconfig, which is what ktlint reads natively and
+    // what the IDE picks up too. No `filter { }` here: the closure captures the Project
+    // and breaks the configuration cache.
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        version.set("1.5.0")
+        version.set("1.8.0")
         android.set(true)
         ignoreFailures.set(false)
-        filter {
-            exclude { it.file.path.contains("${layout.buildDirectory.get()}") }
-            exclude("**/generated/**")
-        }
     }
 
     configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
@@ -34,6 +33,17 @@ allprojects {
         config.setFrom(rootProject.files("config/detekt/detekt.yml"))
         baseline = rootProject.file("config/detekt/baseline.xml").takeIf { it.exists() }
         parallel = true
+    }
+
+    tasks.withType<Test>().configureEach {
+        // Gradle 9 fails a Test task that finds a test source set but no tests in it.
+        // Most modules in the graph are still empty by design — BUILD_PLAN phases 2
+        // onward fill them — and an empty module should not break `./gradlew test`.
+        failOnNoDiscoveredTests = false
+        testLogging {
+            events("failed", "skipped")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
     }
 
     tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {

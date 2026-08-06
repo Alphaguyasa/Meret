@@ -99,10 +99,11 @@ public fun MapScreen(
 
         // --- Top: readouts. Glanceable, never pressed by accident. -------------------
         Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+            modifier =
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(horizontal = Spacing.md, vertical = Spacing.xs),
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
             Row(
@@ -126,15 +127,17 @@ public fun MapScreen(
 
         // --- Bottom: everything pressable. -------------------------------------------
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = contentPadding.calculateBottomPadding()),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = contentPadding.calculateBottomPadding()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.md),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom,
             ) {
@@ -214,11 +217,12 @@ private fun BasemapSurface(
     val water = MeretTheme.colors.assignment.copy(alpha = 0.18f)
 
     Box(
-        modifier = modifier.background(
-            Brush.verticalGradient(
-                listOf(landcover, MaterialTheme.colorScheme.surfaceContainer),
+        modifier =
+            modifier.background(
+                Brush.verticalGradient(
+                    listOf(landcover, MaterialTheme.colorScheme.surfaceContainer),
+                ),
             ),
-        ),
     ) {
         Canvas(Modifier.fillMaxSize()) {
             // Contour-like bands. Purely decorative; deliberately low contrast so the
@@ -226,14 +230,18 @@ private fun BasemapSurface(
             val bandCount = 7
             repeat(bandCount) { index ->
                 val y = size.height * (index + 1) / (bandCount + 1f)
-                val path = Path().apply {
-                    moveTo(0f, y)
-                    cubicTo(
-                        size.width * 0.3f, y - size.height * 0.06f,
-                        size.width * 0.7f, y + size.height * 0.06f,
-                        size.width, y - size.height * 0.02f,
-                    )
-                }
+                val path =
+                    Path().apply {
+                        moveTo(0f, y)
+                        cubicTo(
+                            size.width * 0.3f,
+                            y - size.height * 0.06f,
+                            size.width * 0.7f,
+                            y + size.height * 0.06f,
+                            size.width,
+                            y - size.height * 0.02f,
+                        )
+                    }
                 drawPath(
                     path,
                     contour.copy(alpha = 0.35f),
@@ -241,14 +249,18 @@ private fun BasemapSurface(
                 )
             }
 
-            val river = Path().apply {
-                moveTo(size.width * 0.12f, 0f)
-                cubicTo(
-                    size.width * 0.35f, size.height * 0.35f,
-                    size.width * 0.05f, size.height * 0.6f,
-                    size.width * 0.4f, size.height,
-                )
-            }
+            val river =
+                Path().apply {
+                    moveTo(size.width * 0.12f, 0f)
+                    cubicTo(
+                        size.width * 0.35f,
+                        size.height * 0.35f,
+                        size.width * 0.05f,
+                        size.height * 0.6f,
+                        size.width * 0.4f,
+                        size.height,
+                    )
+                }
             drawPath(river, water, style = Stroke(width = 14f, cap = StrokeCap.Round))
 
             drawCircle(
@@ -260,9 +272,10 @@ private fun BasemapSurface(
 
         if (!installed) {
             Surface(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(Spacing.lg),
+                modifier =
+                    Modifier
+                        .align(Alignment.Center)
+                        .padding(Spacing.lg),
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
                 tonalElevation = Elevations.card,
@@ -295,24 +308,26 @@ private fun BasemapSurface(
 private fun MapScreenPreview() {
     MeretTheme {
         MapScreen(
-            state = MapUiState(
-                gpsQuality = GpsQuality.Excellent,
-                accuracyMetres = 4f,
-                satelliteCount = 14,
-                recordingState = RecordingState.Recording,
-                syncState = SyncState.Pending,
-                pendingCount = 214,
-                isOffline = true,
-                trackingStats = TrackingStats(
-                    state = RecordingState.Recording,
-                    duration = "01:42:07",
-                    distance = "4.82",
-                    distanceUnit = "km",
-                    pointCount = "1,204",
-                    segmentCount = "3",
-                    accuracy = "4",
+            state =
+                MapUiState(
+                    gpsQuality = GpsQuality.Excellent,
+                    accuracyMetres = 4f,
+                    satelliteCount = 14,
+                    recordingState = RecordingState.Recording,
+                    syncState = SyncState.Pending,
+                    pendingCount = 214,
+                    isOffline = true,
+                    trackingStats =
+                        TrackingStats(
+                            state = RecordingState.Recording,
+                            duration = "01:42:07",
+                            distance = "4.82",
+                            distanceUnit = "km",
+                            pointCount = "1,204",
+                            segmentCount = "3",
+                            accuracy = "4",
+                        ),
                 ),
-            ),
             onRecordTap = {},
             onRecordLongPress = {},
             onAddWaypoint = {},
@@ -322,4 +337,3 @@ private fun MapScreenPreview() {
         )
     }
 }
-

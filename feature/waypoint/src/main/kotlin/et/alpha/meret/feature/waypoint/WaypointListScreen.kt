@@ -28,9 +28,10 @@ public fun WaypointListScreen(
         title = stringResource(R.string.waypoints_empty_title),
         body = stringResource(R.string.waypoints_empty_body),
         icon = { PinGlyph(it, tint = MaterialTheme.colorScheme.outline) },
-        modifier = modifier
-            .fillMaxSize()
-            .padding(contentPadding),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(contentPadding),
     )
 }
 

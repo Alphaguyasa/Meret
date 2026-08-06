@@ -32,9 +32,10 @@ public fun EmptyState(
     icon: @Composable (Modifier) -> Unit = {},
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(Spacing.lg),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -51,9 +52,10 @@ public fun EmptyState(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(top = Spacing.xs)
-                .widthIn(max = MAX_BODY_WIDTH),
+            modifier =
+                Modifier
+                    .padding(top = Spacing.xs)
+                    .widthIn(max = MAX_BODY_WIDTH),
         )
     }
 }

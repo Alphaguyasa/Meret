@@ -24,10 +24,11 @@ import androidx.compose.ui.unit.sp
  */
 public val MeretFontFamily: FontFamily = FontFamily.Default
 
-private val LineHeightNoTrim = LineHeightStyle(
-    alignment = LineHeightStyle.Alignment.Center,
-    trim = LineHeightStyle.Trim.None,
-)
+private val LineHeightNoTrim =
+    LineHeightStyle(
+        alignment = LineHeightStyle.Alignment.Center,
+        trim = LineHeightStyle.Trim.None,
+    )
 
 private fun meretStyle(
     size: Int,
@@ -47,23 +48,24 @@ private fun meretStyle(
     fontFeatureSettings = if (tabular) "tnum" else null,
 )
 
-internal val MeretTypography = Typography(
-    displayLarge = meretStyle(45, 54, FontWeight.SemiBold, letterSpacing = -0.5),
-    displayMedium = meretStyle(38, 46, FontWeight.SemiBold, letterSpacing = -0.4),
-    displaySmall = meretStyle(32, 40, FontWeight.SemiBold, letterSpacing = -0.3),
-    headlineLarge = meretStyle(30, 38, FontWeight.SemiBold),
-    headlineMedium = meretStyle(26, 34, FontWeight.SemiBold),
-    headlineSmall = meretStyle(24, 32, FontWeight.SemiBold),
-    titleLarge = meretStyle(20, 28, FontWeight.SemiBold),
-    titleMedium = meretStyle(16, 24, FontWeight.SemiBold, letterSpacing = 0.1),
-    titleSmall = meretStyle(14, 22, FontWeight.SemiBold, letterSpacing = 0.1),
-    bodyLarge = meretStyle(16, 26, FontWeight.Normal, letterSpacing = 0.15),
-    bodyMedium = meretStyle(14, 22, FontWeight.Normal, letterSpacing = 0.2),
-    bodySmall = meretStyle(12, 18, FontWeight.Normal, letterSpacing = 0.3),
-    labelLarge = meretStyle(14, 20, FontWeight.SemiBold, letterSpacing = 0.1),
-    labelMedium = meretStyle(12, 16, FontWeight.SemiBold, letterSpacing = 0.4),
-    labelSmall = meretStyle(11, 16, FontWeight.SemiBold, letterSpacing = 0.5),
-)
+internal val MeretTypography =
+    Typography(
+        displayLarge = meretStyle(45, 54, FontWeight.SemiBold, letterSpacing = -0.5),
+        displayMedium = meretStyle(38, 46, FontWeight.SemiBold, letterSpacing = -0.4),
+        displaySmall = meretStyle(32, 40, FontWeight.SemiBold, letterSpacing = -0.3),
+        headlineLarge = meretStyle(30, 38, FontWeight.SemiBold),
+        headlineMedium = meretStyle(26, 34, FontWeight.SemiBold),
+        headlineSmall = meretStyle(24, 32, FontWeight.SemiBold),
+        titleLarge = meretStyle(20, 28, FontWeight.SemiBold),
+        titleMedium = meretStyle(16, 24, FontWeight.SemiBold, letterSpacing = 0.1),
+        titleSmall = meretStyle(14, 22, FontWeight.SemiBold, letterSpacing = 0.1),
+        bodyLarge = meretStyle(16, 26, FontWeight.Normal, letterSpacing = 0.15),
+        bodyMedium = meretStyle(14, 22, FontWeight.Normal, letterSpacing = 0.2),
+        bodySmall = meretStyle(12, 18, FontWeight.Normal, letterSpacing = 0.3),
+        labelLarge = meretStyle(14, 20, FontWeight.SemiBold, letterSpacing = 0.1),
+        labelMedium = meretStyle(12, 16, FontWeight.SemiBold, letterSpacing = 0.4),
+        labelSmall = meretStyle(11, 16, FontWeight.SemiBold, letterSpacing = 0.5),
+    )
 
 /**
  * Styles Material has no slot for. Field workers do not trust spinners — they trust
@@ -81,15 +83,17 @@ public data class MeretExtendedTypography(
     val mono: TextStyle,
 )
 
-internal val MeretExtendedTypographyDefaults = MeretExtendedTypography(
-    metricLarge = meretStyle(28, 34, FontWeight.Bold, letterSpacing = -0.2, tabular = true),
-    metricSmall = meretStyle(18, 24, FontWeight.SemiBold, tabular = true),
-    metricUnit = meretStyle(13, 18, FontWeight.Medium, letterSpacing = 0.3),
-    mono = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 20.sp,
-        lineHeightStyle = LineHeightNoTrim,
-    ),
-)
+internal val MeretExtendedTypographyDefaults =
+    MeretExtendedTypography(
+        metricLarge = meretStyle(28, 34, FontWeight.Bold, letterSpacing = -0.2, tabular = true),
+        metricSmall = meretStyle(18, 24, FontWeight.SemiBold, tabular = true),
+        metricUnit = meretStyle(13, 18, FontWeight.Medium, letterSpacing = 0.3),
+        mono =
+            TextStyle(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Normal,
+                fontSize = 13.sp,
+                lineHeight = 20.sp,
+                lineHeightStyle = LineHeightNoTrim,
+            ),
+    )

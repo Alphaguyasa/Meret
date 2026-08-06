@@ -22,29 +22,29 @@ enum class TopLevelDestination(
     val icon: @Composable (Modifier, Color, String?) -> Unit,
 ) {
     Map(
-        route = MapRoute,
+        route = MAP_ROUTE,
         labelRes = R.string.destination_map,
         icon = { modifier, tint, cd -> CrosshairGlyph(modifier, cd, tint) },
     ),
     Tracks(
-        route = TracksRoute,
+        route = TRACKS_ROUTE,
         labelRes = R.string.destination_tracks,
         icon = { modifier, tint, cd -> TrackGlyph(modifier, cd, tint) },
     ),
     Waypoints(
-        route = WaypointsRoute,
+        route = WAYPOINTS_ROUTE,
         labelRes = R.string.destination_waypoints,
         icon = { modifier, tint, cd -> PinGlyph(modifier, cd, tint) },
     ),
     Packs(
-        route = TilePacksRoute,
+        route = TILE_PACKS_ROUTE,
         labelRes = R.string.destination_packs,
         icon = { modifier, tint, cd -> LayersGlyph(modifier, cd, tint) },
     ),
 }
 
-const val MapRoute: String = "map"
-const val TracksRoute: String = "tracks"
-const val WaypointsRoute: String = "waypoints"
-const val TilePacksRoute: String = "tile_packs"
-const val SettingsRoute: String = "settings"
+const val MAP_ROUTE: String = "map"
+const val TRACKS_ROUTE: String = "tracks"
+const val WAYPOINTS_ROUTE: String = "waypoints"
+const val TILE_PACKS_ROUTE: String = "tile_packs"
+const val SETTINGS_ROUTE: String = "settings"
