@@ -36,6 +36,11 @@ jobs:
       - name: Unit tests
         run: ./gradlew test --no-daemon
 
+      # Runs only where a Kover rule is configured — currently :core:model and
+      # :core:common, at the 85% line-coverage bar BUILD_PLAN phase 2 sets.
+      - name: Coverage
+        run: ./gradlew koverVerify koverLog --no-daemon
+
       - name: Assemble debug
         run: ./gradlew assembleDebug --no-daemon
 

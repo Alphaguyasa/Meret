@@ -5,6 +5,7 @@ kotlin = "2.2.10"
 ksp = "2.2.10-2.0.2"
 ktlint = "14.2.0"
 detekt = "1.23.8"
+kover = "0.9.1"
 
 # Language / runtime
 coroutines = "1.10.2"
@@ -77,6 +78,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 # Convention plugins defined in build-logic/
 meret-android-application = { id = "meret.android.application" }

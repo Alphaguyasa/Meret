@@ -16,6 +16,18 @@ complexity:
   TooManyFunctions:
     thresholdInFiles: 20
     thresholdInClasses: 20
+    # A namespace object — GeoMath, DouglasPeucker — is a bag of small pure functions
+    # by design. Splitting `haversineDistance` away from `initialBearing` to satisfy a
+    # count would scatter one coherent API across files.
+    thresholdInObjects: 20
+
+exceptions:
+  TooGenericExceptionCaught:
+    # `appCatching` exists precisely to turn *any* throwable into an AppError, after
+    # rethrowing CancellationException. Catching narrowly there would let an unforeseen
+    # exception escape a repository write and crash the app — which is the opposite of
+    # what the type is for. Scoped to that one file rather than relaxed globally.
+    excludes: ['**/core/common/result/AppResult.kt']
 
 naming:
   MatchingDeclarationName:
