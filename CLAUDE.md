@@ -60,6 +60,10 @@ limitation.
 :peer                     Nearby Connections peer sync
 ```
 
+Two modules exist beyond this list, because `ARCHITECTURE.md`'s layering needs them:
+`:domain` (use cases, pure Kotlin) and `:core:data` (repositories — the only module
+allowed to see both `:core:database` and `:core:network`).
+
 **Dependency rules, enforced by convention plugins:**
 - `:core:model` depends on nothing.
 - `:feature:*` may depend on `:core:*` and `:domain`, never on another `:feature:*`.
@@ -74,7 +78,19 @@ limitation.
 - Version catalog in `gradle/libs.versions.toml`. No inline version strings anywhere.
 - Convention plugins in `build-logic/` for `android-library`, `android-feature`,
   `jvm-library`, `hilt`, `room`, `compose`.
-- `minSdk 26`, `targetSdk 35`, `compileSdk 35`.
+- `minSdk 26`, `targetSdk 36`, `compileSdk 37`. *(Was written as 35/35. The toolchain
+  this project was generated with — AGP 9.3.1, Compose BOM 2026.02 — pulls
+  `lifecycle 2.11.0`, which refuses to compile below API 37. The levels live in
+  `BuildConfig` in `build-logic/.../KotlinAndroid.kt`; change them there only.)*
+
+**AGP 9 differences that will bite you**
+- `CommonExtension` is no longer generic, and `compileOptions`/`lint`/`testOptions`/
+  `packaging` lost their lambda overloads. Use the property getters.
+- Library modules no longer declare `targetSdk`.
+- AGP applies Kotlin itself and registers the `kotlin` extension. Applying
+  `org.jetbrains.kotlin.android` on top is a hard error. KSP still registers Kotlin
+  source sets, hence `android.disallowKotlinSourceSets=false` in `gradle.properties`.
+- Hilt below 2.58 looks for the `BaseExtension` AGP 9 removed.
 
 **Kotlin**
 - Explicit API mode on for `:core:*` modules.
