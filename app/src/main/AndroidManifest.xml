@@ -1,9 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Location. Background access is requested separately and only after the user has
+         granted foreground access and seen why we need it. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- The app must work with the radio off. Network permission exists only so the
+         outbox can drain when a connection happens to appear. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- GPS is the point of this app; a device without it cannot use it. -->
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="true" />
 
     <application
-        android:allowBackup="true"
+        android:name=".MeretApplication"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"

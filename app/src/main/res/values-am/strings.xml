@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">መሬት</string>
+    <string name="destination_map">ካርታ</string>
+    <string name="destination_tracks">መስመሮች</string>
+    <string name="destination_waypoints">ቦታዎች</string>
+    <string name="destination_packs">ካርታዎች</string>
+</resources>

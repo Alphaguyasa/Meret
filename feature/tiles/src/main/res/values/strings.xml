@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="packs_empty_title">No map packs installed</string>
+    <string name="packs_empty_body">Copy an .mbtiles file to this device over USB, or download a region while you have Wi-Fi.</string>
+</resources>

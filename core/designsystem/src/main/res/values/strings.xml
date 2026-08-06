@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GPS quality -->
+    <string name="gps_quality_excellent">Excellent signal</string>
+    <string name="gps_quality_good">Good signal</string>
+    <string name="gps_quality_fair">Fair signal</string>
+    <string name="gps_quality_poor">Poor signal</string>
+    <string name="gps_no_fix">No fix</string>
+    <!-- %1$d is the horizontal accuracy in whole metres -->
+    <string name="gps_accuracy_metres">±%1$d m</string>
+    <!-- %1$d is the number of satellites used in the fix -->
+    <string name="gps_satellite_count">%1$d sat</string>
+
+    <!-- Recording -->
+    <string name="record_start">Start recording</string>
+    <string name="record_pause">Pause recording</string>
+    <string name="record_resume">Resume recording</string>
+    <string name="record_stop">Stop recording</string>
+    <string name="tracking_state_recording">Recording</string>
+    <string name="tracking_state_paused">Paused</string>
+    <string name="tracking_state_stopped">Stopped</string>
+
+    <!-- Metrics -->
+    <string name="metric_duration">Duration</string>
+    <string name="metric_distance">Distance</string>
+    <string name="metric_points">Points</string>
+    <string name="metric_segments">Segments</string>
+    <string name="metric_accuracy">Accuracy</string>
+    <string name="unit_metres">m</string>
+    <string name="unit_kilometres">km</string>
+    <string name="unit_hectares">ha</string>
+
+    <!-- Connectivity and sync -->
+    <string name="offline_working_locally">Offline — saving to this device</string>
+    <string name="sync_up_to_date">All synced</string>
+    <string name="sync_uploading">Uploading</string>
+    <string name="sync_retrying">Retrying</string>
+    <!-- %1$d is the number of records waiting in the outbox -->
+    <string name="sync_pending_count">%1$d waiting</string>
+    <!-- %1$d is the number of records needing manual resolution -->
+    <string name="sync_conflicts">%1$d conflicts</string>
+
+    <!-- Generic actions -->
+    <string name="action_expand">Show more</string>
+    <string name="action_collapse">Show less</string>
+</resources>

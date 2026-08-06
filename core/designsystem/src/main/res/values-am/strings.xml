@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GPS quality -->
+    <string name="gps_quality_excellent">በጣም ጥሩ ሲግናል</string>
+    <string name="gps_quality_good">ጥሩ ሲግናል</string>
+    <string name="gps_quality_fair">መካከለኛ ሲግናል</string>
+    <string name="gps_quality_poor">ደካማ ሲግናል</string>
+    <string name="gps_no_fix">ሲግናል የለም</string>
+    <string name="gps_accuracy_metres">±%1$d ሜ</string>
+    <string name="gps_satellite_count">%1$d ሳተላይት</string>
+
+    <!-- Recording -->
+    <string name="record_start">መቅዳት ጀምር</string>
+    <string name="record_pause">መቅዳት አቁም</string>
+    <string name="record_resume">መቅዳት ቀጥል</string>
+    <string name="record_stop">መቅዳት አጠናቅ</string>
+    <string name="tracking_state_recording">በመቅዳት ላይ</string>
+    <string name="tracking_state_paused">ለጊዜው ቆሟል</string>
+    <string name="tracking_state_stopped">ቆሟል</string>
+
+    <!-- Metrics -->
+    <string name="metric_duration">ቆይታ</string>
+    <string name="metric_distance">ርቀት</string>
+    <string name="metric_points">ነጥቦች</string>
+    <string name="metric_segments">ክፍሎች</string>
+    <string name="metric_accuracy">ትክክለኛነት</string>
+    <string name="unit_metres">ሜ</string>
+    <string name="unit_kilometres">ኪሜ</string>
+    <string name="unit_hectares">ሄክታር</string>
+
+    <!-- Connectivity and sync -->
+    <string name="offline_working_locally">ከመስመር ውጭ — በዚህ መሣሪያ ላይ እየተቀመጠ ነው</string>
+    <string name="sync_up_to_date">ሁሉም ተመሳስሏል</string>
+    <string name="sync_uploading">በመስቀል ላይ</string>
+    <string name="sync_retrying">እንደገና በመሞከር ላይ</string>
+    <string name="sync_pending_count">%1$d በመጠባበቅ ላይ</string>
+    <string name="sync_conflicts">%1$d ግጭቶች</string>
+
+    <!-- Generic actions -->
+    <string name="action_expand">ተጨማሪ አሳይ</string>
+    <string name="action_collapse">ቀንስ</string>
+</resources>

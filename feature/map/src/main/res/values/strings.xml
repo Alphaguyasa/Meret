@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_add_waypoint">Add waypoint</string>
+    <string name="map_recentre">Centre on my location</string>
+    <string name="map_no_pack_title">No map pack installed</string>
+    <string name="map_no_pack_body">Copy an .mbtiles pack to this device, or download a region while you have Wi-Fi.</string>
+</resources>

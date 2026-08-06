@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="waypoints_empty_title">No waypoints yet</string>
+    <string name="waypoints_empty_body">Tap the plus button on the map to record a place, with photos and a form.</string>
+</resources>

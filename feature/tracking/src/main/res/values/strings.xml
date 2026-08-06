@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tracks_empty_title">No tracks yet</string>
+    <string name="tracks_empty_body">Press record on the map to start logging where you walk. Tracks are saved on this device first.</string>
+</resources>

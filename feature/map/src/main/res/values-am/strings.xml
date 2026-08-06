@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_add_waypoint">ነጥብ ጨምር</string>
+    <string name="map_recentre">ወደ አካባቢዬ አምጣ</string>
+    <string name="map_no_pack_title">የካርታ ጥቅል አልተጫነም</string>
+    <string name="map_no_pack_body">የ .mbtiles ጥቅል ወደዚህ መሣሪያ ይቅዱ፣ ወይም ዋይ-ፋይ ሲኖርዎት አካባቢ ያውርዱ።</string>
+</resources>
