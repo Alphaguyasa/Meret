@@ -44,6 +44,12 @@ jobs:
       - name: Assemble debug
         run: ./gradlew assembleDebug --no-daemon
 
+      # Compiled, not run — the runner has no emulator. The instrumented suite holds the
+      # Room migration harness and the phase 3 timing benchmarks, and both are the kind of
+      # code that silently stops compiling for months if nothing ever builds it.
+      - name: Compile instrumented tests
+        run: ./gradlew assembleDebugAndroidTest --no-daemon
+
       - name: Android Lint
         run: ./gradlew :app:lintDebug --no-daemon
 

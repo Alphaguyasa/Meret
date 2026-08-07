@@ -88,6 +88,37 @@ class DomainModelTest {
         assertValueSemantics(assignment()) { it.copy(coveragePercent = 99.0) }
         assertValueSemantics(formTemplate()) { it.copy(version = 99) }
         assertValueSemantics(tilePack()) { it.copy(bytes = 99L) }
+        assertValueSemantics(outboxEntry()) { it.copy(attempts = 99) }
+        assertValueSemantics(syncConflict()) { it.copy(detectedAt = 99L) }
+    }
+
+    @Test
+    fun `an outbox row is due only once its backoff has elapsed`() {
+        val entry = outboxEntry().copy(nextAttemptAt = 5_000L)
+
+        assertThat(entry.isDue(now = 4_999L)).isFalse()
+        assertThat(entry.isDue(now = 5_000L)).isTrue()
+        assertThat(entry.isDue(now = 5_001L)).isTrue()
+    }
+
+    @Test
+    fun `a conflict stays unresolved until someone picks a side`() {
+        val conflict = syncConflict()
+
+        assertThat(conflict.isResolved).isFalse()
+        assertThat(conflict.resolvedAt).isNull()
+        assertThat(
+            conflict.copy(resolution = ConflictResolution.LOCAL, resolvedAt = 2_000L).isResolved,
+        ).isTrue()
+    }
+
+    @Test
+    fun `a fresh outbox row has made no attempts and carries no error`() {
+        val entry = outboxEntry()
+
+        assertThat(entry.attempts).isEqualTo(0)
+        assertThat(entry.lastError).isNull()
+        assertThat(entry.priority).isEqualTo(OutboxEntry.DEFAULT_PRIORITY)
     }
 
     @Test
@@ -205,5 +236,25 @@ class DomainModelTest {
         bounds = BoundingBox(3.4, 32.9, 15.0, 48.0),
         source = TilePackSource.SIDELOADED,
         installedAt = 1_000L,
+    )
+
+    private fun outboxEntry() = OutboxEntry(
+        id = "o1",
+        entityType = OutboxEntityType.TRACK_POINTS,
+        entityId = "t1",
+        operation = OutboxOperation.UPSERT,
+        payload = """{"points":[]}""",
+        payloadSha256 = "b".repeat(64),
+        nextAttemptAt = 1_000L,
+        createdAt = 1_000L,
+    )
+
+    private fun syncConflict() = SyncConflict(
+        id = "c1",
+        entityType = OutboxEntityType.WAYPOINT,
+        entityId = "w1",
+        localPayload = """{"title":"mine"}""",
+        remotePayload = """{"title":"theirs"}""",
+        detectedAt = 1_000L,
     )
 }

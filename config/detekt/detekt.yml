@@ -8,6 +8,11 @@ complexity:
     # point. A long parameter list on a stateless composable is correct design.
     ignoreAnnotated: ['Composable']
     functionThreshold: 8
+    # A parameter with a default is not a burden on the caller — it is the Kotlin
+    # named-argument idiom, and it is why data classes are already exempt from this
+    # rule. Test fixture builders live or die on it: `point(seq = 3)` is the normal
+    # call, and the other nine knobs exist so one test in twenty can turn one.
+    ignoreDefaultParameters: true
   LongMethod:
     # Composable layout trees are long by nature; splitting them for a line count
     # produces worse code, not better.
@@ -20,6 +25,27 @@ complexity:
     # by design. Splitting `haversineDistance` away from `initialBearing` to satisfy a
     # count would scatter one coherent API across files.
     thresholdInObjects: 20
+    # A Room DAO is one table's query surface. Splitting TrackDao would put "read a
+    # track" and "write a track" in different files for no reason but a count, so
+    # interfaces get the same budget as classes rather than detekt's default 11.
+    thresholdInInterfaces: 20
+    # NOTE: naming `excludes` replaces detekt's defaults rather than adding to them, so
+    # the test-source globs below are the defaults restored by hand. Dropping them
+    # silently turned every phase 2 test class into a violation.
+    excludes:
+      - '**/test/**'
+      - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/jvmTest/**'
+      - '**/androidUnitTest/**'
+      - '**/androidInstrumentedTest/**'
+      - '**/jsTest/**'
+      - '**/iosTest/**'
+      # EnumConverters is 12 enums × one function each way. Room registers them all on
+      # the same @Database regardless, so splitting it into three converter classes
+      # would change nothing except how far you scroll to check a wire name. Same
+      # argument as thresholdInObjects above, applied to the one class it fits.
+      - '**/core/database/converter/EnumConverters.kt'
 
 exceptions:
   TooGenericExceptionCaught:

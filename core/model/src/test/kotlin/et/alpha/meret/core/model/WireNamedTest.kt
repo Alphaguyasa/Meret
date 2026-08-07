@@ -20,6 +20,9 @@ class WireNamedTest {
         assertRoundTrip(MeasurementMethod.entries)
         assertRoundTrip(AssignmentStatus.entries)
         assertRoundTrip(TilePackSource.entries)
+        assertRoundTrip(OutboxEntityType.entries)
+        assertRoundTrip(OutboxOperation.entries)
+        assertRoundTrip(ConflictResolution.entries)
     }
 
     @Test
@@ -50,6 +53,15 @@ class WireNamedTest {
             .inOrder()
         assertThat(TilePackSource.entries.map { it.wireName })
             .containsExactly("downloaded", "sideloaded")
+            .inOrder()
+        assertThat(OutboxEntityType.entries.map { it.wireName })
+            .containsExactly("track", "track_points", "waypoint", "photo", "measurement")
+            .inOrder()
+        assertThat(OutboxOperation.entries.map { it.wireName })
+            .containsExactly("upsert", "delete")
+            .inOrder()
+        assertThat(ConflictResolution.entries.map { it.wireName })
+            .containsExactly("local", "remote", "merged")
             .inOrder()
     }
 

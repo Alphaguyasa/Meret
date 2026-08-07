@@ -16,11 +16,14 @@ java {
 }
 
 // Only the plugins whose typed DSL we touch are on the compile classpath. Everything
-// else (KSP, Hilt, the Compose compiler) is applied by id — those markers reach the
+// else (Hilt, the Compose compiler) is applied by id — those markers reach the
 // subprojects through the `apply false` declarations in the root build script.
+// KSP is here because the Room plugin configures `KspExtension` directly to point the
+// schema exporter at a committed directory.
 dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
+    compileOnly(libs.ksp.gradlePlugin)
 }
 
 gradlePlugin {
@@ -52,6 +55,10 @@ gradlePlugin {
         register("hilt") {
             id = "meret.hilt"
             implementationClass = "HiltConventionPlugin"
+        }
+        register("room") {
+            id = "meret.room"
+            implementationClass = "RoomConventionPlugin"
         }
         register("explicitApi") {
             id = "meret.explicit.api"
