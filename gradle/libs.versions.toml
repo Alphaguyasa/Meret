@@ -20,6 +20,15 @@ composeBom = "2026.02.01"
 
 # Persistence
 room = "2.8.4"
+# 1.3.0 is alpha-only as of 2026-08. Preferences, not proto: TrackingConfig is a flat bag
+# of scalars, and proto-datastore would add a schema and a codegen step to store sixteen
+# numbers.
+datastore = "1.2.1"
+
+# Location
+# Play Services is a *fallback-optional* dependency: PlatformLocationEngine must work with
+# this artifact present but the services absent or stale. See LOCATION_ENGINE.md.
+playServicesLocation = "21.4.0"
 
 # DI
 hilt = "2.60.1"
@@ -61,6 +70,10 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }

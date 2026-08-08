@@ -11,4 +11,9 @@ android {
 dependencies {
     api(project(":core:model"))
     implementation(project(":core:common"))
+
+    api(libs.androidx.datastore.preferences)
+
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

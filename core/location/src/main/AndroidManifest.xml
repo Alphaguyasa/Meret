@@ -1,2 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Declared by the module whose code needs them, so any consumer inherits them through
+         manifest merge rather than having to remember. The service-related permissions
+         (FOREGROUND_SERVICE_LOCATION, POST_NOTIFICATIONS, WAKE_LOCK) belong with the
+         foreground service and are not declared here, because nothing in this module starts
+         one.
+
+         ACCESS_BACKGROUND_LOCATION is deliberately absent for the same reason: requesting it
+         is a separate, later step in the permission flow, and declaring it from a module that
+         only reads foreground fixes would put it on the manifest of an app that may never ask
+         for it. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+</manifest>
