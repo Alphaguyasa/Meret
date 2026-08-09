@@ -1,0 +1,26 @@
+# Line-ending policy.
+#
+# Deliberately narrow: only the files whose line endings actually change how
+# something behaves. There is no repo-wide `* text=auto eol=lf` here, because
+# gradle-wrapper.properties and app/proguard-rules.pro are stored with CRLF
+# today and a blanket rule would renormalise them for no benefit.
+
+# Runs under /bin/sh on the CI runner. A CRLF checkout — which is what a clone
+# with core.autocrlf=true produces — fails as "bad interpreter: /bin/sh^M".
+# Pin it so no one's local Git config can break the build.
+gradlew  text eol=lf
+*.sh     text eol=lf
+
+# Windows-only, and stored with CRLF. Keep it that way.
+gradlew.bat  text eol=crlf
+*.bat        text eol=crlf
+
+# Never apply text conversion to binaries.
+*.jar   binary
+*.webp  binary
+*.png   binary
+*.ttf   binary
+*.otf   binary
+*.pbf   binary
+*.keystore binary
+*.jks   binary
