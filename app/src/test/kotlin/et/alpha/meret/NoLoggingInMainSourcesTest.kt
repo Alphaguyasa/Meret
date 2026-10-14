@@ -15,24 +15,27 @@ import java.io.File
 class NoLoggingInMainSourcesTest {
     @Test
     fun `no main source writes to stdout, stderr, or Logcat`() {
-        val sources = repoRoot()
-            .walkTopDown()
-            .onEnter { it.name != "build" && !it.name.startsWith(".") }
-            .filter { it.isFile && it.extension == "kt" && it.isMainSource() }
-            .toList()
+        val sources =
+            repoRoot()
+                .walkTopDown()
+                .onEnter { it.name != "build" && !it.name.startsWith(".") }
+                .filter { it.isFile && it.extension == "kt" && it.isMainSource() }
+                .toList()
 
         // Guards against the walk silently finding nothing — a wrong root would pass.
         assertThat(sources.size).isGreaterThan(MIN_EXPECTED_SOURCES)
 
-        val violations = sources.flatMap { file ->
-            violationsIn(file.readText()).map { "${file.relativeTo(repoRoot())}:$it" }
-        }
+        val violations =
+            sources.flatMap { file ->
+                violationsIn(file.readText()).map { "${file.relativeTo(repoRoot())}:$it" }
+            }
         assertThat(violations).isEmpty()
     }
 
     @Test
     fun `the scanner catches each forbidden call`() {
-        val bad = """
+        val bad =
+            """
             fun leak(name: String, e: Exception) {
                 println(name)
                 print(name)
@@ -41,19 +44,20 @@ class NoLoggingInMainSourcesTest {
                 e.printStackTrace()
                 Log.d("tag", name)
             }
-        """.trimIndent()
+            """.trimIndent()
 
         assertThat(violationsIn(bad)).hasSize(6)
     }
 
     @Test
     fun `the scanner ignores comments and look-alike names`() {
-        val fine = """
+        val fine =
+            """
             // println("in a comment")
             /* e.printStackTrace() */
             * KDoc mentioning Log.d(
             fun blueprint(x: Int) = reprint(x) + catalog.size
-        """.trimIndent()
+            """.trimIndent()
 
         assertThat(violationsIn(fine)).isEmpty()
     }
@@ -76,13 +80,14 @@ class NoLoggingInMainSourcesTest {
     private companion object {
         const val MIN_EXPECTED_SOURCES = 50
 
-        val FORBIDDEN = listOf(
-            Regex("""\bprintln\("""),
-            Regex("""(?<![\w.])print\("""),
-            Regex("""\bSystem\.(out|err)\b"""),
-            Regex("""\.printStackTrace\("""),
-            Regex("""\bLog\.[vdiwe]\("""),
-            Regex("""\bLog\.wtf\("""),
-        )
+        val FORBIDDEN =
+            listOf(
+                Regex("""\bprintln\("""),
+                Regex("""(?<![\w.])print\("""),
+                Regex("""\bSystem\.(out|err)\b"""),
+                Regex("""\.printStackTrace\("""),
+                Regex("""\bLog\.[vdiwe]\("""),
+                Regex("""\bLog\.wtf\("""),
+            )
     }
 }
