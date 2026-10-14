@@ -19,24 +19,6 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 1. [P0 · S] Keep personal data out of backups and device transfer
-`android:allowBackup="false"` stops cloud backup, but on Android 12+ it does **not** stop
-device-to-device transfer, and `data_extraction_rules.xml` / `backup_rules.xml` are still
-the Android Studio templates. Survey records (people, health, farms) would be copied to
-whichever phone the device is "set up" onto.
-- Exclude every domain (`root`, `file`, `database`, `sharedpref`, `external`) from
-  `cloud-backup` and `device-transfer`, and from the legacy `full-backup-content`.
-- Test: a unit test that parses both XML files and fails if any domain is not excluded.
-- *Decision logged in NEEDS_APPROVAL.md (exclude D2D too).*
-
-### 2. [P0 · S] Guard against personal data in logs
-No code logs today, which is when a guard is cheapest. Add detekt `ForbiddenMethodCall`
-for `android.util.Log.*`, `println`, `print`, and `Throwable.printStackTrace` in main source
-sets. Diagnostics go through `Telemetry` (no-op by default), and its KDoc gets a "never put
-names, coordinates, or form answers in attributes" rule.
-- Test: detekt itself fails CI on a violation. Add one test-only fixture proving the rule
-  is active (run detekt on a known-bad snippet), or document why that is impractical.
-
 ### 3. [P1 · M] Phase 5a — Persist the active tracking session
 `TrackingSessionStore` in `:core:datastore`: active track id, current segment, paused flag,
 start time (wall clock plus elapsed-realtime). This is what lets a restarted service resume
@@ -130,4 +112,6 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 
 | Item | PR | Tag |
 |---|---|---|
-| Phase 0 setup: context files, CI rewrite, doc drift fixes | (setup PR) | |
+| Phase 0 setup: context files, CI rewrite, doc drift fixes | #1 | v2026-10-14-1 |
+| 1. Keep personal data out of backups and device transfer | #2 | v2026-10-14-2 |
+| 2. Guard against personal data in logs | #3 | v2026-10-14-3 |
