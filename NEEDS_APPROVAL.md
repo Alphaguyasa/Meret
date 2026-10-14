@@ -9,7 +9,7 @@ and the next run will pick it up. Resolved items move to "Resolved" with the ans
 
 ### A1. ACTION FOR ALPHA: set the daily task to "Automatically approve"
 The scheduled run has nobody to approve tool calls. Open the routine in the Claude app
-(Code → Routines → "Meret daily lead developer") and set permissions to **Automatically
+<https://claude.ai/code/routines/trig_019EFpcswGcoGFoKrWFfgczs> ("Meret daily lead developer", daily 07:30 Nairobi) and set permissions to **Automatically
 approve**. Until then each run will stall on its first approval prompt.
 
 ### A2. GitHub Actions minutes (no cost, but a hard cap)
@@ -30,7 +30,7 @@ the repo public (A2 b) would enable protection.
 
 ### A4. Model for the daily task
 The models page lists **Claude Fable 5.1** above Opus 5.5. Per the model policy the routine
-is set to Fable 5.1. It uses your plan's usage faster than Opus. If runs start hitting usage
+is set to Fable 5.1 (`claude-fable-5-1`). It uses your plan's usage faster than Opus. If runs start hitting usage
 limits, say "use opus" and the routine will be switched back. No purchase involved.
 
 ### A5. Device-to-device transfer of survey data (decided safe; confirm)
@@ -46,6 +46,16 @@ roughly 5–15% slower writes, and a one-time migration of existing plaintext da
 Key held in Android Keystore. Alternative: rely on Android's file-based encryption (on by
 default from Android 10; weaker on old phones). **Recommend: yes, after Phase 5.** Waiting
 for your go-ahead (ROADMAP item 14).
+
+### A7. GitHub access for the cloud runs
+The routine clones the repo through the Claude GitHub app. To open and merge PRs and push
+release tags it also needs write access (the Claude GitHub app installed on
+`Alphaguyasa/Meret` with read/write to contents and pull requests). If the first run
+reports it could not push or open a PR, install or widen the app at
+<https://claude.ai/code> → GitHub settings. The routine has **no** connectors attached
+(no Supabase, Gmail, Stripe, Vercel): the creation API attached all of them by default,
+and they were removed so an auto-approved run cannot reach payment, email, or production.
+Add one back only if a roadmap item needs it.
 
 ---
 
