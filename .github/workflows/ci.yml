@@ -3,17 +3,34 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
   pull_request:
+    # A PR that touches only Markdown (DAILY_LOG, ROADMAP, docs) builds nothing, so it
+    # spends no Actions minutes. CLAUDE.md's merge policy treats "no checks" on such a PR
+    # as passing. Anything else — code, Gradle, resources, this file — runs the full job.
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  android:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+
+    # Dummy values, so nothing in CI ever needs a real key. Nothing in the build or the
+    # unit tests talks to Supabase; the convention plugin reads these when
+    # local.properties is absent.
+    env:
+      SUPABASE_URL: https://example.invalid
+      SUPABASE_ANON_KEY: ci-dummy-anon-key
 
     steps:
       - uses: actions/checkout@v4
@@ -27,34 +44,48 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Supabase credentials come from local.properties, which is gitignored. On CI the
-      # convention plugin falls back to the environment, and empty values are fine —
-      # nothing in the build or the unit tests talks to Supabase.
-      - name: Static analysis
-        run: ./gradlew ktlintCheck detekt --no-daemon
+      # One Gradle invocation, not six. Each separate `./gradlew --no-daemon` call paid
+      # JVM start-up and configuration again; folded together the job runs in roughly
+      # half the time, which matters on a private repo with 2,000 free minutes a month.
+      #
+      # - ktlintCheck, detekt          style and static analysis
+      # - lint                         Android Lint on every module, including the
+      #                                MissingTranslation error that keeps values-am/ whole
+      # - testDebugUnitTest            Android-module unit tests (Robolectric included)
+      # - :core:*:test, :domain:test   the pure-JVM modules, which have no debug variant
+      # - koverVerify                  85% line coverage on :core:model and :core:common
+      # - assembleDebug                the APK uploaded below
+      # - assembleDebugAndroidTest     compiled, not run — no emulator on the runner. It
+      #                                holds the Room migration harness and the phase 3
+      #                                benchmarks, which would otherwise rot unseen.
+      - name: Check, test, build
+        run: >
+          ./gradlew --no-daemon --continue
+          ktlintCheck detekt lint
+          testDebugUnitTest :core:model:test :core:common:test :domain:test
+          koverVerify koverLog
+          assembleDebug assembleDebugAndroidTest
 
-      - name: Unit tests
-        run: ./gradlew test --no-daemon
+      # APK size is a performance budget for this app's users. Recording it on every run
+      # gives a before/after number for any change that adds a dependency.
+      - name: Report APK size
+        if: success()
+        run: |
+          apk=$(ls app/build/outputs/apk/debug/*.apk | head -n1)
+          bytes=$(stat -c %s "$apk")
+          echo "Debug APK: $(basename "$apk") — $((bytes / 1024)) KiB ($bytes bytes)"
+          echo "### Debug APK size: $((bytes / 1024)) KiB" >> "$GITHUB_STEP_SUMMARY"
 
-      # Runs only where a Kover rule is configured — currently :core:model and
-      # :core:common, at the 85% line-coverage bar BUILD_PLAN phase 2 sets.
-      - name: Coverage
-        run: ./gradlew koverVerify koverLog --no-daemon
-
-      - name: Assemble debug
-        run: ./gradlew assembleDebug --no-daemon
-
-      # Compiled, not run — the runner has no emulator. The instrumented suite holds the
-      # Room migration harness and the phase 3 timing benchmarks, and both are the kind of
-      # code that silently stops compiling for months if nothing ever builds it.
-      - name: Compile instrumented tests
-        run: ./gradlew assembleDebugAndroidTest --no-daemon
-
-      - name: Android Lint
-        run: ./gradlew :app:lintDebug --no-daemon
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: meret-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
 
       - name: Upload reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: reports
