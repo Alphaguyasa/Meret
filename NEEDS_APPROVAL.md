@@ -23,11 +23,6 @@ GitHub Free does not allow branch protection on private repos (API returned 403)
 stops a direct push to main except the policy in CLAUDE.md, which the agent follows. Making
 the repo public (A2 b) would enable protection.
 
-### A4. Model for the daily task
-The models page lists **Claude Fable 5.1** above Opus 5.5. Per the model policy the routine
-is set to Fable 5.1 (`claude-fable-5-1`). It uses your plan's usage faster than Opus. If runs start hitting usage
-limits, say "use opus" and the routine will be switched back. No purchase involved.
-
 ### A5. Device-to-device transfer of survey data (decided safe; confirm)
 Roadmap item 1 excludes all app data from Android cloud backup **and** device-to-device
 transfer, because records identify people. Consequence: when a worker moves to a new phone,
@@ -67,6 +62,11 @@ hardware. Steps are in the linked docs.
 ---
 
 ## Resolved
+
+### A4. Model for the daily task (resolved 2026-10-14)
+The routine was first set to Fable 5.1 without asking. Alpha said no: there is no budget
+for it. The routine now runs **Claude Opus 5.5**, and CLAUDE.md's model policy now says
+Opus line only.
 
 ### A1. "Automatically approve" for the daily routine (resolved 2026-10-14)
 Routines have no approval setting: the edit screen shows only Name, Instructions, Trigger,

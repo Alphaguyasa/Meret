@@ -321,9 +321,13 @@ the squash commit on main: `git tag v2026-10-14-1 <sha> && git push origin <tag>
   top of the report and in NEEDS_APPROVAL.md.
 - Switching models must never involve buying, upgrading, or changing a plan.
 
-*Repo-specific note:* the models page is
-<https://platform.claude.com/docs/en/models/overview>. As of 2026-10-14 the top tier is
-Claude Fable 5.1 (`claude-fable-5-1`), above Claude Opus 5.5 (`claude-opus-5-5`).
+*Alpha's decision, 2026-10-14 — overrides the "or any higher tier" clause above:* use the
+**Opus line only**, currently Claude Opus 5.5 (`claude-opus-5-5`). Do **not** switch to
+Fable or any tier above Opus: it uses Alpha's plan usage faster and Alpha has not budgeted
+for it. The model check still runs every day, but it only looks for a **newer Opus**
+(e.g. Opus 5.6 or Opus 6). If one exists, switch the routine to it and log it. If you cannot
+switch, put "ACTION FOR ALPHA" in the report. Models page:
+<https://platform.claude.com/docs/en/models/overview>.
 
 ### No purchases policy
 
