@@ -16,9 +16,10 @@ import javax.xml.parsers.DocumentBuilderFactory
 class BackupRulesTest {
     @Test
     fun `manifest disables backup`() {
-        val application = parse("src/main/AndroidManifest.xml")
-            .getElementsByTagName("application")
-            .item(0) as Element
+        val application =
+            parse("src/main/AndroidManifest.xml")
+                .getElementsByTagName("application")
+                .item(0) as Element
 
         assertThat(application.getAttribute("android:allowBackup")).isEqualTo("false")
         assertThat(application.getAttribute("android:dataExtractionRules"))
@@ -43,22 +44,26 @@ class BackupRulesTest {
     fun `legacy full backup excludes every domain`() {
         val root = parse("src/main/res/xml/backup_rules.xml").documentElement
 
-        assertThat(root.childElements("exclude").filter { it.isWholeDomain() }.map { it.domain })
-            .containsAtLeastElementsIn(ALL_DOMAINS)
+        val excluded = root.childElements("exclude").filter { it.isWholeDomain() }.map { it.domain }
+        assertThat(excluded).containsAtLeastElementsIn(ALL_DOMAINS)
         assertThat(root.childElements("include")).isEmpty()
     }
 
     private fun section(name: String): Element {
-        val sections = parse("src/main/res/xml/data_extraction_rules.xml")
-            .getElementsByTagName(name)
+        val sections =
+            parse("src/main/res/xml/data_extraction_rules.xml")
+                .getElementsByTagName(name)
         assertThat(sections.length).isEqualTo(1)
         return sections.item(0) as Element
     }
 
-    private fun excludedDomains(sectionName: String): List<String> =
-        section(sectionName).childElements("exclude").filter { it.isWholeDomain() }.map { it.domain }
+    private fun excludedDomains(sectionName: String): List<String> = section(sectionName)
+        .childElements("exclude")
+        .filter { it.isWholeDomain() }
+        .map { it.domain }
 
-    private fun includes(sectionName: String): List<Element> = section(sectionName).childElements("include")
+    private fun includes(sectionName: String): List<Element> =
+        section(sectionName).childElements("include")
 
     private fun parse(path: String) = DocumentBuilderFactory
         .newInstance()
