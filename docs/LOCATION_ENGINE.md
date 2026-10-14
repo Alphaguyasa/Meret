@@ -132,7 +132,7 @@ Applied in order to each raw fix. **Raw values are always persisted first.**
 
 Rejected fixes are stored with `is_outlier = 1`. They are evidence, not noise.
 
-**2. Kalman smoothing** — constant-velocity model, 2D.
+**2. Kalman smoothing** — a scalar position random walk, run independently on latitude and longitude. No velocity state, deliberately: an enumerator walks, stops, turns back, and a velocity model overshoots each of those into the measured area. See the KDoc on `KalmanLocationFilter`; `dt` comes from `elapsedRealtimeNanos`, not milliseconds.
 
 State: position + variance. Process noise `Q` in metres²/second, default 3.0 for walking.
 
