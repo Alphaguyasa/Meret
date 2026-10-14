@@ -7,11 +7,6 @@ and the next run will pick it up. Resolved items move to "Resolved" with the ans
 
 ## Open
 
-### A1. ACTION FOR ALPHA: set the daily task to "Automatically approve"
-The scheduled run has nobody to approve tool calls. Open the routine in the Claude app
-<https://claude.ai/code/routines/trig_019EFpcswGcoGFoKrWFfgczs> ("Meret daily lead developer", daily 07:30 Nairobi) and set permissions to **Automatically
-approve**. Until then each run will stall on its first approval prompt.
-
 ### A2. GitHub Actions minutes (no cost, but a hard cap)
 The repo is **private** on GitHub Free: 2,000 Actions minutes a month. One CI run is about
 10–17 minutes, and a day with 2 PRs uses roughly 4–5 runs. That fits, but only just.
@@ -73,4 +68,11 @@ hardware. Steps are in the linked docs.
 
 ## Resolved
 
-(none yet)
+### A1. "Automatically approve" for the daily routine (resolved 2026-10-14)
+Routines have no approval setting: the edit screen shows only Name, Instructions, Trigger,
+Connectors, Behaviour (just "Auto-fix pull requests") and Notifications. The routine's
+tools (Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch, PushNotification) are
+pre-allowed in its config. Keep **Auto-fix pull requests off**: it would push fixes outside
+the 2-attempt cap and outside DAILY_LOG. Keep **Connectors empty**. Turn **Notifications
+on**. If a run ever stalls on an approval prompt, the next run (or Alpha) reopens this item
+with the run log.
