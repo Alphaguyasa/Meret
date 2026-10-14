@@ -1,0 +1,10 @@
+# Copy to local.properties (gitignored) and fill in. Never commit the real file.
+#
+# Android SDK location. Android Studio writes this line for you.
+sdk.dir=/path/to/Android/Sdk
+
+# Supabase project (phase 9). Read only through BuildConfig in app/build.gradle.kts.
+# Leave empty until the backend exists — nothing in the app or the tests needs them yet.
+# CI uses dummy values from the workflow environment.
+SUPABASE_URL=
+SUPABASE_ANON_KEY=

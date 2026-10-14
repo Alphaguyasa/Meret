@@ -132,7 +132,7 @@ The service can therefore run with no UI alive at all, which is the normal case.
 
 ## Error handling
 
-`Result<T>` from `:core:common` with a sealed `AppError` hierarchy:
+`AppResult<T>` (not `Result<T>`, which collides with `kotlin.Result` — see its KDoc) from `:core:common` with a sealed `AppError` hierarchy:
 `AppError.Network`, `AppError.Storage`, `AppError.Permission`, `AppError.Gps`,
 `AppError.Conflict`, `AppError.Unexpected`. Map to user-facing strings at the UI layer
 only — never build a user message in the data layer.
