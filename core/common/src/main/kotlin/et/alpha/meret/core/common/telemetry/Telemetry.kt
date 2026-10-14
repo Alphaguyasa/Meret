@@ -8,6 +8,17 @@ package et.alpha.meret.core.common.telemetry
  * a configuration. Clients that want reporting bind their own implementation.
  *
  * Implementations must never throw and must never block the caller.
+ *
+ * ## No personal data, ever
+ *
+ * Records identify people and describe their health and farms. Callers must never put
+ * names, phone numbers, coordinates, form answers, photo paths, or free text a user typed
+ * into an event name, attribute, or exception message passed here. Counts, durations,
+ * states, enum names, and versions are fine. When a throwable may carry user data in its
+ * message, record its class name in an attribute instead of the throwable.
+ *
+ * This is also why the app has no logger: `android.util.Log` and friends are forbidden by
+ * detekt, and `println`/`printStackTrace` by `NoLoggingInMainSourcesTest`.
  */
 public interface Telemetry {
     /** A handled failure worth knowing about. Not shown to the user. */
