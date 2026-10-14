@@ -78,3 +78,20 @@ style:
   UnusedPrivateMember:
     # @Preview functions are entry points for the tooling, never called from code.
     ignoreAnnotated: ['Preview']
+  ForbiddenImport:
+    # Records identify people and describe their health and farms. Nothing reaches
+    # Logcat, which any app with READ_LOGS, any bug-report zip, and any OEM log uploader
+    # can read. Diagnostics go through Telemetry (no-op by default) or the diagnostics
+    # screen, never a logger. println/printStackTrace have no import to forbid; they are
+    # caught by NoLoggingInMainSourcesTest in :app instead.
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**']
+    imports:
+      - value: 'android.util.Log'
+        reason: 'No logging: records hold personal data. Use Telemetry, without personal data.'
+      - value: 'timber.log.*'
+        reason: 'No logging: records hold personal data. Use Telemetry, without personal data.'
+      - value: 'java.util.logging.*'
+        reason: 'No logging: records hold personal data. Use Telemetry, without personal data.'
+      - value: 'org.slf4j.*'
+        reason: 'No logging: records hold personal data. Use Telemetry, without personal data.'
