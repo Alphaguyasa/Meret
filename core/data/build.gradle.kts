@@ -16,5 +16,12 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:database"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:location"))
     implementation(project(":core:network"))
+
+    // TrackRecorder runs against a real in-memory Room database under Robolectric: the
+    // batching is only worth testing against the transaction it batches into.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.room.runtime)
 }
