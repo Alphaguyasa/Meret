@@ -47,6 +47,17 @@ reports it could not push or open a PR, install or widen the app at
 and they were removed so an auto-approved run cannot reach payment, email, or production.
 Add one back only if a roadmap item needs it.
 
+### A8. Release tags cannot be pushed from the cloud run
+`git push origin v2026-10-15-1` returns HTTP 403 from the session's git proxy (branch
+pushes work), and the GitHub tools available to the routine cannot create tags or
+releases. So PRs #7 and #8 merged **without** tags. Rollback still works from the squash
+commits on main (`98a3728` = item 3, `14d760f` = item 4). Options: (a) you create the
+tags from your PC: `git fetch && git tag v2026-10-15-1 98a3728 && git tag v2026-10-15-2
+14d760f && git push origin --tags`; (b) allow tag pushes for the routine, if the Claude
+GitHub app or environment settings allow it; (c) drop tags from the merge policy and use
+squash SHAs, which the log already records. **Recommend (c)**, plus (a) once for today. I
+will keep logging the SHAs either way.
+
 ---
 
 ## Needs a device
