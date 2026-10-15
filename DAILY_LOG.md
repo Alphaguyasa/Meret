@@ -17,6 +17,10 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 | Next | Item 5 (TrackingService) and item 6 (TrackingHealthMonitor). |
 
 Notes for the next run:
+- **Commit author rule (Alpha, after the report):** commits must show Alphaguyasa only.
+  Set the git identity and drop co-author lines; see CLAUDE.md, Workflow expectations.
+  The 4 commits already on main keep their "Co-authored-by: Claude" line, because
+  removing it would mean rewriting main, which the merge policy forbids.
 - **A8 resolved after the report:** Alpha dropped release tags. Record the squash SHA per
   merge instead (CLAUDE.md merge policy). Do not try to push tags.
 - Cloud runs have JDK 21 but no Android SDK and no access to `dl.google.com`, so Gradle
