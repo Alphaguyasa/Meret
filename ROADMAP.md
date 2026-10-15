@@ -19,23 +19,11 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 3. [P1 · M] Phase 5a — Persist the active tracking session
-`TrackingSessionStore` in `:core:datastore`: active track id, current segment, paused flag,
-start time (wall clock plus elapsed-realtime). This is what lets a restarted service resume
-the same track instead of starting a new one (CLAUDE.md invariant 7).
-- Tests: write, read back, clear; a new store instance on the same file sees the session
-  (process-death simulation); corrupt or missing values read as "no active session".
-
-### 4. [P1 · M] Phase 5b — TrackRecorder: fixes to Room in batches
-Consumes `LocationEngine.fixes` through a `Channel`, runs `FixPipeline` on
-`Dispatchers.Default`, writes `TrackPointDao.appendBatch` at 20 points or 10 s, and flushes
-immediately on pause and stop. Outliers are stored with `is_outlier = 1`, never dropped.
-- Tests (Robolectric, in-memory Room, `ReplayLocationEngine`): every replayed fix is in
-  Room after stop; outliers stored and flagged; the batch boundary never loses the tail;
-  the raw columns equal the fixture exactly.
-
 ### 5. [P1 · M] Phase 5c — TrackingService (foreground, type location)
-Service + manifest (`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`,
+Wire it to what items 3–4 built: `TrackingSessionStore` (resume pointer) and
+`TrackRecorder.start(scope, trackId, config, engine.fixes)` (stop the engine *before*
+`TrackRecording.stop()`). Needs Hilt bindings for `DispatcherProvider` and
+`UuidV7Generator`, which nothing provides yet. Service + manifest (`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`,
 `POST_NOTIFICATIONS`, `WAKE_LOCK`), `startForeground` on every path, `START_STICKY`
 resuming from `TrackingSessionStore`, partial wakelock held only while recording, live
 notification with Pause/Stop actions, keeps running in `onTaskRemoved`. Strings in `en` and
@@ -115,3 +103,5 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | Phase 0 setup: context files, CI rewrite, doc drift fixes | #1 | v2026-10-14-1 |
 | 1. Keep personal data out of backups and device transfer | #2 | v2026-10-14-2 |
 | 2. Guard against personal data in logs | #3 | v2026-10-14-3 |
+| 3. Persist the active tracking session (`TrackingSessionStore`) | #7 | none: tag push blocked, see A8 (squash `98a3728`) |
+| 4. TrackRecorder: fixes to Room in batches | #8 | none: tag push blocked, see A8 (squash `14d760f`) |
