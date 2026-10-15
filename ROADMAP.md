@@ -1,7 +1,7 @@
 # ROADMAP.md
 
 Prioritized backlog. The daily run takes the **top open item** first. Mark an item done by
-moving it to "Done" with its PR number and release tag. Replan (see CLAUDE.md, daily loop
+moving it to "Done" with its PR number and squash commit SHA. Replan (see CLAUDE.md, daily loop
 step 5) when fewer than 5 items are open.
 
 **Priority:** P0 = data safety / privacy / broken build · P1 = next phase of the core
@@ -98,10 +98,10 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 
 ## Done
 
-| Item | PR | Tag |
+| Item | PR | Tag / squash commit |
 |---|---|---|
 | Phase 0 setup: context files, CI rewrite, doc drift fixes | #1 | v2026-10-14-1 |
 | 1. Keep personal data out of backups and device transfer | #2 | v2026-10-14-2 |
 | 2. Guard against personal data in logs | #3 | v2026-10-14-3 |
-| 3. Persist the active tracking session (`TrackingSessionStore`) | #7 | none: tag push blocked, see A8 (squash `98a3728`) |
-| 4. TrackRecorder: fixes to Room in batches | #8 | none: tag push blocked, see A8 (squash `14d760f`) |
+| 3. Persist the active tracking session (`TrackingSessionStore`) | #7 | `98a3728` |
+| 4. TrackRecorder: fixes to Room in batches | #8 | `14d760f` |
