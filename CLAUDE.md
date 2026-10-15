@@ -286,8 +286,8 @@ failing. Small, safe, tested changes. (Alpha may raise this later.)
 
 - Never push directly to main. Always branch, PR, then merge.
 - Wait for every CI check to pass.
-- All checks pass: squash-merge the PR yourself, then tag the release
-  (v<YYYY-MM-DD>-<n>) so Alpha can roll back.
+- All checks pass: squash-merge the PR yourself, then record the squash commit SHA in
+  DAILY_LOG.md and ROADMAP.md so Alpha can roll back.
 - A check fails: fix it on the same branch (max 2 attempts). Still failing: do NOT merge.
   Leave the PR open and report why.
 - If branch protection blocks a merge, do not bypass it. Report it.
@@ -295,9 +295,13 @@ failing. Small, safe, tested changes. (Alpha may raise this later.)
 - Split risky or large changes into smaller PRs.
 
 *Repo-specific notes:* branches are named `claude/<short-slug>`. A PR that touches only
-Markdown runs no CI; "no checks reported" on such a PR counts as passing. The tag goes on
-the squash commit on main: `git tag v2026-10-14-1 <sha> && git push origin <tag>`, with
-`<n>` counting up per day.
+Markdown runs no CI; "no checks reported" on such a PR counts as passing.
+
+*Alpha's decision, 2026-10-15 — replaces "tag the release":* no release tags. The cloud
+routine's git proxy refuses tag pushes (HTTP 403) and the GitHub tools cannot create tags,
+so every merge records its short squash SHA instead. Roll back with
+`git revert <sha>` on a branch and a PR, never by rewriting main. Tags from run 1
+(`v2026-10-14-1` to `-3`) stay as they are.
 
 ### Deploy and database policy
 
@@ -356,7 +360,7 @@ switch, put "ACTION FOR ALPHA" in the report. Models page:
 | Field | Content |
 |---|---|
 | Done | Items completed, with PR links |
-| Merged | Yes/No per PR, and release tag |
+| Merged | Yes/No per PR, and squash commit SHA |
 | Failed or blocked | What and why |
 | Roadmap | Items left, and whether a replan happened |
 | Model | Model used; any "ACTION FOR ALPHA" |
