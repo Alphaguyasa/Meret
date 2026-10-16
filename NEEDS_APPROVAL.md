@@ -47,6 +47,13 @@ reports it could not push or open a PR, install or widen the app at
 and they were removed so an auto-approved run cannot reach payment, email, or production.
 Add one back only if a roadmap item needs it.
 
+### A9. Native review of new Amharic strings (no cost, low priority)
+Run 3 added nine tracking-notification strings in `feature/tracking/src/main/res/values-am/`
+(for example "መስመር እየተቀዳ ነው" for "Recording track", "ለጊዜው አቁም" for "Pause"). They were
+written without a native speaker. The same run found that three older Amharic files had
+been garbled (mojibake) and fixed them. If someone who reads Amharic can check those
+screens, that would help. Nothing is blocked waiting on this.
+
 ---
 
 ## Needs a device
@@ -57,7 +64,8 @@ hardware. Steps are in the linked docs.
 | Phase | Criterion | How |
 |---|---|---|
 | 3 | 100k-point insert ratio and 20k-point read bar | `./gradlew :core:database:connectedDebugAndroidTest` on the S9+ (passed on 2026-08-07 per BUILD_PLAN; re-run after DB changes) |
-| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Once roadmap items 3–10 land |
+| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Once roadmap items 3–10 land (3–6 done, 7–10 left) |
+| 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
 
 ---
 

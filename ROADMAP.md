@@ -19,23 +19,6 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 5. [P1 · M] Phase 5c — TrackingService (foreground, type location)
-Wire it to what items 3–4 built: `TrackingSessionStore` (resume pointer) and
-`TrackRecorder.start(scope, trackId, config, engine.fixes)` (stop the engine *before*
-`TrackRecording.stop()`). Needs Hilt bindings for `DispatcherProvider` and
-`UuidV7Generator`, which nothing provides yet. Service + manifest (`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`,
-`POST_NOTIFICATIONS`, `WAKE_LOCK`), `startForeground` on every path, `START_STICKY`
-resuming from `TrackingSessionStore`, partial wakelock held only while recording, live
-notification with Pause/Stop actions, keeps running in `onTaskRemoved`. Strings in `en` and
-`am`.
-- Tests (Robolectric): start → foreground with a notification; stop → wakelock released and
-  session cleared; restart with a persisted session → resumes the same track id.
-
-### 6. [P1 · S] Phase 5d — TrackingHealthMonitor
-Pure logic: expected vs actual fixes per 10-minute window, and a `tracking_gap` event when
-a gap exceeds 3× the sampling interval while recording (not while paused).
-- Tests with synthetic timelines: no gap, one gap, gap during pause ignored.
-
 ### 7. [P1 · S] Phase 5e — DeviceCompat OEM guidance
 `oemGuidanceFor(manufacturer)` for Tecno/Infinix/Itel, Xiaomi, Oppo, Vivo, Huawei,
 Samsung, OnePlus, and a generic fallback. Deep-link launch wrapped in try/catch with a
@@ -50,7 +33,9 @@ Staged: fine location → notifications (13+) → background location (with rati
 - Tests: the state machine that picks the next step, as a pure unit test per API level.
 
 ### 9. [P1 · M] Phase 5g — Diagnostics screen
-Everything in `LOCATION_ENGINE.md` §Diagnostics, plus "copy report". The report must hold
+Everything in `LOCATION_ENGINE.md` §Diagnostics, plus "copy report". Wire
+`TrackingHealthMonitor` (item 6, `:core:common`) into `TrackingService`: feed it state
+changes and fixes, poll `check()`, and show `windowHealth()` here. The report must hold
 no personal data: no coordinates, no names, no form answers. Counts, states, and versions
 only.
 - Tests: report builder output for a fixture state, and a test asserting no lat/lon appears.
@@ -105,3 +90,7 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 2. Guard against personal data in logs | #3 | v2026-10-14-3 |
 | 3. Persist the active tracking session (`TrackingSessionStore`) | #7 | `98a3728` |
 | 4. TrackRecorder: fixes to Room in batches | #8 | `14d760f` |
+| 5a. TrackingController: one owner for a recording | #12 | `cd17fe0` |
+| Fix: double-encoded Amharic strings in 3 feature modules (found during item 5) | #13 | `13c9546` |
+| 6. TrackingHealthMonitor: fix-gap detection | #15 | `9db0ff8` |
+| 5b. TrackingService, foreground type location | #14 | `19bf20a` |
