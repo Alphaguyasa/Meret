@@ -4,7 +4,13 @@
     <!-- Declared here, beside the service that needs them (LOCATION_ENGINE.md §Permissions).
          ACCESS_BACKGROUND_LOCATION is not: a foreground service of type "location" started
          from a user action does not need it, and asking for it is a later, separate step of
-         the permission flow (roadmap item 8). -->
+         the permission flow (roadmap item 8).
+
+         The location permissions duplicate :core:location's. Lint checks each module's own
+         manifest, and an FGS of type "location" must name one of them alongside
+         FOREGROUND_SERVICE_LOCATION (ForegroundServicePermission). Manifest merge dedupes. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
