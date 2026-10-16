@@ -4,6 +4,37 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-16 — Run 3 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | Item 5, split into two PRs: `TrackingController` keeps the engine, recorder, persisted session and track status in step ([#12](https://github.com/Alphaguyasa/Meret/pull/12)). `TrackingService` adds the foreground service (type location), sticky restore, wakelock, live notification and en/am strings ([#14](https://github.com/Alphaguyasa/Meret/pull/14)). Item 6: `TrackingHealthMonitor` detects fix gaps ([#15](https://github.com/Alphaguyasa/Meret/pull/15)). **Bug found and fixed:** Amharic strings in `feature/tracking`, `feature/waypoint` and `feature/tiles` were mojibake (garbled text). They are restored, and a new test stops it from happening again ([#13](https://github.com/Alphaguyasa/Meret/pull/13)). |
+| Merged | #12 yes, `cd17fe0` · #13 yes, `13c9546` · #15 yes, `9db0ff8` · #14 yes, `19bf20a` (first CI attempt failed lint `ForegroundServicePermission`; fixed on the branch, second attempt passed). |
+| Failed or blocked | Nothing open. There is still no Android SDK in the container (`dl.google.com` is blocked). |
+| Roadmap | 9 open items (7–15). No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Checked the models page: no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7 unchanged. **A9 new:** a native speaker should review the new Amharic tracking strings (no cost). |
+| Next | Item 7 (DeviceCompat OEM guidance) and item 8 (permission onboarding flow). |
+
+Notes for the next run:
+- **Tooling that works in the cloud container:** the ktlint binary from
+  `github.com/pinterest/ktlint/releases/download/1.8.0/ktlint`, the detekt CLI jar from
+  `github.com/detekt/detekt/releases/download/v1.23.8/detekt-cli-1.23.8-all.jar`, and
+  `kotlinc` from `github.com/JetBrains/kotlin/releases/download/v2.2.10/kotlin-compiler-2.2.10.zip`.
+  With these you can compile pure-Kotlin files (`:core:model`, and `:core:common` except
+  `DispatcherProvider`, which needs coroutines) and run a scratch harness. Maven Central
+  returned 404/429, so the JUnit and Truth jars could not be downloaded.
+- **Module lint reads only the module's own manifest.** A service with type `location`
+  needs FINE/COARSE declared in that module's manifest too (cost one CI cycle on #14).
+- Recording has one entry point: `TrackingService.start(context, trackId)`, called from a
+  user action. The track row must already exist. Nothing creates one yet; the record
+  button (Phase 7) will. The service gets its controller from `TrackingServiceHost`
+  (implemented by `MeretApplication`), not from Hilt injection, so Robolectric tests use
+  a fake controller.
+- `TrackingHealthMonitor` is not wired to anything yet. That is now part of item 9.
+- Debug APK size was not captured this run (the step summary is not in the job log tail).
+  The uploaded artifact zip after #14 is 12,953 KiB.
+
 ## 2026-10-15 — Run 2 (scheduled, cloud)
 
 | Field | Content |
