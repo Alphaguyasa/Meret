@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="tracks_empty_title">áŠ¥áˆµáŠ«áˆáŠ• áˆáŠ•áˆ áˆ˜áˆµáˆ˜áˆ­ á‹¨áˆˆáˆ</string>
-    <string name="tracks_empty_body">á‹¨áˆšáˆ„á‹±á‰ á‰µáŠ• áˆ˜áŠ•áŒˆá‹µ áˆ˜áˆ˜á‹áŒˆá‰¥ áˆˆáˆ˜áŒ€áˆ˜áˆ­ á‰ áŠ«áˆ­á‰³á‹ áˆ‹á‹­ áˆ˜á‰…á‹³á‰µ á‹­áŒ«áŠ‘á¢ áˆ˜áˆµáˆ˜áˆ®á‰½ áˆ˜áŒ€áˆ˜áˆªá‹« á‰ á‹šáˆ… áˆ˜áˆ£áˆªá‹« áˆ‹á‹­ á‹­á‰€áˆ˜áŒ£áˆ‰á¢</string>
+    <string name="tracks_empty_title">እስካሁን ምንም መስመር የለም</string>
+    <string name="tracks_empty_body">የሚሄዱበትን መንገድ መመዝገብ ለመጀመር በካርታው ላይ መቅዳት ይጫኑ። መስመሮች መጀመሪያ በዚህ መሣሪያ ላይ ይቀመጣሉ።</string>
 </resources>
