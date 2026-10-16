@@ -56,8 +56,10 @@ Manifest:
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+<!-- Declared in :feature:tracking's manifest, so the class is
+     et.alpha.meret.feature.tracking.service.TrackingService. -->
 <service
-    android:name=".tracking.TrackingService"
+    android:name=".service.TrackingService"
     android:foregroundServiceType="location"
     android:exported="false" />
 ```
