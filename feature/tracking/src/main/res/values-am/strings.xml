@@ -2,4 +2,13 @@
 <resources>
     <string name="tracks_empty_title">እስካሁን ምንም መስመር የለም</string>
     <string name="tracks_empty_body">የሚሄዱበትን መንገድ መመዝገብ ለመጀመር በካርታው ላይ መቅዳት ይጫኑ። መስመሮች መጀመሪያ በዚህ መሣሪያ ላይ ይቀመጣሉ።</string>
+    <string name="tracking_channel_name">መስመር መቅዳት</string>
+    <string name="tracking_channel_description">መስመር እየተቀዳ እያለ ርቀቱን እና የማቆሚያ ቁልፎችን ያሳያል።</string>
+    <string name="tracking_notification_starting">ጂፒኤስ በመጀመር ላይ…</string>
+    <string name="tracking_notification_recording">መስመር እየተቀዳ ነው</string>
+    <string name="tracking_notification_paused">መቅዳት ለጊዜው ቆሟል</string>
+    <string name="tracking_notification_stats">%1$.2f ኪ.ሜ · ነጥቦች፦ %2$d</string>
+    <string name="tracking_action_pause">ለጊዜው አቁም</string>
+    <string name="tracking_action_resume">ቀጥል</string>
+    <string name="tracking_action_stop">አቁም</string>
 </resources>
