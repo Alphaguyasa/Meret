@@ -69,6 +69,21 @@ public interface TrackDao {
         updatedAt: Long,
     )
 
+    /** Ends a recording: the final [status] and the wall-clock time it ended. */
+    @Query(
+        """
+        UPDATE track
+        SET status = :status, ended_at = :endedAt, updated_at = :updatedAt
+        WHERE id = :trackId
+        """,
+    )
+    public suspend fun endTrack(
+        trackId: String,
+        status: TrackStatus,
+        endedAt: Long,
+        updatedAt: Long,
+    )
+
     @Query("UPDATE track SET sync_state = :syncState WHERE id = :trackId")
     public suspend fun updateSyncState(
         trackId: String,
