@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- OEM battery-manager guidance (DeviceCompat). Menu names stay in English because the
+         phone's own settings may be in English even when the app is in Amharic. -->
+    <string name="oem_deeplink_instructions">On the next screen, find Meret and turn on autostart or allow it to run in the background. Without this, the phone may stop recording your track when the screen is off.</string>
+    <string name="oem_step_lock_recents">Open the recent apps screen, then lock the Meret card: pull it down or long-press it and tap the lock icon.</string>
+    <string name="oem_step_transsion_autostart">Open the Phone Master app, go to \"App management\" then \"Auto-start\", and turn Meret on.</string>
+    <string name="oem_step_transsion_battery">Open Settings, then \"Apps\", \"Meret\", \"Battery\", and choose \"No restrictions\" (or turn off \"Power saving\" for Meret).</string>
+    <string name="oem_step_xiaomi_autostart">Open Settings, then \"Apps\", \"Manage apps\", \"Meret\", and turn on \"Autostart\".</string>
+    <string name="oem_step_xiaomi_battery">On the same Meret page, open \"Battery saver\" and choose \"No restrictions\".</string>
+    <string name="oem_step_oppo_background">Open Settings, then \"Battery\" (or \"Apps\", \"Meret\", \"Battery usage\"), and allow Meret to run in the background and to auto-launch.</string>
+    <string name="oem_step_vivo_autostart">Open the i Manager app, go to \"App manager\" then \"Autostart manager\", and turn Meret on.</string>
+    <string name="oem_step_vivo_battery">Open Settings, then \"Battery\", \"Background power consumption management\", and set Meret to \"Allow\".</string>
+    <string name="oem_step_huawei_app_launch">Open Settings, then \"Battery\", \"App launch\". Find Meret, turn off \"Manage automatically\", and turn on \"Auto-launch\", \"Secondary launch\" and \"Run in background\".</string>
+    <string name="oem_step_samsung_never_sleeping">Open Settings, then \"Battery\" (or \"Device care\", \"Battery\"), \"Background usage limits\", \"Never sleeping apps\", and add Meret.</string>
+    <string name="oem_step_oneplus_battery">Open Settings, then \"Battery\", \"Battery optimisation\", find Meret, and choose \"Don\'t optimise\".</string>
+    <string name="oem_step_generic_battery">Open Settings, then \"Apps\", \"Meret\", \"Battery\", and choose \"Unrestricted\" or \"Don\'t optimise\".</string>
+</resources>

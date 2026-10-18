@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="oem_deeplink_instructions">በሚቀጥለው ገጽ ላይ Meretን ፈልገው «autostart»ን ያብሩ ወይም ከበስተጀርባ እንዲሠራ ይፍቀዱ። ይህ ካልተደረገ ስክሪኑ ሲጠፋ ስልኩ መስመርዎን መቅዳት ሊያቆም ይችላል።</string>
+    <string name="oem_step_lock_recents">የቅርብ ጊዜ መተግበሪያዎችን ገጽ ይክፈቱ፣ ከዚያ የMeret ካርድን ይቆልፉ፦ ወደ ታች ይጎትቱት ወይም ተጭነው ይያዙትና የመቆለፊያ ምልክቱን ይጫኑ።</string>
+    <string name="oem_step_transsion_autostart">«Phone Master» መተግበሪያን ይክፈቱ፣ ወደ «App management» ከዚያ «Auto-start» ይሂዱ፣ እና Meretን ያብሩ።</string>
+    <string name="oem_step_transsion_battery">«Settings»ን ይክፈቱ፣ ከዚያ «Apps»፣ «Meret»፣ «Battery»፣ እና «No restrictions»ን ይምረጡ (ወይም ለMeret «Power saving»ን ያጥፉ)።</string>
+    <string name="oem_step_xiaomi_autostart">«Settings»ን ይክፈቱ፣ ከዚያ «Apps»፣ «Manage apps»፣ «Meret»፣ እና «Autostart»ን ያብሩ።</string>
+    <string name="oem_step_xiaomi_battery">በዚያው የMeret ገጽ ላይ «Battery saver»ን ይክፈቱና «No restrictions»ን ይምረጡ።</string>
+    <string name="oem_step_oppo_background">«Settings»ን ይክፈቱ፣ ከዚያ «Battery» (ወይም «Apps»፣ «Meret»፣ «Battery usage»)፣ እና Meret ከበስተጀርባ እንዲሠራና በራሱ እንዲጀምር ይፍቀዱ።</string>
+    <string name="oem_step_vivo_autostart">«i Manager» መተግበሪያን ይክፈቱ፣ ወደ «App manager» ከዚያ «Autostart manager» ይሂዱ፣ እና Meretን ያብሩ።</string>
+    <string name="oem_step_vivo_battery">«Settings»ን ይክፈቱ፣ ከዚያ «Battery»፣ «Background power consumption management»፣ እና Meretን «Allow» ያድርጉ።</string>
+    <string name="oem_step_huawei_app_launch">«Settings»ን ይክፈቱ፣ ከዚያ «Battery»፣ «App launch»። Meretን ፈልገው «Manage automatically»ን ያጥፉ፣ እና «Auto-launch»፣ «Secondary launch» እና «Run in background»ን ያብሩ።</string>
+    <string name="oem_step_samsung_never_sleeping">«Settings»ን ይክፈቱ፣ ከዚያ «Battery» (ወይም «Device care»፣ «Battery»)፣ «Background usage limits»፣ «Never sleeping apps»፣ እና Meretን ያክሉ።</string>
+    <string name="oem_step_oneplus_battery">«Settings»ን ይክፈቱ፣ ከዚያ «Battery»፣ «Battery optimisation»፣ Meretን ፈልገው «Don\'t optimise»ን ይምረጡ።</string>
+    <string name="oem_step_generic_battery">«Settings»ን ይክፈቱ፣ ከዚያ «Apps»፣ «Meret»፣ «Battery»፣ እና «Unrestricted» ወይም «Don\'t optimise»ን ይምረጡ።</string>
+</resources>

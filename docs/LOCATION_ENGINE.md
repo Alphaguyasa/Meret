@@ -199,13 +199,23 @@ Build a `DeviceCompat` helper:
 
 ```kotlin
 sealed interface OemGuidance {
-    data class DeepLink(val intent: Intent, val instructions: Int) : OemGuidance
+    data class DeepLink(
+        val targets: List<SettingsTarget>,   // tried in order
+        val instructions: Int,
+        val fallback: ManualSteps,
+    ) : OemGuidance
     data class ManualSteps(val steps: List<Int>) : OemGuidance
     data object NotRequired : OemGuidance
 }
 
-fun oemGuidanceFor(manufacturer: String): OemGuidance
+fun oemGuidanceFor(manufacturer: String, brand: String = ""): OemGuidance
 ```
+
+*(Changed from `DeepLink(intent, instructions)`: one family has several historical names
+for the same screen, so a deep link is a list of package/class targets tried in order, with
+its own manual fallback. Plain strings also keep the table testable on the JVM.
+`DeviceCompat.open()` builds the `Intent`s. Implemented in
+`core/location/.../compat/`.)*
 
 Cover Transsion (Tecno/Infinix/Itel), Xiaomi, Oppo, Vivo, Huawei, Samsung, OnePlus, and a
 generic fallback. Always wrap the deep-link `startActivity` in a try/catch — these
