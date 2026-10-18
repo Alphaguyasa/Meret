@@ -19,18 +19,15 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 7. [P1 · S] Phase 5e — DeviceCompat OEM guidance
-`oemGuidanceFor(manufacturer)` for Tecno/Infinix/Itel, Xiaomi, Oppo, Vivo, Huawei,
-Samsung, OnePlus, and a generic fallback. Deep-link launch wrapped in try/catch with a
-`ManualSteps` fallback. Step text in `en` and `am`.
-- Tests: manufacturer string matching (case, whitespace, sub-brands); a missing activity
-  falls back to manual steps.
-
-### 8. [P1 · M] Phase 5f — Permission onboarding flow
-Staged: fine location → notifications (13+) → background location (with rationale screen)
-→ battery optimisation → OEM autostart. Handles the coarse-only grant on 12+.
-`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` added to the manifest here.
-- Tests: the state machine that picks the next step, as a pure unit test per API level.
+### 8b. [P1 · M] Phase 5f, part 2 — Permission onboarding screens
+Compose screens driven by `OnboardingStepPicker` (`:domain`, done in 8a): one screen per
+`OnboardingStep`, a rationale screen before background location, the precise-location
+explanation for the coarse-only grant on 12+, and the OEM screen using `DeviceCompat`
+(`:core:location`, item 7). Skipped steps persisted in DataStore. Manifest entries go with
+the code that requests them: `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` and
+`ACCESS_BACKGROUND_LOCATION`. Read a fresh `PermissionSnapshot` on every resume.
+- Tests: the snapshot reader against Robolectric's shadow permissions; the ViewModel's
+  state for each step; en and am strings complete.
 
 ### 9. [P1 · M] Phase 5g — Diagnostics screen
 Everything in `LOCATION_ENGINE.md` §Diagnostics, plus "copy report". Wire
@@ -94,3 +91,5 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | Fix: double-encoded Amharic strings in 3 feature modules (found during item 5) | #13 | `13c9546` |
 | 6. TrackingHealthMonitor: fix-gap detection | #15 | `9db0ff8` |
 | 5b. TrackingService, foreground type location | #14 | `19bf20a` |
+| 7. DeviceCompat OEM guidance | #17 | `d784d20` |
+| 8a. OnboardingStepPicker: permission flow order per API level | #18 | `704dbe8` |

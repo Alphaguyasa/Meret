@@ -53,6 +53,10 @@ Run 3 added nine tracking-notification strings in `feature/tracking/src/main/res
 written without a native speaker. The same run found that three older Amharic files had
 been garbled (mojibake) and fixed them. If someone who reads Amharic can check those
 screens, that would help. Nothing is blocked waiting on this.
+**Run 4 added 13 more** in `core/location/src/main/res/values-am/strings.xml`: the
+step-by-step battery and autostart instructions for each phone brand. Phone menu names
+(«Settings», «Auto-start») stay in English inside the Amharic sentence, because the phone's
+own menus may be in English. Please check that this reads naturally.
 
 ---
 
@@ -64,7 +68,8 @@ hardware. Steps are in the linked docs.
 | Phase | Criterion | How |
 |---|---|---|
 | 3 | 100k-point insert ratio and 20k-point read bar | `./gradlew :core:database:connectedDebugAndroidTest` on the S9+ (passed on 2026-08-07 per BUILD_PLAN; re-run after DB changes) |
-| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Once roadmap items 3–10 land (3–6 done, 7–10 left) |
+| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Once roadmap items 3–10 land (3–7 and 8a done; 8b, 9, 10 left) |
+| 5 | The OEM autostart deep links open the right screen (Tecno/Infinix/Itel Phone Master, Xiaomi Security). If none opens, the manual steps appear instead | After item 8b gives them a button; adb `am start -n <package>/<class>` works today |
 | 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
 
 ---
