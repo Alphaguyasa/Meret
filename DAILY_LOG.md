@@ -4,6 +4,34 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-18 — Run 4 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | Item 7: `DeviceCompat` OEM guidance. It covers Tecno/Infinix/Itel, Xiaomi (incl. Redmi/POCO), Oppo/realme, Vivo/iQOO, Huawei/Honor, Samsung and OnePlus. Each brand gets autostart deep links tried in order, with manual steps in en and am if none opens ([#17](https://github.com/Alphaguyasa/Meret/pull/17)). Item 8 was split. 8a, the `OnboardingStepPicker` state machine for the permission flow, is done and tested on API 26–36 ([#18](https://github.com/Alphaguyasa/Meret/pull/18)). 8b, the screens, is now the top roadmap item. |
+| Merged | #17 yes, `d784d20` · #18 yes, `704dbe8`. Both passed CI on the first attempt (about 2.5 min each). |
+| Failed or blocked | Nothing. |
+| Roadmap | 8 open items (8b, 9–15). No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Checked the models page: no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7 unchanged. A9 extended: 13 new Amharic OEM-step strings to review. New "Needs a device" row: the OEM deep links on real Tecno/Xiaomi firmware. |
+| Next | Item 8b (onboarding screens), then item 9 (diagnostics screen). |
+
+Notes for the next run:
+- **Maven Central worked this run.** JUnit 4.13.2, hamcrest-core 1.3, Truth 1.4.4 and Guava
+  33.3.1 downloaded from `repo1.maven.org`. With `kotlinc` you can now **run** pure-Kotlin
+  unit tests locally. Compile main with `-Xexplicit-api=strict` and the tests in a second
+  pass without it, then run `org.junit.runner.JUnitCore`. For code that uses `R`, a stub
+  `object R { object string { const val x = 1 } }` works.
+- Standalone ktlint 1.8.0 flags `build-logic/.../KotlinAndroid.kt:79` (multiline-expression-wrapping)
+  on main. CI's ktlint task does not cover `build-logic`, so it is not a CI failure. Left alone.
+- `DeviceCompat.create(context)` is the production entry point. Call `open(link)` from a button
+  only. `oemGuidanceFor(OemFamily)` is public, so 8b can show any brand's steps in a preview.
+- `OnboardingStepPicker.next(snapshot, skipped)`: 8b must build `PermissionSnapshot` fresh on
+  every resume. Add `OEM_AUTOSTART` to `skipped` once the worker returns from the OEM screen:
+  no API reports whether autostart is on.
+- Debug APK after #17: **13,224 KiB** (+271 KiB since #14's 12,953 KiB artifact zip; that
+  figure was the zip, so the two are not directly comparable).
+
 ## 2026-10-16 — Run 3 (scheduled, cloud)
 
 | Field | Content |
