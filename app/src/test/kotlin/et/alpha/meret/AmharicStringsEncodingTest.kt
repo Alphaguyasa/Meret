@@ -68,7 +68,7 @@ class AmharicStringsEncodingTest {
 
     private companion object {
         /** app, core/designsystem, feature/map, feature/tracking, feature/waypoint, feature/tiles. */
-        const val MIN_EXPECTED_FILES = 6
+        const val MIN_EXPECTED_FILES = 7
 
         val ETHIOPIC = Regex("[\\u1200-\\u137F]")
 
