@@ -1,2 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Declared beside the onboarding screen that requests them (LOCATION_ENGINE.md
+         §Permissions). Location and notifications duplicate :core:location's and
+         :feature:tracking's; lint checks each module's own manifest, and manifest merge
+         dedupes.
+
+         ACCESS_BACKGROUND_LOCATION is asked for last of the location steps, after a rationale
+         screen, and only once foreground location is granted. REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+         is what lets the app open the system "stop optimising" dialog directly. Play
+         restricts it, but the app ships by APK to NGO deployments, and on Transsion and
+         Xiaomi phones a tracking app without it loses its tracks. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+</manifest>

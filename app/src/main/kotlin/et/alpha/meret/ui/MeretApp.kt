@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -13,7 +14,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +34,7 @@ import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
 import et.alpha.meret.feature.map.MapScreen
 import et.alpha.meret.feature.map.MapUiState
+import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
 import et.alpha.meret.feature.tiles.TilePackScreen
 import et.alpha.meret.feature.tracking.TrackListScreen
 import et.alpha.meret.feature.waypoint.WaypointListScreen
@@ -48,6 +53,27 @@ import et.alpha.meret.navigation.WAYPOINTS_ROUTE
  */
 @Composable
 fun MeretApp(
+    modifier: Modifier = Modifier,
+    requireOnboarding: Boolean = true,
+) {
+    // Checked once per process. The permission screens come before the map because
+    // without location there is nothing the map can do; every other step can be skipped.
+    // Saveable, so a rotation does not re-run it, while a new process (where the worker may
+    // have revoked something in Settings) does.
+    var onboarded by rememberSaveable { mutableStateOf(!requireOnboarding) }
+
+    if (onboarded) {
+        MeretShell(modifier)
+    } else {
+        OnboardingRoute(
+            onFinished = { onboarded = true },
+            modifier = modifier.safeDrawingPadding(),
+        )
+    }
+}
+
+@Composable
+private fun MeretShell(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -163,5 +189,5 @@ private fun NavHostController.navigateToTopLevel(destination: TopLevelDestinatio
 @Preview(showBackground = true, widthDp = 390, heightDp = 800)
 @Composable
 private fun MeretAppPreview() {
-    MeretTheme { MeretApp() }
+    MeretTheme { MeretApp(requireOnboarding = false) }
 }
