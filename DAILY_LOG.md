@@ -4,6 +4,34 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-19 — Run 5 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | Item 8b, split into two PRs. Part 1 adds the onboarding state: `OnboardingStore` saves skipped steps in DataStore, `AndroidPermissionSnapshotSource` reads the permissions fresh on every call, and `OnboardingViewModel` drives the step picker ([#20](https://github.com/Alphaguyasa/Meret/pull/20)). Part 2 adds the screens: one per step in en and am, a rationale before background location, a settings route for a denied or approximate-only location, the battery-optimisation dialog, and the OEM deep link or manual steps. `MeretApp` shows the flow before the map ([#21](https://github.com/Alphaguyasa/Meret/pull/21)). Phase 5f is done. |
+| Merged | #20 yes, `1574771` · #21 yes, `026a710`. Both passed CI on the first attempt (about 2.5 min each). |
+| Failed or blocked | Nothing. |
+| Roadmap | 7 open items (9–15). No replan needed (the threshold is fewer than 5). |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Checked the models page: no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7 unchanged. A9 extended: 21 new Amharic onboarding strings, plus a question about which app name the Amharic text should use («መሬት» or "Meret"). New "Needs a device" row: the onboarding flow on Android 8, 10, 11+ and 13+. |
+| Next | Item 9 (diagnostics screen, wiring `TrackingHealthMonitor` into `TrackingService`), then item 10 (boot receiver). |
+
+Notes for the next run:
+- **ViewModel tests outside Android work.** Compile against stubs (`androidx.lifecycle.ViewModel`
+  with a `viewModelScope`, an in-memory store) with `kotlinc`, plus coroutines, turbine,
+  JUnit and Truth from Maven Central. Maven Central returns 429 now and then; retry with a
+  backoff. The real tests end every ViewModel scope inside `runTest`
+  (`runOnboardingTest`). Without that, the store's flow resumes on Main after `resetMain`
+  and fails the next test.
+- Onboarding runs once per process (`rememberSaveable` in `MeretApp`). A skip is permanent.
+  Nothing in Settings can re-run the flow yet; add that to item 9's diagnostics screen if
+  a supervisor needs it.
+- Lint's `BatteryLife` check warns about `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` in
+  `:feature:settings`. It is deliberate (APK distribution, Transsion/Xiaomi) and is not
+  suppressed.
+- detekt's `CyclomaticComplexMethod` (threshold 15) counts each `when` branch inside a
+  composable's lambdas. Move the dispatch into a small class (`StepActions`).
+
 ## 2026-10-18 — Run 4 (scheduled, cloud)
 
 | Field | Content |

@@ -84,4 +84,4 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 7. DeviceCompat OEM guidance | #17 | `d784d20` |
 | 8a. OnboardingStepPicker: permission flow order per API level | #18 | `704dbe8` |
 | 8b-1. Onboarding state: skipped steps, permission snapshot, ViewModel | #20 | `1574771` |
-| 8b-2. Permission onboarding screens, en/am, app gate | #21 | `SHA21` |
+| 8b-2. Permission onboarding screens, en/am, app gate | #21 | `026a710` |
