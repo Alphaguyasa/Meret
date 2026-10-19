@@ -19,16 +19,6 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 8b. [P1 · M] Phase 5f, part 2 — Permission onboarding screens
-Compose screens driven by `OnboardingStepPicker` (`:domain`, done in 8a): one screen per
-`OnboardingStep`, a rationale screen before background location, the precise-location
-explanation for the coarse-only grant on 12+, and the OEM screen using `DeviceCompat`
-(`:core:location`, item 7). Skipped steps persisted in DataStore. Manifest entries go with
-the code that requests them: `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` and
-`ACCESS_BACKGROUND_LOCATION`. Read a fresh `PermissionSnapshot` on every resume.
-- Tests: the snapshot reader against Robolectric's shadow permissions; the ViewModel's
-  state for each step; en and am strings complete.
-
 ### 9. [P1 · M] Phase 5g — Diagnostics screen
 Everything in `LOCATION_ENGINE.md` §Diagnostics, plus "copy report". Wire
 `TrackingHealthMonitor` (item 6, `:core:common`) into `TrackingService`: feed it state
@@ -93,3 +83,5 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 5b. TrackingService, foreground type location | #14 | `19bf20a` |
 | 7. DeviceCompat OEM guidance | #17 | `d784d20` |
 | 8a. OnboardingStepPicker: permission flow order per API level | #18 | `704dbe8` |
+| 8b-1. Onboarding state: skipped steps, permission snapshot, ViewModel | #20 | `1574771` |
+| 8b-2. Permission onboarding screens, en/am, app gate | #21 | `026a710` |
