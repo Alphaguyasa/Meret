@@ -12,6 +12,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import et.alpha.meret.core.datastore.OnboardingStore
 import et.alpha.meret.core.datastore.TrackingConfigStore
 import et.alpha.meret.core.datastore.TrackingSessionStore
 import javax.inject.Singleton
@@ -53,6 +54,11 @@ public object DataStoreModule {
     public fun provideTrackingSessionStore(
         dataStore: DataStore<Preferences>,
     ): TrackingSessionStore = TrackingSessionStore(dataStore)
+
+    @Provides
+    @Singleton
+    public fun provideOnboardingStore(dataStore: DataStore<Preferences>): OnboardingStore =
+        OnboardingStore(dataStore)
 
     private const val PREFERENCES_NAME = "meret_preferences"
 }
