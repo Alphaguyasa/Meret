@@ -57,6 +57,10 @@ screens, that would help. Nothing is blocked waiting on this.
 step-by-step battery and autostart instructions for each phone brand. Phone menu names
 («Settings», «Auto-start») stay in English inside the Amharic sentence, because the phone's
 own menus may be in English. Please check that this reads naturally.
+**Run 5 added 21 more** in `feature/settings/src/main/res/values-am/strings.xml`: the
+permission onboarding screens (for example "አካባቢን ይፍቀዱ" for "Allow location", "አሁን
+አይደለም" for "Not now"). The prose uses the Amharic app name «መሬት»; the older OEM steps use
+"Meret". Please say which one the field teams should see.
 
 ---
 
@@ -68,8 +72,9 @@ hardware. Steps are in the linked docs.
 | Phase | Criterion | How |
 |---|---|---|
 | 3 | 100k-point insert ratio and 20k-point read bar | `./gradlew :core:database:connectedDebugAndroidTest` on the S9+ (passed on 2026-08-07 per BUILD_PLAN; re-run after DB changes) |
-| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Once roadmap items 3–10 land (3–7 and 8a done; 8b, 9, 10 left) |
-| 5 | The OEM autostart deep links open the right screen (Tecno/Infinix/Itel Phone Master, Xiaomi Security). If none opens, the manual steps appear instead | After item 8b gives them a button; adb `am start -n <package>/<class>` works today |
+| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Once roadmap items 3–10 land (3–8 done; 9, 10 left) |
+| 5 | The OEM autostart deep links open the right screen (Tecno/Infinix/Itel Phone Master, Xiaomi Security). If none opens, the manual steps appear instead | The onboarding screen's «Open phone settings» button (item 8b, done) on a real Tecno/Xiaomi |
+| 5 | Onboarding on Android 8, 10, 11+ and 13+: every step appears in order, «Allow all the time» is reachable, and a skipped step does not come back on relaunch | Fresh install, deny then grant each permission |
 | 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
 
 ---
