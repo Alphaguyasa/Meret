@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_location_title">Allow location</string>
+    <string name="onboarding_location_body">Meret records where you walk and where you collect data. It cannot work without your location.</string>
+    <string name="onboarding_location_body_settings">Location is blocked for Meret. In «Settings», open «Permissions», then «Location», and allow it.</string>
+    <string name="onboarding_precise_title">Turn on precise location</string>
+    <string name="onboarding_precise_body">You allowed approximate location only. It can be 1–3 km off, too far to map a field. Choose «Precise».</string>
+    <string name="onboarding_precise_body_settings">Meret has approximate location only. In «Settings», open «Permissions», then «Location», and turn on «Use precise location».</string>
+    <string name="onboarding_notifications_title">Allow notifications</string>
+    <string name="onboarding_notifications_body">While a track records, a notification shows its distance, with Pause and Stop buttons. Without this permission the notification is hidden.</string>
+    <string name="onboarding_background_title">Keep recording with the screen off</string>
+    <string name="onboarding_background_body">To record a track while the phone is in your pocket, Meret needs location all the time. It uses it only while you record a track.</string>
+    <string name="onboarding_background_body_settings">To record a track while the phone is in your pocket, Meret needs location all the time. It uses it only while you record a track. On the next screen, choose «Allow all the time».</string>
+    <string name="onboarding_battery_title">Stop battery saver ending tracks</string>
+    <string name="onboarding_battery_body">To save battery, Android can stop Meret and end a track without warning. Allow Meret to run in the background.</string>
+    <string name="onboarding_oem_title">One more setting on this phone</string>
+    <string name="onboarding_oem_manual_intro">Follow these steps, then come back to Meret.</string>
+    <string name="onboarding_oem_step_number" translatable="false">%1$d.</string>
+    <string name="onboarding_action_allow">Allow</string>
+    <string name="onboarding_action_open_settings">Open Settings</string>
+    <string name="onboarding_action_continue">Continue</string>
+    <string name="onboarding_action_open_phone_settings">Open phone settings</string>
+    <string name="onboarding_action_done">I have done this</string>
+    <string name="onboarding_action_not_now">Not now</string>
+</resources>

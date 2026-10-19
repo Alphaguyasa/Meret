@@ -10,6 +10,8 @@ dependencies {
     // Permission onboarding: skipped steps live in DataStore, the OEM screen in DeviceCompat.
     implementation(project(":core:datastore"))
     implementation(project(":core:location"))
+    // rememberLauncherForActivityResult and LocalActivity, for the permission dialogs.
+    implementation(libs.androidx.activity.compose)
 
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_location_title">አካባቢን ይፍቀዱ</string>
+    <string name="onboarding_location_body">መሬት የሚሄዱበትን መንገድ እና መረጃ የሚሰበስቡበትን ቦታ ይመዘግባል። ያለ አካባቢዎ መሥራት አይችልም።</string>
+    <string name="onboarding_location_body_settings">ለመሬት አካባቢ ታግዷል። በ«Settings» ውስጥ «Permissions»፣ ከዚያ «Location»ን ከፍተው ይፍቀዱ።</string>
+    <string name="onboarding_precise_title">ትክክለኛ አካባቢን ያብሩ</string>
+    <string name="onboarding_precise_body">የፈቀዱት ግምታዊ አካባቢን ብቻ ነው። ይህ ከ1–3 ኪ.ሜ ሊሳሳት ይችላል፤ ማሳን ለመለካት በጣም ሩቅ ነው። «Precise»ን ይምረጡ።</string>
+    <string name="onboarding_precise_body_settings">መሬት ያለው ግምታዊ አካባቢ ብቻ ነው። በ«Settings» ውስጥ «Permissions»፣ ከዚያ «Location»ን ከፍተው «Use precise location»ን ያብሩ።</string>
+    <string name="onboarding_notifications_title">ማሳወቂያዎችን ይፍቀዱ</string>
+    <string name="onboarding_notifications_body">መስመር እየተቀዳ እያለ ማሳወቂያ ርቀቱን ከ«ለጊዜው አቁም» እና «አቁም» ቁልፎች ጋር ያሳያል። ይህ ፈቃድ ከሌለ ማሳወቂያው ይደበቃል።</string>
+    <string name="onboarding_background_title">ስክሪኑ ጠፍቶም መቅዳት ይቀጥል</string>
+    <string name="onboarding_background_body">ስልኩ ኪስዎ ውስጥ እያለ መስመር ለመቅዳት መሬት ሁልጊዜ አካባቢ ያስፈልገዋል። የሚጠቀመው መስመር ሲቀዱ ብቻ ነው።</string>
+    <string name="onboarding_background_body_settings">ስልኩ ኪስዎ ውስጥ እያለ መስመር ለመቅዳት መሬት ሁልጊዜ አካባቢ ያስፈልገዋል። የሚጠቀመው መስመር ሲቀዱ ብቻ ነው። በሚቀጥለው ገጽ ላይ «Allow all the time»ን ይምረጡ።</string>
+    <string name="onboarding_battery_title">ባትሪ ቆጣቢው መስመር እንዳያቋርጥ</string>
+    <string name="onboarding_battery_body">ባትሪ ለመቆጠብ አንድሮይድ መሬትን አቁሞ መስመርን ያለ ማስጠንቀቂያ ሊያቋርጥ ይችላል። መሬት ከበስተጀርባ እንዲሠራ ይፍቀዱ።</string>
+    <string name="onboarding_oem_title">በዚህ ስልክ ላይ አንድ ተጨማሪ ቅንብር</string>
+    <string name="onboarding_oem_manual_intro">እነዚህን ደረጃዎች ይከተሉ፣ ከዚያ ወደ መሬት ይመለሱ።</string>
+    <string name="onboarding_action_allow">ፍቀድ</string>
+    <string name="onboarding_action_open_settings">ቅንብሮችን ክፈት</string>
+    <string name="onboarding_action_continue">ቀጥል</string>
+    <string name="onboarding_action_open_phone_settings">የስልክ ቅንብሮችን ክፈት</string>
+    <string name="onboarding_action_done">ይህን አድርጌያለሁ</string>
+    <string name="onboarding_action_not_now">አሁን አይደለም</string>
+</resources>
