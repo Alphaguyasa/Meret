@@ -22,7 +22,6 @@ class DiagnosticsReportBuilderTest {
             Permissions
             Precise location: granted
             Approximate location: granted
-            Location blocked: no
             Notifications: granted
             Background location: denied
             Battery optimisation ignored: no
