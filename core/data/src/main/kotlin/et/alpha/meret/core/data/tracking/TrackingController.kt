@@ -2,6 +2,7 @@ package et.alpha.meret.core.data.tracking
 
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.model.Track
+import et.alpha.meret.domain.diagnostics.TrackingHealth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -37,6 +38,13 @@ public interface TrackingController {
 
     /** The track being recorded, if any, as Room has it. For the live notification. */
     public val activeTrack: Flow<Track?>
+
+    /**
+     * Fix rate, last accuracy and the gap log of the recording in this process, for the
+     * diagnostics screen. Starts empty after process death; the persisted track does not
+     * carry it.
+     */
+    public val health: StateFlow<TrackingHealth>
 
     /**
      * Starts recording into [trackId], whose row must already exist.

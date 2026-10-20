@@ -9,6 +9,7 @@ import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.data.tracking.TrackingController
 import et.alpha.meret.core.data.tracking.TrackingState
 import et.alpha.meret.core.model.Track
+import et.alpha.meret.domain.diagnostics.TrackingHealth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Test
@@ -150,6 +151,8 @@ class FakeTrackingController : TrackingController {
     override val state = MutableStateFlow<TrackingState>(TrackingState.Idle)
 
     override val activeTrack: Flow<Track?> = MutableStateFlow(null)
+
+    override val health = MutableStateFlow(TrackingHealth())
 
     override suspend fun start(trackId: String): AppResult<Unit> {
         calls += "start:$trackId"

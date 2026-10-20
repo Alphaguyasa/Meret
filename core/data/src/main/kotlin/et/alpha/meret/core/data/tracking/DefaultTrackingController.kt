@@ -13,14 +13,21 @@ import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.TrackStatus
 import et.alpha.meret.core.model.TrackingConfig
 import et.alpha.meret.core.model.TrackingSession
+import et.alpha.meret.domain.diagnostics.TrackingHealth
+import et.alpha.meret.domain.diagnostics.TrackingHealthTracker
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -38,6 +45,13 @@ import javax.inject.Inject
  * - **stop** stops the engine first (fixes after the recorder's collector is cancelled would be
  *   lost, see [TrackRecording.stop]), writes the last batch, completes the row, and clears the
  *   session last. Killed before the clear, [restore] finds a completed track and clears it.
+ *
+ * ## Health
+ *
+ * A [TrackingHealthTracker] watches the same fixes as the recorder, and a ticker polls it once
+ * per sampling interval so a gap shows up while it is still open, not only when the next fix
+ * ends it. Both run only between [start] (or [restore]) and [stop]; the engine's own
+ * transitions mark recording time.
  *
  * ## Scope
  *
@@ -59,6 +73,10 @@ public class DefaultTrackingController
         private val mutex = Mutex()
         private val mutableState = MutableStateFlow<TrackingState>(TrackingState.Idle)
 
+        private val healthTracker = TrackingHealthTracker()
+        private val mutableHealth = MutableStateFlow(healthTracker.current)
+        private var healthJob: Job? = null
+
         private var recording: TrackRecording? = null
         private var config: TrackingConfig = TrackingConfig()
 
@@ -66,6 +84,8 @@ public class DefaultTrackingController
 
         override val activeTrack: Flow<Track?> =
             trackDao.observeActiveTrack().map { it?.toDomain() }
+
+        override val health: StateFlow<TrackingHealth> = mutableHealth.asStateFlow()
 
         override suspend fun start(trackId: String): AppResult<Unit> =
             mutex.withLock { startLocked(trackId) }
@@ -173,6 +193,7 @@ public class DefaultTrackingController
         private suspend fun pauseLocked(trackId: String) {
             engine.stop()
             checkNotNull(recording).pause()
+            mutableHealth.value = healthTracker.pause(timeProvider.elapsedRealtimeNanos())
             sessionStore.setPaused(true)
             trackDao.updateStatus(trackId, TrackStatus.PAUSED, timeProvider.nowMillis())
             mutableState.value = TrackingState.Recording(trackId, isPaused = true)
@@ -182,6 +203,9 @@ public class DefaultTrackingController
             engine.stop()
             recording?.stop()
             recording = null
+            healthJob?.cancel()
+            healthJob = null
+            mutableHealth.value = healthTracker.end(timeProvider.elapsedRealtimeNanos())
             val now = timeProvider.nowMillis()
             trackDao.endTrack(trackId, TrackStatus.COMPLETED, endedAt = now, updatedAt = now)
             sessionStore.clear()
@@ -192,6 +216,32 @@ public class DefaultTrackingController
         private suspend fun beginRecording(trackId: String) {
             config = configStore.config.first()
             recording = recorder.start(scope, trackId, config, engine.fixes)
+            watchHealth(config.profile.intervalMillis)
+        }
+
+        /** Feeds the health tracker every fix, and polls it for a gap still open. */
+        private fun watchHealth(samplingIntervalMillis: Long) {
+            healthJob?.cancel()
+            mutableHealth.value = healthTracker.begin(samplingIntervalMillis)
+            // UNDISPATCHED, like the recorder: subscribed to the hot flow before this returns.
+            healthJob =
+                scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                    launch(start = CoroutineStart.UNDISPATCHED) {
+                        engine.fixes.collect { fix ->
+                            mutableHealth.value =
+                                healthTracker.onFix(
+                                    atElapsedNanos = fix.elapsedRealtimeNanos,
+                                    accuracyMetres = fix.accuracyMetres,
+                                    satellitesUsed = fix.satellitesUsed,
+                                )
+                        }
+                    }
+                    while (isActive) {
+                        delay(samplingIntervalMillis)
+                        mutableHealth.value =
+                            healthTracker.tick(timeProvider.elapsedRealtimeNanos())
+                    }
+                }
         }
 
         /**
@@ -201,6 +251,7 @@ public class DefaultTrackingController
          */
         private suspend fun startEngine(trackId: String): AppResult<Unit> = try {
             engine.start(config)
+            mutableHealth.value = healthTracker.resume(timeProvider.elapsedRealtimeNanos())
             mutableState.value = TrackingState.Recording(trackId, isPaused = false)
             AppResult.Success(Unit)
         } catch (denied: SecurityException) {
