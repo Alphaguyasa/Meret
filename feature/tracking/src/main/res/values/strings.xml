@@ -11,4 +11,9 @@
     <string name="tracking_action_pause">Pause</string>
     <string name="tracking_action_resume">Resume</string>
     <string name="tracking_action_stop">Stop</string>
+    <string name="tracking_interrupted_channel_name">Interrupted tracks</string>
+    <string name="tracking_interrupted_channel_description">Shown after the phone restarts during a track, with a button to resume it.</string>
+    <string name="tracking_interrupted_title">Track not finished</string>
+    <string name="tracking_interrupted_body">The phone restarted while a track was recording. Everything recorded is saved. Tap Resume recording to continue the same track.</string>
+    <string name="tracking_action_resume_track">Resume recording</string>
 </resources>

@@ -25,6 +25,7 @@ internal sealed interface TrackingCommand {
         const val ACTION_PAUSE = "et.alpha.meret.tracking.PAUSE"
         const val ACTION_RESUME = "et.alpha.meret.tracking.RESUME"
         const val ACTION_STOP = "et.alpha.meret.tracking.STOP"
+        const val ACTION_RESTORE = "et.alpha.meret.tracking.RESTORE"
         const val EXTRA_TRACK_ID = "et.alpha.meret.tracking.TRACK_ID"
 
         /** Anything unrecognised restores: the safe reading is "carry on with what exists". */
@@ -35,6 +36,7 @@ internal sealed interface TrackingCommand {
                 ACTION_PAUSE -> Pause
                 ACTION_RESUME -> Resume
                 ACTION_STOP -> Stop
+                ACTION_RESTORE -> Restore
                 else -> Restore
             }
         }

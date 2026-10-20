@@ -15,12 +15,24 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Only to offer resuming an open track after a restart. Never starts tracking itself. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application>
         <service
             android:name=".service.TrackingService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <!-- Exported so the system's BOOT_COMPLETED reliably reaches it. Only the system may send
+             that protected action, and the receiver ignores every other action. -->
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

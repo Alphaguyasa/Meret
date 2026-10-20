@@ -166,6 +166,10 @@ class FakeTrackingController : TrackingController {
         return AppResult.Success(restoreTo)
     }
 
+    var interrupted: String? = null
+
+    override suspend fun interruptedTrackId(): String? = interrupted
+
     override suspend fun pause() {
         calls += "pause"
         val current = state.value
