@@ -61,6 +61,11 @@ own menus may be in English. Please check that this reads naturally.
 permission onboarding screens (for example "አካባቢን ይፍቀዱ" for "Allow location", "አሁን
 አይደለም" for "Not now"). The prose uses the Amharic app name «መሬት»; the older OEM steps use
 "Meret". Please say which one the field teams should see.
+**Run 6 added 52 more**: 47 for the diagnostics screen in
+`feature/settings/src/main/res/values-am/strings.xml` (for example "ምርመራ" for
+"Diagnostics", "ምርመራውን ቅዳ" for "Copy diagnostics") and 5 for the after-restart prompt in
+`feature/tracking/src/main/res/values-am/strings.xml` ("መስመሩ አልተጠናቀቀም", "መቅዳት ቀጥል"). They
+avoid the app name, so the «መሬት»/"Meret" question above does not apply to them.
 
 ---
 
@@ -72,9 +77,11 @@ hardware. Steps are in the linked docs.
 | Phase | Criterion | How |
 |---|---|---|
 | 3 | 100k-point insert ratio and 20k-point read bar | `./gradlew :core:database:connectedDebugAndroidTest` on the S9+ (passed on 2026-08-07 per BUILD_PLAN; re-run after DB changes) |
-| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Once roadmap items 3–10 land (3–8 done; 9, 10 left) |
+| 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Roadmap items 3–10 are done; ready to test |
 | 5 | The OEM autostart deep links open the right screen (Tecno/Infinix/Itel Phone Master, Xiaomi Security). If none opens, the manual steps appear instead | The onboarding screen's «Open phone settings» button (item 8b, done) on a real Tecno/Xiaomi |
 | 5 | Onboarding on Android 8, 10, 11+ and 13+: every step appears in order, «Allow all the time» is reachable, and a skipped step does not come back on relaunch | Fresh install, deny then grant each permission |
+| 5 | Diagnostics: tap the GPS chip on the map, check every line in Amharic, «Copy diagnostics», paste into WhatsApp. The paste must hold no coordinates | Any phone, after a few minutes of recording |
+| 5 | Reboot mid-track: after unlocking, the «Track not finished» prompt appears; «Resume recording» continues the same track in a new segment; with no open track, no prompt | Needs a record button (Phase 7) or adb to start a track |
 | 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
 
 ---
