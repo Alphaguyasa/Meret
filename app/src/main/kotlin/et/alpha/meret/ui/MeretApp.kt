@@ -34,10 +34,12 @@ import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
 import et.alpha.meret.feature.map.MapScreen
 import et.alpha.meret.feature.map.MapUiState
+import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
 import et.alpha.meret.feature.tiles.TilePackScreen
 import et.alpha.meret.feature.tracking.TrackListScreen
 import et.alpha.meret.feature.waypoint.WaypointListScreen
+import et.alpha.meret.navigation.DIAGNOSTICS_ROUTE
 import et.alpha.meret.navigation.MAP_ROUTE
 import et.alpha.meret.navigation.TILE_PACKS_ROUTE
 import et.alpha.meret.navigation.TRACKS_ROUTE
@@ -146,7 +148,7 @@ private fun MeretShell(
                             onAddWaypoint = {},
                             onRecentreMap = {},
                             onOpenSync = {},
-                            onOpenDiagnostics = {},
+                            onOpenDiagnostics = { navController.navigate(DIAGNOSTICS_ROUTE) },
                             contentPadding = innerPadding,
                         )
                     }
@@ -157,6 +159,12 @@ private fun MeretShell(
                     }
                     composable(WAYPOINTS_ROUTE) {
                         WaypointListScreen(
+                            modifier = Modifier.padding(innerPadding),
+                        )
+                    }
+                    // Reached from the GPS chip on the map, not the bottom bar.
+                    composable(DIAGNOSTICS_ROUTE) {
+                        DiagnosticsRoute(
                             modifier = Modifier.padding(innerPadding),
                         )
                     }
