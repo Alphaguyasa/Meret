@@ -93,6 +93,12 @@ public class DefaultTrackingController
         override suspend fun restore(): AppResult<TrackingState> =
             mutex.withLock { restoreLocked() }
 
+        override suspend fun interruptedTrackId(): String? = mutex.withLock {
+            if (mutableState.value != TrackingState.Idle) return@withLock null
+            val trackId = sessionStore.session.first()?.trackId ?: return@withLock null
+            trackId.takeIf { trackDao.getTrack(it)?.status?.isOpen() == true }
+        }
+
         override suspend fun pause() {
             mutex.withLock {
                 val current = mutableState.value

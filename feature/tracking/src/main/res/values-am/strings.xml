@@ -11,4 +11,9 @@
     <string name="tracking_action_pause">ለጊዜው አቁም</string>
     <string name="tracking_action_resume">ቀጥል</string>
     <string name="tracking_action_stop">አቁም</string>
+    <string name="tracking_interrupted_channel_name">የተቋረጡ መስመሮች</string>
+    <string name="tracking_interrupted_channel_description">መስመር እየተቀዳ ሳለ ስልኩ እንደገና ሲጀምር ይታያል፤ ለመቀጠል የሚያስችል ቁልፍ አለው።</string>
+    <string name="tracking_interrupted_title">መስመሩ አልተጠናቀቀም</string>
+    <string name="tracking_interrupted_body">መስመር እየተቀዳ ሳለ ስልኩ እንደገና ጀምሯል። የተቀዳው ሁሉ ተቀምጧል። ያንኑ መስመር ለመቀጠል «መቅዳት ቀጥል»ን ይጫኑ።</string>
+    <string name="tracking_action_resume_track">መቅዳት ቀጥል</string>
 </resources>

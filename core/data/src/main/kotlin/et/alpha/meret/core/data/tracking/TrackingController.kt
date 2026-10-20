@@ -63,6 +63,13 @@ public interface TrackingController {
      */
     public suspend fun restore(): AppResult<TrackingState>
 
+    /**
+     * The track an earlier process left open, if this one is not recording it: what a
+     * reboot or a killed service leaves behind. Reads only; [restore] picks it up. A session
+     * whose track is gone or already finished counts as none.
+     */
+    public suspend fun interruptedTrackId(): String?
+
     /** Stops the engine and writes the pending batch. No-op unless recording unpaused. */
     public suspend fun pause()
 
