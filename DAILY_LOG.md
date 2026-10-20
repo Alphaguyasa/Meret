@@ -4,6 +4,35 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-20 — Run 6 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | Item 9 in two PRs. Part 1: `TrackingHealthTracker` gets every fix and every engine start and stop, and a ticker polls it, so an open gap shows on the screen while it is still open. `TrackingController.health` exposes it, and `DiagnosticsReportBuilder` builds the copied report ([#23](https://github.com/Alphaguyasa/Meret/pull/23)). Part 2: the diagnostics screen in en/am, opened from the GPS chip on the map, with «Copy diagnostics» ([#24](https://github.com/Alphaguyasa/Meret/pull/24)). Item 10: after a reboot with a track still open, one notification offers «Resume recording». The service is never started automatically ([#25](https://github.com/Alphaguyasa/Meret/pull/25)). **Phase 5 code is complete.** Its device criteria are in NEEDS_APPROVAL. |
+| Merged | #23 yes, `b9955cd` · #24 yes, `987cc6e` · #25 yes, `f18ca7e`. All passed CI on the first attempt, about 3 min each. #25 got a main merge plus one commit before merging, because #24's test fake implements the interface #25 extends. |
+| Failed or blocked | Nothing. |
+| Roadmap | 7 open items: 11–15, plus new items 16 (re-run onboarding from diagnostics) and 17 (`tracking_gap` telemetry). No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Checked the models page: no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7 unchanged. A9 extended with 52 more Amharic strings (diagnostics and the after-restart prompt). 2 new "Needs a device" rows (the diagnostics screen and paste, reboot mid-track). The Phase 5 survival test is now ready to run. |
+| Next | Item 11 (Dependabot, monthly, at most 2 open PRs), then item 12 (Phase 0 glyphs, sprite, style). |
+
+Notes for the next run:
+- The health tracker lives in `DefaultTrackingController`, not `TrackingService` as the old
+  roadmap text said. The controller owns the engine transitions and is tested without a
+  service. It runs from `beginRecording` to `stop` and starts empty after process death.
+- The copied report is fixed-format English on purpose; the screen is localised. The
+  `DiagnosticsSnapshot` type has no field for a position, a name or an id. Keep it that way:
+  the report goes to WhatsApp.
+- **Interface changes ripple into test fakes**: `TrackingController` is implemented by the
+  fakes in `TrackingServiceTest` and `DiagnosticsViewModelTest`. Two open PRs that both touch
+  it need a main merge before the second one merges.
+- `BootReceiver` is `exported="true"`: only the system can send `BOOT_COMPLETED`, and the
+  receiver ignores every other action. It uses `BOOT_COMPLETED`, not the locked variant,
+  because DataStore lives in credential-protected storage.
+- `:domain` tests can be run locally: compile `:core:model`, `:core:common` (minus
+  `DispatcherProvider`) and `:domain` with kotlinc, then run JUnit. Maven Central worked first
+  time this run.
+
 ## 2026-10-19 — Run 5 (scheduled, cloud)
 
 | Field | Content |

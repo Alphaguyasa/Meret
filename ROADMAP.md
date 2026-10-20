@@ -19,19 +19,6 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 9. [P1 · M] Phase 5g — Diagnostics screen
-Everything in `LOCATION_ENGINE.md` §Diagnostics, plus "copy report". Wire
-`TrackingHealthMonitor` (item 6, `:core:common`) into `TrackingService`: feed it state
-changes and fixes, poll `check()`, and show `windowHealth()` here. The report must hold
-no personal data: no coordinates, no names, no form answers. Counts, states, and versions
-only.
-- Tests: report builder output for a fixture state, and a test asserting no lat/lon appears.
-
-### 10. [P1 · S] Phase 5h — Boot receiver
-If a track was active at shutdown, post a notification offering to resume. Never auto-start
-the service on boot.
-- Tests (Robolectric): boot with an active session → notification; without → nothing.
-
 ### 11. [P2 · S] Dependency updates and vulnerability alerts
 Dependabot for `gradle` and `github-actions`, monthly, at most 2 open PRs (Actions minutes
 are limited). Free on GitHub.
@@ -55,6 +42,18 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 
 ### 15. [P3 · S] Remove Android Studio template leftovers
 `proguard-rules.pro` comments, template comments in `res/xml`, unused launcher assets if any.
+
+### 16. [P2 · S] Re-run permission onboarding from the diagnostics screen
+A skip in onboarding is permanent, and nothing re-asks. Add a "Check permissions again"
+button on the diagnostics screen that clears the stored skips and shows the onboarding flow.
+It is for supervisors fixing a phone that keeps losing tracks.
+- Tests: clearing skips makes the picker offer the skipped step again; the button is only
+  shown when a step is missing.
+
+### 17. [P3 · S] Record `tracking_gap` through `Telemetry`
+`TrackingHealthTracker` logs gaps for the diagnostics screen only. Also send each closed gap
+to `Telemetry.recordEvent("tracking_gap", duration only)`. The default is no-op, so nothing
+leaves the phone unless a deployment binds a reporter.
 
 ### Later phases (expand into items when they reach the top)
 - Phase 7 — Tracking UI and track rendering
@@ -85,3 +84,6 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 8a. OnboardingStepPicker: permission flow order per API level | #18 | `704dbe8` |
 | 8b-1. Onboarding state: skipped steps, permission snapshot, ViewModel | #20 | `1574771` |
 | 8b-2. Permission onboarding screens, en/am, app gate | #21 | `026a710` |
+| 9a. Tracking health in the controller, diagnostics report builder | #23 | `b9955cd` |
+| 9b. Diagnostics screen, copy report, en/am | #24 | `987cc6e` |
+| 10. Boot receiver: offer to resume an open track | #25 | `f18ca7e` |
