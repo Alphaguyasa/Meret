@@ -158,6 +158,8 @@ class DiagnosticsViewModelTest {
 
         override suspend fun restore(): AppResult<TrackingState> = AppResult.Success(state.value)
 
+        override suspend fun interruptedTrackId(): String? = null
+
         override suspend fun pause() = Unit
 
         override suspend fun resume(): AppResult<Unit> = AppResult.Success(Unit)
