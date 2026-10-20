@@ -12,6 +12,9 @@ dependencies {
     implementation(project(":core:location"))
     // rememberLauncherForActivityResult and LocalActivity, for the permission dialogs.
     implementation(libs.androidx.activity.compose)
+    // Diagnostics: the recording's state and health, and the app's version code.
+    implementation(project(":core:data"))
+    implementation(libs.androidx.core.ktx)
 
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)

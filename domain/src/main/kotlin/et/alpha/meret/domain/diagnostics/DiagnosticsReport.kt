@@ -64,7 +64,6 @@ public class DiagnosticsReportBuilder {
             appendLine("Permissions")
             line("Precise location", permissions.fineLocation.grant())
             line("Approximate location", permissions.coarseLocation.grant())
-            line("Location blocked", permissions.locationPermanentlyDenied.yesNo())
             if (permissions.sdkInt >= NOTIFICATIONS_SDK) {
                 line("Notifications", permissions.notifications.grant())
             }
