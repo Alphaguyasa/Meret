@@ -17,3 +17,6 @@ tools/work/
 *.mbtiles
 *.pmtiles
 *.osm.pbf
+tools/node_modules/
+# Noto TTFs for build-glyphs.sh (OFL, downloaded, not committed)
+tools/fonts/

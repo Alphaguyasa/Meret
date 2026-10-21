@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meret tile preview</title>
+  <!-- The page itself needs the network once, for MapLibre GL JS. Everything the map draws
+       (tiles, style, glyphs, sprite) comes from serve.py on 127.0.0.1. -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+  <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+  <style>
+    html, body, #map { margin: 0; height: 100%; }
+    #panel { position: absolute; top: 10px; left: 10px; z-index: 1; background: #fff;
+             padding: 6px 10px; border-radius: 4px; font: 13px sans-serif;
+             box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <label><input type="checkbox" id="english"> English names first</label>
+    <div id="status"></div>
+  </div>
+  <div id="map"></div>
+  <script>
+    const map = new maplibregl.Map({ container: 'map', style: '/style.json', hash: true });
+    map.addControl(new maplibregl.NavigationControl());
+    map.addControl(new maplibregl.ScaleControl());
+
+    // Same switch the app will offer: name:am first, or name:en first.
+    const field = (english) => english
+      ? ['coalesce', ['get', 'name:en'], ['get', 'name'], ['get', 'name:am']]
+      : ['coalesce', ['get', 'name:am'], ['get', 'name']];
+    document.getElementById('english').addEventListener('change', (e) => {
+      for (const layer of map.getStyle().layers) {
+        if (layer.layout && layer.layout['text-field']) {
+          map.setLayoutProperty(layer.id, 'text-field', field(e.target.checked));
+        }
+      }
+    });
+
+    // A missing glyph range or sprite shows here, not as silently absent labels.
+    const status = document.getElementById('status');
+    map.on('error', (e) => { status.textContent = 'Error: ' + (e.error && e.error.message); });
+    map.on('styleimagemissing', (e) => { status.textContent = 'Missing icon: ' + e.id; });
+    map.on('moveend', () => { status.textContent = 'z' + map.getZoom().toFixed(1); });
+  </script>
+</body>
+</html>
