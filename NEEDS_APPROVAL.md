@@ -67,6 +67,18 @@ permission onboarding screens (for example "አካባቢን ይፍቀዱ" for "A
 `feature/tracking/src/main/res/values-am/strings.xml` ("መስመሩ አልተጠናቀቀም", "መቅዳት ቀጥል"). They
 avoid the app name, so the «መሬት»/"Meret" question above does not apply to them.
 
+### A10. Dependabot: turn on alerts, and who merges its PRs (no cost)
+Run 7 added `.github/dependabot.yml` (ROADMAP item 11): monthly, minor and patch versions
+only, one grouped PR for Gradle and one for GitHub Actions, so at most 2 open. Two things:
+1. **Please turn on** github.com → the repo → Settings → Code security → "Dependabot
+   alerts" and "Dependabot security updates". Both are free. The file cannot do this, and
+   without alerts nothing tells us about a vulnerable library between monthly runs.
+2. **Merging.** A squash merge of a Dependabot PR is authored by `dependabot[bot]`, which
+   breaks "commits show Alphaguyasa only". Options: (a) the daily run merges them anyway
+   when CI is green; (b) the run copies the version change onto its own `claude/` branch,
+   which costs a second CI run per update; (c) you merge them yourself. **Default until
+   you answer:** the run leaves them open and lists them in the report.
+
 ---
 
 ## Needs a device
