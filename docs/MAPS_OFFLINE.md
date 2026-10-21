@@ -58,13 +58,18 @@ Ethiopic script is not covered by MapLibre's `LocalIdeographFontFamily`, which o
 handles CJK. Amharic labels require generated glyph PBFs.
 
 ```bash
-npm i -g @maplibre/font-maker   # or use fontnik directly
-font-maker --font=NotoSansEthiopic-Regular.ttf --output=fonts/
-font-maker --font=NotoSans-Regular.ttf         --output=fonts/
+cd tools && npm ci && ./build-glyphs.sh   # fontnik; see tools/README.md for the TTFs
 ```
 
-This produces `fonts/<Font Name>/0-255.pbf`, `256-511.pbf`, and so on. The directory name
-must match the font stack string in the style exactly, including spaces.
+*(This doc used to say `npm i -g @maplibre/font-maker`. That package is not on npm; corrected
+2026-10-21.)*
+
+MapLibre requests glyphs per font **stack**, not per font: for the `text-font` below it
+fetches `Noto Sans Regular,Noto Sans Ethiopic Regular/0-255.pbf`, which is the names joined
+by a comma with no space. A glyph server merges the fonts on request. The phone has no glyph
+server, so `build-glyphs.sh` writes the merged stack directory itself (fontnik `composite`),
+plus one directory per single font. The directory name must match the joined stack string
+exactly, including spaces.
 
 Ethiopic lives in U+1200–U+137F, so the `4608-4863` range is the one that matters —
 but ship all ranges the style might request.
@@ -93,8 +98,9 @@ Make this a runtime toggle — a setting that switches the expression between
 
 ## Step 3 — Sprites
 
-Take a permissively licensed icon set (Maki, Apache-2.0) and build the atlas with
-`spritezero`. Output `sprite.png`, `sprite@2x.png`, `sprite.json`, `sprite@2x.json` into
+Take a permissively licensed icon set (Maki, CC0-1.0) and build the atlas with
+`tools/build-sprite.sh`. *(It was `spritezero`, which needs mapnik and no longer builds on
+current Node; the script packs the same format with sharp.)* Output `sprite.png`, `sprite@2x.png`, `sprite.json`, `sprite@2x.json` into
 `assets/map/sprite/`.
 
 ```json

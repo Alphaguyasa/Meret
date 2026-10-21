@@ -1,0 +1,10 @@
+# Maki icons (CC0-1.0) packed into the sprite. One name per line, as in @mapbox/maki/icons/.
+# Every icon-image the style uses must be listed here; MeretStyleTest checks it.
+fuel
+hospital
+marker
+mountain
+place-of-worship
+school
+shop
+town-hall

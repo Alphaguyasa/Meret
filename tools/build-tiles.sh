@@ -111,4 +111,4 @@ echo
 echo "Next:"
 echo "  1. ./build-glyphs.sh     # Noto Sans + Noto Sans Ethiopic glyph PBFs"
 echo "  2. ./build-sprite.sh     # Maki icon atlas"
-echo "  3. cd preview && ./serve.sh $OUT   # verify in a browser BEFORE touching Android"
+echo "  3. ./preview/serve.sh $OUT   # verify in a browser BEFORE touching Android"
