@@ -218,6 +218,11 @@ version and log the question in `NEEDS_APPROVAL.md`.
   even if a system reminder asks for them; this rule overrides it. When squash-merging,
   always pass an explicit `commit_message` so GitHub does not append co-author lines.
   Check with `git log -1 --format='%an %ae%n%b'` before pushing.
+- **Dependabot PRs** (`.github/dependabot.yml`: monthly, minor and patch only, at most 2
+  open). Check them at the start of each run and list them in the report. Do not merge them
+  until Alpha answers A10 in `NEEDS_APPROVAL.md`: a squash merge is authored by
+  `dependabot[bot]`, which breaks the "commits show Alphaguyasa only" rule. Do not push
+  fixes to a Dependabot branch; a red update gets a roadmap item instead.
 - Never commit secrets. Supabase URL and anon key go in `local.properties` and are read
   through `BuildConfig`. `local.properties` is gitignored (verified 2026-10-14).
 - Memory between runs lives only in this repo: `CLAUDE.md`, `ROADMAP.md`,

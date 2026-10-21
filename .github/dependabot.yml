@@ -1,0 +1,43 @@
+# Dependency updates (ROADMAP item 11).
+#
+# The repo is private on GitHub Free: 2,000 Actions minutes a month, and every update PR
+# runs the full CI job (about 3–17 minutes). So: monthly, one grouped PR per ecosystem,
+# at most 2 open PRs in total.
+#
+# Major versions are ignored here. A major bump of AGP, Kotlin, Compose or Room needs a
+# planned roadmap item (CLAUDE.md lists what AGP 9 alone broke), not a bot PR.
+# Security updates are separate from this file: Dependabot raises those whenever an
+# advisory matches, whatever the schedule, once "Dependabot security updates" is on in
+# the repo settings.
+version: 2
+
+updates:
+  # Root build: gradle/libs.versions.toml, which build-logic also reads.
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: deps
+    groups:
+      # One PR, so Kotlin and KSP (whose version embeds the Kotlin one) move together.
+      gradle-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
