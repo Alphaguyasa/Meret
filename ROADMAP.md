@@ -9,8 +9,8 @@ product · P2 = important, not blocking · P3 = cleanup.
 **Effort:** S = under half a day · M = about a day · L = split before starting.
 
 Phases refer to `docs/BUILD_PLAN.md`. Phases 1–4 are done (git history to `1fc66f5`).
-Phase 0 (tile pack) is only partly done: `tools/build-tiles.sh` exists, the glyph, sprite,
-style, and preview steps do not.
+Phase 0 (tile pack) tooling is done (`tools/`, item 12). A real Ethiopia pack has not been
+built yet: Planetiler needs a machine with ~20 GB scratch space, not the cloud container.
 
 Acceptance criteria that need a physical phone are not claimed by CI. They are listed in
 `NEEDS_APPROVAL.md` under "Needs a device".
@@ -19,21 +19,11 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 11. [P2 · S] Dependency updates and vulnerability alerts
-Dependabot for `gradle` and `github-actions`, monthly, at most 2 open PRs (Actions minutes
-are limited). Free on GitHub.
-
-### 12. [P2 · M] Phase 0 remainder — glyphs, sprite, style, preview
-`tools/build-glyphs.sh`, `tools/build-sprite.sh`, `tools/style/meret-style.json`,
-`tools/preview/`, `tools/README.md` per `docs/SESSION_PROMPTS.md` session 0. Only free,
-self-hostable sources (OSM extract, Noto fonts, Maki icons).
-- Tests: a JVM test that parses the style JSON and checks the font stacks match the
-  generated glyph directory names, and that glyphs/sprite use `asset://`, never `http`.
-
 ### 13. [P2 · L] Phase 6 — Offline map (split before starting)
 6a MbtilesReader (TMS→XYZ flip, gzip passthrough) with a tiny fixture `.mbtiles`;
 6b LocalTileServer on loopback; 6c network security config (cleartext to 127.0.0.1 only);
-6d StyleProvider; 6e MapLibre Compose wrapper (check the real API in the artifact first);
+6d StyleProvider (bundle only the stack glyph directory, ~2.4 MB, and the sprite from
+`tools/out/map/`; see `tools/README.md`); 6e MapLibre Compose wrapper (check the real API in the artifact first);
 6f map screen controls; 6g SAF tile pack import.
 
 ### 14. [P2 · M] Encrypt the Room database at rest
@@ -54,6 +44,12 @@ It is for supervisors fixing a phone that keeps losing tracks.
 `TrackingHealthTracker` logs gaps for the diagnostics screen only. Also send each closed gap
 to `Telemetry.recordEvent("tracking_gap", duration only)`. The default is no-op, so nothing
 leaves the phone unless a deployment binds a reporter.
+
+### 18. [P3 · S] Cover `tools/package-lock.json` with Dependabot
+`tools/` now has npm dependencies (fontnik, sharp, Maki). Dependabot alerts (A10) will flag
+advisories in the lockfile, but nothing proposes routine updates. Add an `npm` entry for
+`/tools`, monthly, sharing the 2-open-PR budget (lower the Gradle limit or group). sharp was
+pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 
 ### Later phases (expand into items when they reach the top)
 - Phase 7 — Tracking UI and track rendering
@@ -87,3 +83,5 @@ leaves the phone unless a deployment binds a reporter.
 | 9a. Tracking health in the controller, diagnostics report builder | #23 | `b9955cd` |
 | 9b. Diagnostics screen, copy report, en/am | #24 | `987cc6e` |
 | 10. Boot receiver: offer to resume an open track | #25 | `f18ca7e` |
+| 11. Dependabot for Gradle and GitHub Actions | #27 | `30bc255` |
+| 12. Phase 0 remainder: style, glyphs, sprite, preview | #28 | `a5fe889` |

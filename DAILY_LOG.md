@@ -4,6 +4,41 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-21 — Run 7 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | Item 11: `.github/dependabot.yml` for Gradle and GitHub Actions. It runs monthly, takes minor and patch versions only, and opens one grouped PR per ecosystem, so at most 2 are open ([#27](https://github.com/Alphaguyasa/Meret/pull/27)). Item 12: the Phase 0 remainder ([#28](https://github.com/Alphaguyasa/Meret/pull/28)), made of `tools/style/meret-style.json` (OpenMapTiles layers, `asset://` glyphs and sprite, Noto Sans + Ethiopic stack, `name:am` first), `build-glyphs.sh` (fontnik, including the merged stack directory MapLibre actually requests), `build-sprite.sh` (Maki packed with sharp), `preview/` (Python stdlib server + MapLibre GL JS page) and `tools/README.md`. `MeretStyleTest` (9 cases) guards the style in CI. **Phase 0 tooling is complete.** |
+| Merged | #27 yes, `30bc255` · #28 yes, `a5fe889`. Both passed CI on the first attempt (about 1.5 min each). |
+| Failed or blocked | Nothing. |
+| Roadmap | 6 open items: 13–17, plus new item 18 (Dependabot for `tools/` npm). No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Checked Anthropic's models docs: no newer Opus. No action. |
+| Needs approval | **A10 new:** turn on Dependabot alerts and security updates (free, in repo settings), and decide who merges Dependabot PRs, because their squash commit is authored by `dependabot[bot]`. A2, A3, A5, A6, A7, A9 unchanged. New "Needs a device" row: glyphs and sprite through `asset://` in aeroplane mode (after Phase 6d). |
+| Next | Item 13 (Phase 6). Split it first; 6a `MbtilesReader` with a tiny fixture `.mbtiles` is the first PR. |
+
+Notes for the next run:
+- **Doc corrections made in #28.** `@maplibre/font-maker` is not on npm. spritezero needs
+  mapnik and fails to build on Node 22. Maki is CC0, not Apache-2.0. MapLibre requests glyphs
+  per font *stack* (`Noto Sans Regular,Noto Sans Ethiopic Regular/…`, comma, no space), so the
+  merged directory must exist offline. `build-glyphs.sh` writes it with `fontnik.composite`.
+- **What reached the network from the container this run:** Noto TTFs from
+  `raw.githubusercontent.com` (jsDelivr returned 403), and npm, Maven Central (one 429, retry)
+  and the GitHub release downloads (ktlint, detekt, kotlinc). The `api.github.com` releases API
+  returned 403.
+- **Rendering works in the container.** Headless Chromium (`/opt/pw-browsers/chromium-1194`,
+  `--use-gl=swiftshader`) ran MapLibre GL JS 5.6.0 from npm against a synthetic `.mbtiles`
+  built with `geojson-vt` + `vt-pbf`. Amharic labels, the sprite icon and the language toggle
+  all showed. The same harness can check the Phase 6 style in a browser.
+- For Phase 6d, bundle only the stack directory from `tools/out/map/fonts/` (2.4 MB; the
+  single-font dirs are never requested) plus the sprite (20 KB). Do not commit
+  `tools/out/` (gitignored); decide in 6d whether assets are generated in CI or committed.
+  Committing them would add about 2.4 MB to the repo and APK.
+- Debug APK after #28: **13,332 KiB** (CI log; `tools/` is not in the APK).
+- `MeretStyleTest` reads `tools/style/` via the `meret.styleDir` system property, which is set in
+  `core/maps/build.gradle.kts` and declared as a task input, so style edits re-run it.
+- Truth's `containsAtLeastElementsIn` counts duplicates. Use a set when the order and count
+  of "used" items do not matter.
+
 ## 2026-10-20 — Run 6 (scheduled, cloud)
 
 | Field | Content |
