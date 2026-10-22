@@ -14,6 +14,8 @@ dependencies {
     implementation(project(":core:designsystem"))
 
     testImplementation(libs.kotlinx.serialization.json)
+    // MbtilesReaderTest opens real SQLite packs, which needs Android's SQLiteDatabase.
+    testImplementation(libs.robolectric)
 }
 
 // MeretStyleTest checks tools/style/, which lives outside this module. Declared as an input
