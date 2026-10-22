@@ -1,0 +1,322 @@
+package et.alpha.meret.core.maps.server
+
+import et.alpha.meret.core.maps.mbtiles.InvalidMbtilesException
+import et.alpha.meret.core.maps.mbtiles.MbtilesMetadata
+import et.alpha.meret.core.maps.mbtiles.TileSource
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.IOException
+import java.net.InetAddress
+import java.net.ServerSocket
+import java.net.Socket
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.zip.GZIPInputStream
+
+/** Opens the pack behind a pack id, or returns null when there is no such pack. */
+public fun interface TilePackResolver {
+    public fun open(packId: String): TileSource?
+}
+
+/**
+ * Serves tile packs to MapLibre over HTTP on `127.0.0.1`, on a port picked at [start].
+ *
+ * MapLibre Native cannot read `.mbtiles` itself, so the style points at this server:
+ * - `GET /{packId}/tiles.json`: TileJSON from the pack's metadata
+ * - `GET /{packId}/{z}/{x}/{y}.pbf`: the tile, gzipped as stored when the client accepts
+ *   gzip (OkHttp always does), 204 when the pack has no tile there
+ *
+ * It binds to loopback only, so nothing off the phone can reach it. Other apps on the phone
+ * can, which exposes map tiles and nothing else: tiles are public OpenStreetMap data, and no
+ * survey record is reachable through this class.
+ *
+ * Written by hand rather than on NanoHTTPD: that library is unmaintained and has open
+ * advisories (CVE-2020-13697, CVE-2022-21230), and two GET routes do not need it.
+ *
+ * Start it before the map loads a style and stop it when the last map screen leaves the
+ * foreground; the port changes on every start, so rewrite the style after each one.
+ */
+public class LocalTileServer(
+    private val resolver: TilePackResolver,
+) {
+    private var running: Running? = null
+
+    /** The bound port, or null while stopped. */
+    public val port: Int?
+        @Synchronized get() = running?.socket?.localPort
+
+    /**
+     * Binds a fresh port and starts accepting, or returns the current port when already
+     * running. Throws [IOException] if loopback cannot be bound.
+     */
+    @Synchronized
+    public fun start(): Int {
+        running?.let { return it.socket.localPort }
+        val socket = ServerSocket(0, BACKLOG, LOOPBACK)
+        val server = Running(socket, resolver)
+        running = server
+        server.acceptInBackground()
+        return socket.localPort
+    }
+
+    /** Closes the port, every open connection and every opened pack. Safe to call twice. */
+    @Synchronized
+    public fun stop() {
+        running?.close()
+        running = null
+    }
+
+    /** `http://127.0.0.1:{port}/{packId}`, the base the style's source URL uses. */
+    public fun baseUrl(packId: String): String {
+        val current = checkNotNull(port) { "server is not running" }
+        return "http://$HOST:$current/$packId"
+    }
+
+    private class Running(
+        val socket: ServerSocket,
+        private val resolver: TilePackResolver,
+    ) {
+        private val workers: ExecutorService =
+            Executors.newCachedThreadPool { task ->
+                Thread(task, "meret-tiles-${threadIds.incrementAndGet()}").apply { isDaemon = true }
+            }
+        private val clients: MutableSet<Socket> = ConcurrentHashMap.newKeySet()
+        private val packs = ConcurrentHashMap<String, ServedPack>()
+        private val missingPacks: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+        @Volatile private var closed = false
+
+        fun acceptInBackground() {
+            workers.execute {
+                while (!closed) {
+                    val client =
+                        try {
+                            socket.accept()
+                        } catch (_: IOException) {
+                            // close() closed the socket; anything else ends the server too.
+                            break
+                        }
+                    if (clients.size >= MAX_CONNECTIONS) {
+                        refuse(client)
+                    } else {
+                        clients += client
+                        workers.execute { serve(client) }
+                    }
+                }
+            }
+        }
+
+        fun close() {
+            closed = true
+            closeQuietly(socket)
+            clients.forEach(::closeQuietly)
+            workers.shutdownNow()
+            packs.values.forEach { closeQuietly(it.source) }
+            packs.clear()
+        }
+
+        private fun serve(client: Socket) {
+            try {
+                client.soTimeout = IDLE_TIMEOUT_MS
+                client.tcpNoDelay = true
+                val input = BufferedInputStream(client.getInputStream())
+                val output = BufferedOutputStream(client.getOutputStream())
+                var keepAlive = true
+                while (keepAlive && !closed) {
+                    keepAlive = exchange(input, output)
+                }
+            } catch (_: IOException) {
+                // Idle timeout, or the client hung up. Either way the connection is done.
+            } finally {
+                clients -= client
+                closeQuietly(client)
+            }
+        }
+
+        /** Answers one request. Returns whether the connection stays open. */
+        private fun exchange(
+            input: BufferedInputStream,
+            output: BufferedOutputStream,
+        ): Boolean {
+            val request =
+                try {
+                    Http.readRequest(input)
+                } catch (e: BadRequestException) {
+                    val response = HttpResponse(e.status)
+                    Http.writeResponse(output, response, keepAlive = false, includeBody = true)
+                    null
+                }
+            if (request != null) {
+                val includeBody = request.method != "HEAD"
+                Http.writeResponse(output, respond(request), request.keepAlive, includeBody)
+            }
+            return request?.keepAlive ?: false
+        }
+
+        private fun respond(request: HttpRequest): HttpResponse {
+            if (request.method != "GET" && request.method != "HEAD") {
+                return HttpResponse(Http.METHOD_NOT_ALLOWED)
+            }
+            val route = Route.parse(request.path)
+            val pack = route?.let { pack(it.packId) }
+            return when {
+                route == null || pack == null -> HttpResponse(Http.NOT_FOUND)
+                route is Route.TileJson -> tileJson(pack, route.packId)
+                route is Route.Tile -> tile(pack, route, request)
+                else -> HttpResponse(Http.NOT_FOUND)
+            }
+        }
+
+        private fun tileJson(
+            pack: ServedPack,
+            packId: String,
+        ): HttpResponse {
+            val tilesUrl = "http://$HOST:${socket.localPort}/$packId/{z}/{x}/{y}.pbf"
+            val body = TileJson.build(pack.metadata, tilesUrl).toByteArray(Charsets.UTF_8)
+            return HttpResponse(Http.OK, body, contentType = "application/json; charset=utf-8")
+        }
+
+        private fun tile(
+            pack: ServedPack,
+            route: Route.Tile,
+            request: HttpRequest,
+        ): HttpResponse {
+            val tile =
+                try {
+                    pack.source.readTile(route.z, route.x, route.y)
+                } catch (_: InvalidMbtilesException) {
+                    return HttpResponse(Http.INTERNAL_ERROR)
+                }
+            return when {
+                tile == null -> HttpResponse(Http.NO_CONTENT)
+                !tile.isGzipped -> HttpResponse(Http.OK, tile.bytes, PROTOBUF)
+                request.acceptsGzip -> HttpResponse(Http.OK, tile.bytes, PROTOBUF, "gzip")
+                else -> HttpResponse(Http.OK, gunzip(tile.bytes), PROTOBUF)
+            }
+        }
+
+        /**
+         * The pack for [packId], opened once and kept until [close]. Ids that do not resolve,
+         * or whose metadata is unusable, are remembered too, so a bad id costs one lookup.
+         */
+        private fun pack(packId: String): ServedPack? =
+            if (!PACK_ID.matches(packId) || packId in missingPacks) {
+                null
+            } else {
+                packs[packId] ?: synchronized(packs) {
+                    packs[packId] ?: openPack(packId)?.also { packs[packId] = it }
+                }
+            }
+
+        private fun openPack(packId: String): ServedPack? {
+            val source = resolver.open(packId)
+            val metadata =
+                try {
+                    source?.readMetadata()
+                } catch (_: InvalidMbtilesException) {
+                    null
+                }
+            if (source == null || metadata == null || closed) {
+                source?.let(::closeQuietly)
+                missingPacks += packId
+                return null
+            }
+            return ServedPack(source, metadata)
+        }
+
+        private fun refuse(client: Socket) {
+            try {
+                client.soTimeout = IDLE_TIMEOUT_MS
+                val output = client.getOutputStream()
+                Http.writeResponse(
+                    output,
+                    HttpResponse(Http.SERVICE_UNAVAILABLE),
+                    keepAlive = false,
+                    includeBody = true,
+                )
+            } catch (_: IOException) {
+                // The client is already gone.
+            } finally {
+                closeQuietly(client)
+            }
+        }
+    }
+
+    /** The two URL shapes the server answers. Anything else is a 404. */
+    private sealed interface Route {
+        val packId: String
+
+        data class TileJson(
+            override val packId: String,
+        ) : Route
+
+        data class Tile(
+            override val packId: String,
+            val z: Int,
+            val x: Int,
+            val y: Int,
+        ) : Route
+
+        companion object {
+            fun parse(path: String): Route? {
+                val segments = path.removePrefix("/").split('/')
+                return when {
+                    segments.size == 2 && segments[1] == "tiles.json" -> TileJson(segments[0])
+                    segments.size == TILE_PATH_SEGMENTS -> tile(segments)
+                    else -> null
+                }
+            }
+
+            private fun tile(segments: List<String>): Tile? {
+                val (z, x, file) = segments.drop(1)
+                val y = file.removeSuffix(".pbf").takeIf { it != file }?.toIntOrNull()
+                val zoom = z.toIntOrNull()
+                val column = x.toIntOrNull()
+                return if (zoom != null && column != null &&
+                    y != null
+                ) {
+                    Tile(segments[0], zoom, column, y)
+                } else {
+                    null
+                }
+            }
+        }
+    }
+
+    private class ServedPack(
+        val source: TileSource,
+        val metadata: MbtilesMetadata,
+    )
+
+    private companion object {
+        const val HOST = "127.0.0.1"
+        val LOOPBACK: InetAddress = InetAddress.getByAddress(byteArrayOf(127, 0, 0, 1))
+        const val BACKLOG = 16
+
+        /** MapLibre keeps a handful of connections open; this caps a misbehaving client. */
+        const val MAX_CONNECTIONS = 32
+
+        /** An idle keep-alive connection gives its thread back after this long. */
+        const val IDLE_TIMEOUT_MS = 10_000
+        const val TILE_PATH_SEGMENTS = 4
+        const val PROTOBUF = "application/x-protobuf"
+
+        /** Pack ids are generated by the app; this keeps anything path-like out. */
+        val PACK_ID = Regex("[A-Za-z0-9_-]{1,64}")
+        val threadIds = AtomicInteger()
+
+        fun gunzip(bytes: ByteArray): ByteArray = GZIPInputStream(bytes.inputStream()).use {
+            it.readBytes()
+        }
+
+        fun closeQuietly(closeable: AutoCloseable) {
+            try {
+                closeable.close()
+            } catch (_: IOException) {
+                // Nothing left to release.
+            }
+        }
+    }
+}
