@@ -4,6 +4,38 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-22 — Run 8 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | Item 13 (Phase 6) split into 6a–6g, and two parts done. **6a** `MbtilesReader` opens a pack read-only, flips XYZ rows to TMS, returns tiles as stored (gzip flagged, not unpacked), and validates the metadata. Tested with real SQLite under Robolectric, on plain and deduplicated (Planetiler view) packs ([#31](https://github.com/Alphaguyasa/Meret/pull/31)). **6b** `LocalTileServer` serves `/{packId}/tiles.json` and `/{packId}/{z}/{x}/{y}.pbf` on `127.0.0.1`, on a port picked at start, with keep-alive and gzip passthrough, and returns 204 for a missing tile ([#32](https://github.com/Alphaguyasa/Meret/pull/32)). |
+| Merged | #31 yes, `2cbba96` · #32 yes, `c3f49c1`. Both passed CI on the first attempt (about 2 min each). |
+| Failed or blocked | Nothing. |
+| Roadmap | 6 open items: 13 (6c–6g left), 14–18. No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Checked Anthropic's models page: no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7, A9, A10 unchanged. **Dependabot #30** (Gradle group, 27 updates) is open and green. It is left unmerged until A10 is answered. No GitHub Actions Dependabot PR was opened. New "Needs a device" row: the loopback tile server on a real phone (after 6c and 6e). |
+| Next | 6c (network security config, cleartext to 127.0.0.1 only), then 6d (StyleProvider and bundled glyphs and sprite). |
+
+Notes for the next run:
+- **Doc correction in #32: no NanoHTTPD.** It has been unmaintained since 2.3.1 and has open
+  advisories (CVE-2020-13697, CVE-2022-21230). `LocalTileServer` is hand-written HTTP/1.1,
+  GET/HEAD only, about 500 lines. MAPS_OFFLINE.md, ARCHITECTURE.md and SESSION_PROMPTS.md
+  are corrected.
+- `TileSource` is the seam: the server reads packs through it, and `MbtilesReader` implements
+  it. Server tests use an in-memory source and real loopback sockets, so they run on the JVM
+  with no Android SDK.
+- **Running `core/maps` tests locally:** kotlinc 2.2.10 plus JUnit, Truth, Guava,
+  hamcrest and kotlinx-serialization-json/core-jvm 1.9.0 from Maven Central (two 429s; retry
+  with a backoff). Compile the tests with `-Xfriend-paths=<main classes dir>`, or every
+  `internal` symbol is invisible. 32 tests ran this way. `MbtilesReaderTest` needs
+  Robolectric and runs in CI only.
+- Two stacked PRs: 6b branched from 6a's branch. After #31's squash, `git merge origin/main`
+  conflicted on the two files 6b had changed. 6b's side was a strict superset, so
+  `checkout --ours` was right. Diff against main afterwards to confirm.
+- Response headers: every response sends `Cache-Control: no-store`, because the port changes
+  per start. 6e must check that MapLibre's ambient cache honours it.
+- Debug APK after #31: **13,332 KiB** (unchanged; nothing in the app uses `:core:maps` yet).
+
 ## 2026-10-21 — Run 7 (scheduled, cloud)
 
 | Field | Content |
