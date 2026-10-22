@@ -19,12 +19,15 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split before starting)
-6a MbtilesReader (TMS→XYZ flip, gzip passthrough) with a tiny fixture `.mbtiles`;
-6b LocalTileServer on loopback; 6c network security config (cleartext to 127.0.0.1 only);
+### 13. [P2 · L] Phase 6 — Offline map (split; 6a and 6b done)
+Remaining parts, one PR each, in order:
+6c network security config (cleartext to 127.0.0.1 only);
 6d StyleProvider (bundle only the stack glyph directory, ~2.4 MB, and the sprite from
-`tools/out/map/`; see `tools/README.md`); 6e MapLibre Compose wrapper (check the real API in the artifact first);
-6f map screen controls; 6g SAF tile pack import.
+`tools/out/map/`; see `tools/README.md`; substitute `LocalTileServer.baseUrl(packId)`);
+6e MapLibre Compose wrapper (check the real API in the artifact first; check that MapLibre's
+ambient cache honours `Cache-Control: no-store`, else set its size to 0);
+6f map screen controls; 6g SAF tile pack import (validate with `MbtilesReader`, keep only
+`format=pbf`).
 
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
@@ -85,3 +88,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 10. Boot receiver: offer to resume an open track | #25 | `f18ca7e` |
 | 11. Dependabot for Gradle and GitHub Actions | #27 | `30bc255` |
 | 12. Phase 0 remainder: style, glyphs, sprite, preview | #28 | `a5fe889` |
+| 13 · 6a. `MbtilesReader` (TMS flip, gzip passthrough, metadata) | #31 | `2cbba96` |
+| 13 · 6b. `LocalTileServer` (loopback HTTP, TileJSON; not NanoHTTPD) | #32 | `c3f49c1` |
