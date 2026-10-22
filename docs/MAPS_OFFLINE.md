@@ -117,14 +117,23 @@ MapLibre Native does not read `.mbtiles` directly. Serve it locally.
 
 ```
 :core:maps
-  LocalTileServer      NanoHTTPD on 127.0.0.1, ephemeral port
+  LocalTileServer      hand-written HTTP/1.1 on 127.0.0.1, ephemeral port
   MbtilesReader        SQLite reads, TMS→XYZ row flip
   StyleProvider        loads style JSON from assets, rewrites the source URL
 ```
 
+*(This doc used to name NanoHTTPD. It has been unmaintained since 2.3.1 (2016) and has open
+advisories (CVE-2020-13697, CVE-2022-21230), so `LocalTileServer` is about 500 lines of
+GET/HEAD-only HTTP/1.1 with keep-alive instead. Corrected 2026-10-22.)*
+
 **Endpoints:**
 - `GET /{packId}/tiles.json` — TileJSON built from the mbtiles `metadata` table
-- `GET /{packId}/{z}/{x}/{y}.pbf` — the tile blob
+- `GET /{packId}/{z}/{x}/{y}.pbf` — the tile blob, or `204 No Content` when the pack has no
+  tile there (MapLibre then draws nothing and does not retry)
+
+Every response carries `Cache-Control: no-store`. The port changes on every start, so a copy
+in MapLibre's ambient cache would never be read again. Check in 6e that MapLibre honours it;
+if not, set the ambient cache size to 0.
 
 **The row flip is mandatory.** MBTiles stores rows in TMS order; MapLibre requests XYZ:
 ```kotlin

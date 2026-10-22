@@ -12,8 +12,9 @@ dependencies {
     api(project(":core:model"))
     implementation(project(":core:common"))
     implementation(project(":core:designsystem"))
+    // TileJSON for the loopback tile server. The runtime library only; no codegen plugin.
+    implementation(libs.kotlinx.serialization.json)
 
-    testImplementation(libs.kotlinx.serialization.json)
     // MbtilesReaderTest opens real SQLite packs, which needs Android's SQLiteDatabase.
     testImplementation(libs.robolectric)
 }

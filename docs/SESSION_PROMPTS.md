@@ -252,7 +252,7 @@ from memory, including mine. Tell me the version and anything that differs from 
 
 - MbtilesReader: SQLite reads from a .mbtiles file, TMS->XYZ row flip, gzip detection by
   magic bytes with Content-Encoding passthrough, metadata parsing into a TileJSON model
-- LocalTileServer: NanoHTTPD bound to 127.0.0.1 on an ephemeral port, serving
+- LocalTileServer: a small hand-written HTTP/1.1 server (not NanoHTTPD, see MAPS_OFFLINE.md) bound to 127.0.0.1 on an ephemeral port, serving
   /{packId}/tiles.json and /{packId}/{z}/{x}/{y}.pbf, lifecycle-bound start/stop
 - Network security config permitting cleartext for 127.0.0.1 only — not globally
 - StyleProvider: loads style JSON from assets, substitutes {{TILE_SERVER}} with the live

@@ -2,7 +2,6 @@ package et.alpha.meret.core.maps.mbtiles
 
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
-import java.io.Closeable
 import java.io.File
 
 /**
@@ -20,9 +19,9 @@ import java.io.File
  */
 public class MbtilesReader private constructor(
     private val database: SQLiteDatabase,
-) : Closeable {
+) : TileSource {
     /** Reads and validates the `metadata` table. */
-    public fun readMetadata(): MbtilesMetadata {
+    override fun readMetadata(): MbtilesMetadata {
         val rows =
             guard("metadata table is unreadable") {
                 database.rawQuery("SELECT name, value FROM metadata", null).use { cursor ->
@@ -42,7 +41,7 @@ public class MbtilesReader private constructor(
      * The tile at XYZ `z/x/y`, exactly as stored (gzipped or not), or null when the pack has
      * no tile there or the address is out of range.
      */
-    public fun readTile(
+    override fun readTile(
         z: Int,
         x: Int,
         y: Int,

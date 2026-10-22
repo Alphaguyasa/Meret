@@ -62,7 +62,7 @@ selected zoom levels from a tile server into MapLibre's own store. Good for a di
 sized area over Wi-Fi. Verify and raise the default tile-count ceiling before use.
 
 **Path B — sideloaded `.mbtiles` pack.** A pre-built country pack is copied to the device
-over USB or on an SD card. The app runs a loopback HTTP server (NanoHTTPD) on
+over USB or on an SD card. The app runs a loopback HTTP server (`LocalTileServer`) on
 `127.0.0.1` that serves tiles out of the `.mbtiles` SQLite file, and the style points at
 it. This is the path that matters for teams that never see good Wi-Fi.
 
