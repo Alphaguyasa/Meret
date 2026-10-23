@@ -209,7 +209,11 @@ class LocalTileServerTest {
 
         assertThat(server.port).isNull()
         assertThat(ethiopia.closed).isTrue()
-        assertThrows(IOException::class.java) { Socket("127.0.0.1", first).close() }
+        // Not a bare connect: once freed, the ephemeral port can be taken by another
+        // process, or a loopback connect can land on itself. What matters is that no tile
+        // server answers there any more.
+        val stale = runCatching { get("/ethiopia/0/0/0.pbf", port = first).status }
+        assertThat(stale.getOrNull()).isNotEqualTo(200)
         assertThat(server.start()).isNotNull()
         assertThat(get("/ethiopia/0/0/0.pbf").status).isEqualTo(200)
     }
