@@ -29,3 +29,32 @@ tasks.withType<Test>().configureEach {
         .withPathSensitivity(PathSensitivity.RELATIVE)
     systemProperty("meret.styleDir", mapStyleDir.asFile.absolutePath)
 }
+
+// The style template ships in this module's assets as map/style.json
+// (StyleProvider.TEMPLATE_ASSET). tools/style/ stays its only source.
+abstract class BundleMapStyle : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val style: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        val target = outputDir.file("map/style.json").get().asFile
+        target.parentFile.mkdirs()
+        style.get().asFile.copyTo(target, overwrite = true)
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val taskName = "bundle${variant.name.replaceFirstChar { it.uppercase() }}MapStyle"
+        val bundle =
+            tasks.register<BundleMapStyle>(taskName) {
+                style.set(mapStyleDir.file("meret-style.json"))
+            }
+        variant.sources.assets?.addGeneratedSourceDirectory(bundle, BundleMapStyle::outputDir)
+    }
+}

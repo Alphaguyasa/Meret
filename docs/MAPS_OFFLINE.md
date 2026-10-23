@@ -153,8 +153,12 @@ never hardcode. Pass the actual port into the style rewrite.
 **Style rewrite:** keep `style.json` in assets with a placeholder source URL and
 substitute at load time:
 ```kotlin
-val style = assetJson.replace("{{TILE_SERVER}}", "http://127.0.0.1:$port/$packId")
+val style = template.replace("\"{{TILE_SERVER}}\"", "\"${server.baseUrl(packId)}/tiles.json\"")
 ```
+Replace the quoted JSON value only: the style's `metadata` notes mention the placeholder in
+prose. The source URL is the TileJSON, not the pack root. `StyleProvider` in `:core:maps`
+does this, refuses any URL off 127.0.0.1, and the build copies `tools/style/meret-style.json`
+into the module's assets as `map/style.json`.
 Write the result to `cacheDir` and hand MapLibre a `file://` URI. Note that Android 9+
 blocks cleartext HTTP by default — add a network security config that permits cleartext
 for `127.0.0.1` only. Do not set `cleartextTrafficPermitted="true"` globally.
