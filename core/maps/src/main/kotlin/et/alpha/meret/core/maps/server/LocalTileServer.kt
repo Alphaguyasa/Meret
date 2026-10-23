@@ -291,6 +291,7 @@ public class LocalTileServer(
     )
 
     private companion object {
+        /** The only cleartext host in `:app`'s `network_security_config.xml`. Change both. */
         const val HOST = "127.0.0.1"
         val LOOPBACK: InetAddress = InetAddress.getByAddress(byteArrayOf(127, 0, 0, 1))
         const val BACKLOG = 16

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    HTTPS everywhere except one host: the loopback tile server (LocalTileServer in
+    :core:maps), which MapLibre reaches at http://127.0.0.1:{port}. The port changes on
+    every start, and a network security config cannot match a port, so the rule covers
+    the address. Nothing else listens there, and nothing on 127.0.0.1 leaves the phone.
+
+    Do not add cleartextTrafficPermitted="true" to base-config, or "localhost": the style
+    and the server use the literal address only. Only the system CAs are trusted, so a
+    user-installed CA cannot read sync traffic. Guarded by NetworkSecurityConfigTest.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>
