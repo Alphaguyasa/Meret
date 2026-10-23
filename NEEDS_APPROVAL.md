@@ -79,6 +79,15 @@ only, one grouped PR for Gradle and one for GitHub Actions, so at most 2 open. T
    which costs a second CI run per update; (c) you merge them yourself. **Default until
    you answer:** the run leaves them open and lists them in the report.
 
+### A11. Glyphs and sprite: committed or built in CI (no cost, has a default)
+Phase 6d-2 puts the Ethiopic + Latin glyph stack directory (~2.4 MB of PBFs) and the sprite
+(~20 KB) into the app. Options: (a) **commit them** under `core/maps/src/main/assets/map/`.
+Builds stay reproducible and CI needs no font downloads, but the repo grows by ~2.4 MB per
+font change. (b) **Build them in CI** with `tools/build-glyphs.sh`. The repo stays small,
+but every CI run downloads the Noto fonts and runs npm, which adds minutes (A2) and a network
+dependency. The APK grows by ~2.4 MB either way. **Default if you don't answer:** (a), with
+the OFL licence text beside the fonts.
+
 ---
 
 ## Needs a device

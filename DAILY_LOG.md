@@ -4,6 +4,39 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-23 — Run 9 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **6c** network security config: cleartext to `127.0.0.1` only (no subdomains, no `localhost`), system CAs only, no debug overrides. `NetworkSecurityConfigTest` guards it ([#34](https://github.com/Alphaguyasa/Meret/pull/34)). **6d-1** `StyleProvider`: the build copies `tools/style/meret-style.json` into `:core:maps` assets as `map/style.json`. `StyleProvider` swaps in the loopback TileJSON URL, refuses any URL that is not on 127.0.0.1, and writes the style to `cacheDir` by write-then-rename. It returns a `file://` URI ([#35](https://github.com/Alphaguyasa/Meret/pull/35)). 6d was split: glyphs and sprite are now 6d-2. |
+| Merged | #34 yes, `622964f` · #35 yes, `54b46a5`. #34 failed CI once on a flaky test it did not cause (`LocalTileServerTest`, see notes). It passed after the test fix, which was attempt 1 of 2. #35 passed on the first attempt. Each CI run took about 2 min. |
+| Failed or blocked | Nothing is blocked. One flaky test was found and fixed in #34. |
+| Roadmap | 6 open items: 13 (6d-2 to 6g left), 14–18. No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Checked Anthropic's models page: no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7, A9, A10 unchanged. **A11 new** (low stakes, has a default): commit the generated glyphs and sprite (~2.4 MB) or generate them in CI. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. |
+| Next | 6d-2 (bundle the glyph stack directory and the sprite), then 6e (MapLibre Compose wrapper). |
+
+Notes for the next run:
+- **Flaky test, fixed:** `LocalTileServerTest` checked that a port was closed with a bare
+  `Socket(...)` connect after `stop()`. In CI that connect once succeeded. After a port is
+  freed, another process can reuse it, or a loopback connect can land on its own socket. The
+  test now sends a request and expects no tile back. Never assert "port closed" by connect.
+- **Placeholder trap:** `meret-style.json` has `{{TILE_SERVER}}` twice. One is the source
+  URL; the other is inside the `metadata` notes text. `StyleProvider` replaces only the
+  quoted JSON value `"{{TILE_SERVER}}"`. The source URL is the TileJSON
+  (`baseUrl(packId) + "/tiles.json"`), not the pack root. MAPS_OFFLINE.md had both wrong;
+  it is fixed.
+- **Generated assets in AGP 9 work:** a per-variant task registered in `onVariants`, then
+  `variant.sources.assets?.addGeneratedSourceDirectory(task, Task::outputDir)`, defined in
+  `core/maps/build.gradle.kts`. Robolectric sees the result (`StyleAssetTest`, through
+  `isIncludeAndroidResources`). Use the same pattern for 6d-2 if the glyphs end up generated.
+- The squash message of #34 corrects the branch commit: with targetSdk 36, cleartext is
+  already off by default on every API level. It is not on for API 26–27.
+- Local runs: kotlinc 2.2.10 + JUnit, Truth, Guava, coroutines(-test) 1.10.2 and
+  kotlinx-serialization 1.9.0 from Maven Central, with no 429s this run. `LocalTileServerTest`
+  passed 13/13, three times in a row, with `-Xfriend-paths`. ktlint 1.8.0 needs explicit
+  file paths: a `**` glob walks `/proc` and crashes.
+
 ## 2026-10-22 — Run 8 (scheduled, cloud)
 
 | Field | Content |
