@@ -19,17 +19,18 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split; 6a, 6b, 6c and 6d-1 done)
+### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6d and 6e-1 done)
 Remaining parts, one PR each, in order:
-6d-2 bundle the glyph stack directory (~2.4 MB) and the sprite (~20 KB) from `tools/out/map/`
-into `:core:maps` assets at `map/fonts/` and `map/sprite/` (see `tools/README.md`, and
-NEEDS_APPROVAL A11 for committed vs generated in CI; default: committed, with the OFL licence);
-a test that every stack and range the style requests exists, Ethiopic `4608-4863` included;
-6e MapLibre Compose wrapper (check the real API in the artifact first; check that MapLibre's
-ambient cache honours `Cache-Control: no-store`, else set its size to 0; load the style from
-`StyleProvider.write(server.baseUrl(packId) + "/tiles.json")`);
-6f map screen controls; 6g SAF tile pack import (validate with `MbtilesReader`, keep only
-`format=pbf`).
+6e-2 add MapLibre Android (`org.maplibre.gl:android-sdk` 12.3.1, BSD-2, checked on Maven
+Central 2026-10-24; latest stable) to the catalog and wrap `MapView` in a Compose
+`AndroidView` in `:core:maps`, forwarding the lifecycle (`onCreate/onStart/onResume/onPause/
+onStop/onDestroy/onLowMemory`, all present in 12.3.1). Hold `OfflineMapSession` from start to
+stop and load `Style.Builder().fromUri(session.acquire(packId))`. Call
+`OfflineManager.getInstance(context).setMaximumAmbientCacheSize(0, callback)` once: the Java
+sources do not mention `no-store`, so do not rely on the native cache honouring it. Measure the
+debug APK before and after (native libs per ABI) and record both in the log;
+6f map screen controls; 6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (the layout
+`PackDirectoryResolver` reads; validate with `MbtilesReader`, keep only `format=pbf`).
 
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
@@ -94,3 +95,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 13 · 6b. `LocalTileServer` (loopback HTTP, TileJSON; not NanoHTTPD) | #32 | `c3f49c1` |
 | 13 · 6c. Network security config (cleartext to 127.0.0.1 only); flaky `LocalTileServerTest` fixed | #34 | `622964f` |
 | 13 · 6d-1. `StyleProvider` and the bundled style template | #35 | `54b46a5` |
+| 13 · 6d-2. Glyph stack (Noto Sans + Ethiopic, 256 ranges) and sprite in `:core:maps` assets | #37 | `436ba95` |
+| 13 · 6e-1. `OfflineMapSession` (ref-counted server + style), `PackDirectoryResolver` | #38 | `b4e2e46` |

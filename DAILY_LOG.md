@@ -4,6 +4,39 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-24 — Run 10 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **6d-2:** the glyph stack `Noto Sans Regular,Noto Sans Ethiopic Regular` (all 256 ranges, 2.4 MB) and the 1x/2x Maki sprite are in `:core:maps` assets. Both were built with `tools/build-glyphs.sh` and `build-sprite.sh`, with `OFL.txt` beside them. `MapAssetsTest` checks every range of every stack the style uses, Ethiopic `4608-4863` (130 KB), the sprite icons and the licence ([#37](https://github.com/Alphaguyasa/Meret/pull/37)). **6e-1:** 6e was split. `OfflineMapSession` reference-counts the loopback server: the first acquire starts it, every acquire writes the style for the current port, and the last release stops it. `PackDirectoryResolver` maps an id to `{dir}/{id}.mbtiles` and refuses paths, `..`, links out of the directory and corrupt packs ([#38](https://github.com/Alphaguyasa/Meret/pull/38)). |
+| Merged | #37 yes, `436ba95` (CI green on the first attempt). #38 yes, `b4e2e46`. Its first CI run failed on detekt `ReturnCount` in `PackDirectoryResolver.open`. Attempt 1 of 2 fixed it, and CI went green. |
+| Failed or blocked | Nothing is blocked. One detekt failure was mine, and it is fixed (see notes). |
+| Roadmap | 6 open items: 13 (6e-2, 6f, 6g left), 14–18. No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). I checked Anthropic's models page: there is no newer Opus. No action. |
+| Needs approval | A11: the default (a), commit the assets, is now applied. Tell me if you want CI-generated assets instead. A2, A3, A5, A6, A7, A9, A10 are unchanged. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. |
+| Next | 6e-2: add MapLibre Android 12.3.1 and the Compose `MapView` wrapper, with the ambient cache set to 0 and the APK measured before and after. Then 6f (map screen controls). |
+
+Notes for the next run:
+- **Run detekt locally before pushing.** ktlint alone missed `ReturnCount` (max 2 returns).
+  `detekt-cli-1.23.8-all.jar` from the GitHub release works:
+  `java -jar detekt.jar --config config/detekt/detekt.yml --build-upon-default-config --input core/maps/src`.
+- **MapLibre facts checked in the 12.3.1 sources jar.** `MapView` has
+  `onCreate/onStart/onResume/onPause/onStop/onDestroy/onLowMemory/onSaveInstanceState`.
+  `MapLibre.getInstance(context)` exists, and so does
+  `OfflineManager.setMaximumAmbientCacheSize(size, callback)`. The Java and Kotlin sources
+  never mention `no-store`, so set the ambient cache to 0. Do not call
+  `MapLibre.setConnected(false)`: that would also stop requests to 127.0.0.1. The POM pulls in
+  OkHttp 4.12.0 and Timber 5.0.1. The sources jar has overlapping zip entries, so `unzip` and
+  Python's `zipfile` refuse it. Grep it with Python after catching the error (most files
+  extract first), or use `jar xf`.
+- **The APK has no glyphs yet.** `:app` does not depend on `:core:maps`, so the debug APK
+  artifact stayed at about 13.4 MB (zip). The ~2.4 MB glyphs arrive with 6e-2.
+- `OfflineMapSessionTest` uses real loopback sockets and a `StandardTestDispatcher` for `io`.
+  Never wrap a session call in `runBlocking` inside `runTest`: the test dispatcher would
+  deadlock. Use a suspend `expect(...)` helper.
+- Local runs this time: kotlinc 2.2.10 with a stub `MbtilesReader` (it needs Android
+  SQLite). 27 tests passed. Maven Central returned one 429 (junit), and a retry worked.
+
 ## 2026-10-23 — Run 9 (scheduled, cloud)
 
 | Field | Content |
