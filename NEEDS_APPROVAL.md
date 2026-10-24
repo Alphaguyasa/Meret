@@ -87,6 +87,8 @@ font change. (b) **Build them in CI** with `tools/build-glyphs.sh`. The repo sta
 but every CI run downloads the Noto fonts and runs npm, which adds minutes (A2) and a network
 dependency. The APK grows by ~2.4 MB either way. **Default if you don't answer:** (a), with
 the OFL licence text beside the fonts.
+**Run 10 applied the default:** #37 committed the stack directory and the sprite under
+`core/maps/src/main/assets/map/` with `OFL.txt`. Answer only if you want (b) instead.
 
 ---
 
