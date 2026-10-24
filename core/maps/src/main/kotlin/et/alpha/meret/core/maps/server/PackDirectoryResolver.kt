@@ -19,12 +19,15 @@ public class PackDirectoryResolver(
     private val openPack: (File) -> TileSource = MbtilesReader::open,
 ) : TilePackResolver {
     override fun open(packId: String): TileSource? {
-        if (!isValidPackId(packId)) return null
-        val file = File(directory, packId + EXTENSION)
-        if (file.canonicalFile.parentFile != directory.canonicalFile || !file.isFile) return null
-        return try {
-            openPack(file)
-        } catch (_: InvalidMbtilesException) {
+        val file = packId.takeIf(::isValidPackId)?.let { File(directory, it + EXTENSION) }
+        val inside = file?.canonicalFile?.parentFile == directory.canonicalFile
+        return if (file != null && inside && file.isFile) {
+            try {
+                openPack(file)
+            } catch (_: InvalidMbtilesException) {
+                null
+            }
+        } else {
             null
         }
     }
