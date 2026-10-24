@@ -63,6 +63,23 @@ sqlite3 $P "select hex(substr(tile_data,1,2)) from tiles limit 1;"           # 1
 sqlite3 $P "select json_extract(value,'$.vector_layers[*].id') from metadata where name='json';"
 ```
 
+## Refreshing the app's copy
+
+The app ships the glyph stack and the sprite as committed assets in `:core:maps`
+(NEEDS_APPROVAL A11, default (a)). After a font, `fonts.json` or `sprite-icons.txt`
+change, rebuild and copy:
+
+```bash
+./build-glyphs.sh && ./build-sprite.sh
+A=../core/maps/src/main/assets/map
+rm -rf "$A/fonts/Noto Sans Regular,Noto Sans Ethiopic Regular" "$A/sprite"
+cp -r "out/map/fonts/Noto Sans Regular,Noto Sans Ethiopic Regular" "$A/fonts/"
+cp -r out/map/sprite "$A/sprite"
+```
+
+A new font stack in the style needs its directory copied too, and its font's licence in
+`$A/fonts/OFL.txt`. `MapAssetsTest` fails if a stack, a range or an icon is missing.
+
 ## Things that are easy to get wrong
 
 - **Font stacks, not fonts.** MapLibre requests

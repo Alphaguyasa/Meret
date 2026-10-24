@@ -74,7 +74,11 @@ exactly, including spaces.
 Ethiopic lives in U+1200–U+137F, so the `4608-4863` range is the one that matters —
 but ship all ranges the style might request.
 
-Bundle under `app/src/main/assets/map/fonts/`.
+Bundled under `core/maps/src/main/assets/map/fonts/`: the stack directory only (about
+2.4 MB, all 256 ranges, most of them a few bytes), with `OFL.txt` beside it. The single-font
+directories are never requested and are not shipped. *(Was `app/src/main/assets/`; the
+map assets live in `:core:maps` with the style, corrected 2026-10-24.)* `MapAssetsTest`
+checks that every range of every stack the style uses is in the assets.
 
 In the style:
 ```json
@@ -101,7 +105,7 @@ Make this a runtime toggle — a setting that switches the expression between
 Take a permissively licensed icon set (Maki, CC0-1.0) and build the atlas with
 `tools/build-sprite.sh`. *(It was `spritezero`, which needs mapnik and no longer builds on
 current Node; the script packs the same format with sharp.)* Output `sprite.png`, `sprite@2x.png`, `sprite.json`, `sprite@2x.json` into
-`assets/map/sprite/`.
+`core/maps/src/main/assets/map/sprite/`.
 
 ```json
 "sprite": "asset://map/sprite/sprite"
