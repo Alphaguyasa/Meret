@@ -1,0 +1,58 @@
+{
+  "fuel": {
+    "x": 2,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  },
+  "hospital": {
+    "x": 36,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  },
+  "marker": {
+    "x": 70,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  },
+  "mountain": {
+    "x": 104,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  },
+  "place-of-worship": {
+    "x": 138,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  },
+  "school": {
+    "x": 172,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  },
+  "shop": {
+    "x": 206,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  },
+  "town-hall": {
+    "x": 240,
+    "y": 2,
+    "width": 30,
+    "height": 30,
+    "pixelRatio": 2
+  }
+}
