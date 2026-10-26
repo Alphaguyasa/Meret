@@ -4,6 +4,7 @@ import android.Manifest
 import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.common.result.map
+import et.alpha.meret.core.common.telemetry.Telemetry
 import et.alpha.meret.core.database.dao.TrackDao
 import et.alpha.meret.core.database.mapper.toDomain
 import et.alpha.meret.core.datastore.TrackingConfigStore
@@ -67,13 +68,14 @@ public class DefaultTrackingController
         private val sessionStore: TrackingSessionStore,
         private val configStore: TrackingConfigStore,
         private val trackDao: TrackDao,
+        telemetry: Telemetry,
     ) : TrackingController {
         private val timeProvider = recorder.timeProvider
         private val scope = CoroutineScope(SupervisorJob() + recorder.dispatchers.default)
         private val mutex = Mutex()
         private val mutableState = MutableStateFlow<TrackingState>(TrackingState.Idle)
 
-        private val healthTracker = TrackingHealthTracker()
+        private val healthTracker = TrackingHealthTracker(telemetry)
         private val mutableHealth = MutableStateFlow(healthTracker.current)
         private var healthJob: Job? = null
 

@@ -7,6 +7,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import et.alpha.meret.core.common.dispatcher.DispatcherProvider
 import et.alpha.meret.core.common.dispatcher.StandardDispatcherProvider
+import et.alpha.meret.core.common.telemetry.NoOpTelemetry
+import et.alpha.meret.core.common.telemetry.Telemetry
 import et.alpha.meret.core.common.time.TimeProvider
 import et.alpha.meret.core.common.uuid.UuidV7Generator
 import et.alpha.meret.core.data.tracking.DefaultTrackingController
@@ -43,4 +45,12 @@ public object CommonModule {
     @Singleton
     public fun provideUuidV7Generator(timeProvider: TimeProvider): UuidV7Generator =
         UuidV7Generator(timeProvider)
+
+    /**
+     * Nothing leaves the phone. A deployment that wants crash or gap reports replaces this
+     * binding with its own reporter, which must keep to the no-personal-data rules on
+     * [Telemetry].
+     */
+    @Provides
+    public fun provideTelemetry(): Telemetry = NoOpTelemetry
 }
