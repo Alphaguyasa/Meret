@@ -4,6 +4,37 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-26 — Run 12 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Run 11 (earlier today) wrote no log.** It merged 6e-2, the MapLibre `MapView` wrapper ([#40](https://github.com/Alphaguyasa/Meret/pull/40)), and opened 6f-1 ([#41](https://github.com/Alphaguyasa/Meret/pull/41)), then stopped. #41's CI hung, so this run picked it up. **6f-1:** the map screen draws the newest installed pack through `OfflineMap`. With no pack it shows the placeholder. A bad pack id or an unwritable style leaves the map blank instead of crashing. **Item 17:** each closed tracking gap goes to `Telemetry` as `tracking_gap`, with `duration_ms` as its only attribute. `NoOpTelemetry` is the binding ([#42](https://github.com/Alphaguyasa/Meret/pull/42)). |
+| Merged | #40 yes, `c0829be` (run 11). #41 yes, `2efa101`, after one fix (attempt 1 of 2, see notes). #42 yes, `1b2537a`, green on the first attempt. Each green run took about 4 min. |
+| Failed or blocked | #41's first CI run cost 45 Actions minutes: a test outside the PR timed out, and then the build sat idle for 38 min. It is fixed, and new timeouts limit a future hang (see notes). Linters and kotlinc could not run locally: auto mode refused to run downloaded binaries this run. CI was the only check. |
+| Roadmap | 6 open items: 13 (6f-2 and 6g left), 14, 15, 16, 18, and **19, new:** the APK went from 13.4 to 33.4 MB with MapLibre (4 ABIs); ship per-ABI. No replan needed. Item 17 was taken ahead of 13: 6f-2 is larger and needs MapLibre API checks. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). I checked Anthropic's models page: there is no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7, A9, A10, A11 unchanged. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. New "Needs a device" row: the map screen draws a sideloaded pack. |
+| Next | 6f-2 (map controls: puck, follow, compass, scale bar, zoom), then 6g (SAF pack import) or 19 (APK size). |
+
+Notes for the next run:
+- **The #41 hang.** `OnboardingViewModelTest > returning from the OEM screen ...` failed with
+  `UncompletedCoroutinesError` after 1 min. It waited on `store.skippedSteps.first { }` for a
+  write made on DataStore's default `Dispatchers.IO` scope. After that, every requested task
+  had printed its header, yet Gradle never printed `BUILD FAILED`. It sat idle from 11:51 to
+  12:29 until the 45-min job timeout. The root cause of the idle time was not proven (no SDK
+  to reproduce). Fixes: the test's DataStore now uses `scope = backgroundScope`; every `Test`
+  task times out after 10 min (`KotlinAndroid.kt`, `configureTestTimeout`); and the CI job
+  times out after 30 min. **Any other test that builds a DataStore without a test scope is a
+  candidate for the same flake:** `DefaultTrackingControllerTest`, and the unscoped
+  `OnboardingStoreTest`/`TrackingSessionStoreTest` paths.
+- Read a long CI log with `get_job_logs(return_content=true, tail_lines=3000)`. The result
+  is saved to a file; extract it with `jq -r .logs_content`. The blob URL itself is refused
+  by the proxy (403).
+- `Telemetry` was not bound in Hilt before #42. It is now `CommonModule.provideTelemetry()`
+  in `:core:data`. A deployment's reporter replaces that one line.
+- `MapViewModel` picks `packs.firstOrNull()`; `TilePackDao.observeTilePacks` orders newest
+  first. 6g must write `installedAt` so that the order holds.
+
 ## 2026-10-24 — Run 10 (scheduled, cloud)
 
 | Field | Content |

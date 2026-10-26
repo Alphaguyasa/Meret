@@ -19,18 +19,14 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6d and 6e-1 done)
+### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6e and 6f-1 done)
 Remaining parts, one PR each, in order:
-6e-2 add MapLibre Android (`org.maplibre.gl:android-sdk` 12.3.1, BSD-2, checked on Maven
-Central 2026-10-24; latest stable) to the catalog and wrap `MapView` in a Compose
-`AndroidView` in `:core:maps`, forwarding the lifecycle (`onCreate/onStart/onResume/onPause/
-onStop/onDestroy/onLowMemory`, all present in 12.3.1). Hold `OfflineMapSession` from start to
-stop and load `Style.Builder().fromUri(session.acquire(packId))`. Call
-`OfflineManager.getInstance(context).setMaximumAmbientCacheSize(0, callback)` once: the Java
-sources do not mention `no-store`, so do not rely on the native cache honouring it. Measure the
-debug APK before and after (native libs per ABI) and record both in the log;
-6f map screen controls; 6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (the layout
-`PackDirectoryResolver` reads; validate with `MbtilesReader`, keep only `format=pbf`).
+6f-2 map screen controls: location puck, follow mode, compass, scale bar, zoom. Check every
+MapLibre call against the 12.3.1 sources jar first (CLAUDE.md); 6f-1 left `onRecentreMap` a
+no-op in `MapRoute`. Choosing the pack that covers the user's position comes with the puck;
+6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (the layout
+`PackDirectoryResolver` reads; validate with `MbtilesReader`, keep only `format=pbf`) and a
+`tile_pack` row, which `MapViewModel` already observes.
 
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
@@ -46,16 +42,17 @@ It is for supervisors fixing a phone that keeps losing tracks.
 - Tests: clearing skips makes the picker offer the skipped step again; the button is only
   shown when a step is missing.
 
-### 17. [P3 · S] Record `tracking_gap` through `Telemetry`
-`TrackingHealthTracker` logs gaps for the diagnostics screen only. Also send each closed gap
-to `Telemetry.recordEvent("tracking_gap", duration only)`. The default is no-op, so nothing
-leaves the phone unless a deployment binds a reporter.
-
 ### 18. [P3 · S] Cover `tools/package-lock.json` with Dependabot
 `tools/` now has npm dependencies (fontnik, sharp, Maki). Dependabot alerts (A10) will flag
 advisories in the lockfile, but nothing proposes routine updates. Add an `npm` entry for
 `/tools`, monthly, sharing the 2-open-PR budget (lower the Gradle limit or group). sharp was
 pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
+
+### 19. [P2 · S] Cut the APK size MapLibre added
+MapLibre's native libraries took the debug APK from 13.4 MB to 33.4 MB (#40), for 4 ABIs.
+Field phones are low-end and data is paid by the megabyte. Measure the release build, then
+ship per-ABI: an App Bundle for Play, and ABI splits (`armeabi-v7a`, `arm64-v8a`) for
+sideloaded APKs. Drop `x86`/`x86_64` from release only. Record before and after in the log.
 
 ### Later phases (expand into items when they reach the top)
 - Phase 7 — Tracking UI and track rendering
@@ -97,3 +94,6 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 13 · 6d-1. `StyleProvider` and the bundled style template | #35 | `54b46a5` |
 | 13 · 6d-2. Glyph stack (Noto Sans + Ethiopic, 256 ranges) and sprite in `:core:maps` assets | #37 | `436ba95` |
 | 13 · 6e-1. `OfflineMapSession` (ref-counted server + style), `PackDirectoryResolver` | #38 | `b4e2e46` |
+| 13 · 6e-2. MapLibre 12.3.1 `MapView` wrapper, lifecycle, ambient cache off | #40 | `c0829be` |
+| 13 · 6f-1. Map screen draws the installed pack; flaky `OnboardingViewModelTest` fixed, test and CI timeouts | #41 | `2efa101` |
+| 17. Closed tracking gaps go to `Telemetry` (duration only, no-op by default) | #42 | `1b2537a` |
