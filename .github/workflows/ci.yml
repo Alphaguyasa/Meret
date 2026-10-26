@@ -23,7 +23,8 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # A green run takes about 8-17 minutes. 45 let a hung build burn 38 (PR #41).
+    timeout-minutes: 30
 
     # Dummy values, so nothing in CI ever needs a real key. Nothing in the build or the
     # unit tests talks to Supabase; the convention plugin reads these when
