@@ -19,18 +19,15 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6d and 6e-1 done)
+### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6e done, 6f-1 in #41)
 Remaining parts, one PR each, in order:
-6e-2 add MapLibre Android (`org.maplibre.gl:android-sdk` 12.3.1, BSD-2, checked on Maven
-Central 2026-10-24; latest stable) to the catalog and wrap `MapView` in a Compose
-`AndroidView` in `:core:maps`, forwarding the lifecycle (`onCreate/onStart/onResume/onPause/
-onStop/onDestroy/onLowMemory`, all present in 12.3.1). Hold `OfflineMapSession` from start to
-stop and load `Style.Builder().fromUri(session.acquire(packId))`. Call
-`OfflineManager.getInstance(context).setMaximumAmbientCacheSize(0, callback)` once: the Java
-sources do not mention `no-store`, so do not rely on the native cache honouring it. Measure the
-debug APK before and after (native libs per ABI) and record both in the log;
-6f map screen controls; 6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (the layout
-`PackDirectoryResolver` reads; validate with `MbtilesReader`, keep only `format=pbf`).
+6f-2 location puck and follow mode, and choose the installed pack that covers the user's
+position (`TilePackDao.getTilePacksCovering`) instead of the newest one;
+6f-3 compass, scale bar, zoom controls, and the camera position kept across rotation
+(`rememberSaveable`);
+6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (`PackDirectoryResolver.APP_DIRECTORY`),
+validated with `MbtilesReader` (keep only `format=pbf`), plus a `tile_pack` row. Its `path` must
+match the file the resolver serves.
 
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
@@ -56,6 +53,13 @@ leaves the phone unless a deployment binds a reporter.
 advisories in the lockfile, but nothing proposes routine updates. Add an `npm` entry for
 `/tools`, monthly, sharing the 2-open-PR budget (lower the Gradle limit or group). sharp was
 pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
+
+### 19. [P2 · S] Fix the flaky `OnboardingViewModelTest` OEM-return test
+`returning from the OEM screen finishes the flow and is persisted` timed out after 1 min once
+in CI (#40, run 40271014432) and passed on the re-run. The test waits on a real DataStore
+write that `OnboardingViewModel.skip` launches in `viewModelScope`, on a `Main` dispatcher
+from a different test scheduler. Find the race and make the test deterministic (for example
+a test DataStore scope, or await the write through the ViewModel), without loosening it.
 
 ### Later phases (expand into items when they reach the top)
 - Phase 7 — Tracking UI and track rendering
@@ -97,3 +101,4 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 13 · 6d-1. `StyleProvider` and the bundled style template | #35 | `54b46a5` |
 | 13 · 6d-2. Glyph stack (Noto Sans + Ethiopic, 256 ranges) and sprite in `:core:maps` assets | #37 | `436ba95` |
 | 13 · 6e-1. `OfflineMapSession` (ref-counted server + style), `PackDirectoryResolver` | #38 | `b4e2e46` |
+| 13 · 6e-2. MapLibre 12.3.1, `OfflineMap` Compose wrapper, ambient cache 0, Logger off, `ACCESS_WIFI_STATE` removed | #40 | `c0829be` |

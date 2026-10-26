@@ -90,6 +90,23 @@ the OFL licence text beside the fonts.
 **Run 10 applied the default:** #37 committed the stack directory and the sprite under
 `core/maps/src/main/assets/map/` with `OFL.txt`. Answer only if you want (b) instead.
 
+### A12. APK size after MapLibre: one APK per phone type? (no cost, has a default)
+Adding the map engine (#40) took the debug APK from **13.4 MB to 33.4 MB** (CI artifact,
+zipped). Almost all of the increase is MapLibre's native library, which ships once for each of
+the four CPU types: arm64-v8a 13.2 MB, armeabi-v7a 9.6 MB, x86 13.5 MB, x86_64 13.5 MB
+(uncompressed). A phone uses only one of them. Field phones are ARM (Tecno/Infinix/Itel), and
+x86 is only for emulators. Options for **release** builds:
+- (a) **One APK per CPU type** (ABI splits) for arm64-v8a and armeabi-v7a. Each is about
+  13 MB smaller than today. It is free and works for sideloading and WhatsApp sharing, but
+  whoever installs it must pick the right file (the app can show its type in Diagnostics).
+- (b) **Publish an Android App Bundle on Google Play**, which delivers only the matching
+  library. A Play developer account costs a one-time US$25, so under the no-purchases rule
+  this waits for you.
+- (c) **Keep one universal APK.** It is the simplest, but about 20 MB more to download
+  over a slow connection.
+**Default if you don't answer:** nothing changes; debug builds stay universal. I recommend
+(a) for release builds once a release build exists.
+
 ---
 
 ## Needs a device
@@ -107,6 +124,7 @@ hardware. Steps are in the linked docs.
 | 5 | Reboot mid-track: after unlocking, the «Track not finished» prompt appears; «Resume recording» continues the same track in a new segment; with no open track, no prompt | Needs a record button (Phase 7) or adb to start a track |
 | 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
 | 6 | The loopback tile server on a phone: MapLibre loads `tiles.json` and tiles from `127.0.0.1` in aeroplane mode, with no cleartext error, and the server stops when the map leaves the foreground | After 6c (network security config) and 6e (map wrapper) |
+| 6 | The map screen draws an installed pack (after 6g, or a pack and a `tile_pack` row pushed with adb): map renders in aeroplane mode, rotating the phone does not crash or leak, and leaving the map tab stops the tile server | `OfflineMap` (#40) and the map screen (#41) |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 
 ---
