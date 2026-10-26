@@ -7,6 +7,6 @@ android {
 }
 
 dependencies {
-    // OfflineMap replaces the placeholder basemap in 6f (map screen controls).
+    implementation(project(":core:data"))
     implementation(project(":core:maps"))
 }
