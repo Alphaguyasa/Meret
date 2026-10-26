@@ -64,8 +64,11 @@ internal class MapLifecycleForwarder(
 
     private fun down(): Lifecycle.State = when (state) {
         Lifecycle.State.RESUMED -> Lifecycle.State.STARTED.also { target.onPause() }
+
         Lifecycle.State.STARTED -> Lifecycle.State.CREATED.also { target.onStop() }
+
         Lifecycle.State.CREATED -> Lifecycle.State.DESTROYED.also { target.onDestroy() }
+
         // Never created: nothing native to free.
         else -> Lifecycle.State.DESTROYED
     }
