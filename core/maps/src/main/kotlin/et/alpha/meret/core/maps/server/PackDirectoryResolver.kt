@@ -34,5 +34,8 @@ public class PackDirectoryResolver(
 
     public companion object {
         public const val EXTENSION: String = ".mbtiles"
+
+        /** The app's pack directory, under `filesDir`. */
+        public const val APP_DIRECTORY: String = "packs"
     }
 }

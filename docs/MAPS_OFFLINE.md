@@ -136,8 +136,9 @@ GET/HEAD-only HTTP/1.1 with keep-alive instead. Corrected 2026-10-22.)*
   tile there (MapLibre then draws nothing and does not retry)
 
 Every response carries `Cache-Control: no-store`. The port changes on every start, so a copy
-in MapLibre's ambient cache would never be read again. Check in 6e that MapLibre honours it;
-if not, set the ambient cache size to 0.
+in MapLibre's ambient cache would never be read again. MapLibre's sources (12.3.1) never
+mention `no-store`, so `MapLibreSetup` also sets the ambient cache size to 0 before the first
+`MapView` is built.
 
 **The row flip is mandatory.** MBTiles stores rows in TMS order; MapLibre requests XYZ:
 ```kotlin
@@ -225,14 +226,23 @@ whatever the first symbol layer id in your style is.
 MapLibre has no first-class Compose API. Wrap it:
 
 ```
-MapLibreMap(modifier, state) →
-  AndroidView(factory = { MapView(it) }, update = { ... })
-  + DisposableEffect forwarding onStart/onResume/onPause/onStop/onDestroy/onLowMemory
-  + rememberSaveable camera position
+OfflineMap(packId, session, modifier)          core/maps/.../view/OfflineMap.kt
+  AndroidView(factory = { mapView })           MapView built once per context, in remember
+  + MapLifecycleForwarder (DisposableEffect)   onCreate…onDestroy, in order; winds the view
+                                               down if it leaves the composition first
+  + ComponentCallbacks                         onLowMemory
+  + holdStyleWhileStarted (LaunchedEffect)     OfflineMapSession held from start to stop,
+                                               style reloaded for each new port
+  + rememberSaveable camera position           6f
 ```
 
 `MapView` lifecycle methods must all be forwarded or you will leak the renderer and crash
-on rotation. Hold the `MapLibreMap` instance in a `remember`, never in the ViewModel.
+on rotation. Hold the `MapLibreMap` instance in a `remember`, never in the ViewModel. No
+MapLibre type appears in `:core:maps`' public API, so feature modules never depend on it.
+
+`MapLibreSetup` also turns MapLibre's `Logger` off (it writes to Logcat), and the
+`:core:maps` manifest removes the `ACCESS_WIFI_STATE` permission MapLibre declares.
+`ManifestPermissionsTest` in `:app` fails on any permission a library adds.
 
 ## Performance targets
 

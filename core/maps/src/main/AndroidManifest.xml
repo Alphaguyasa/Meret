@@ -1,2 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- MapLibre declares this, and nothing in its Java sources reads Wi-Fi state. Every map
+         byte comes from the phone, so the permission is removed rather than inherited.
+         MapLibre's other permissions (internet, network state, location) the app already
+         holds for its own reasons. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        tools:node="remove" />
+
+</manifest>

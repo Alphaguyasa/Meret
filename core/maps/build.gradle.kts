@@ -14,6 +14,9 @@ dependencies {
     implementation(project(":core:designsystem"))
     // TileJSON for the loopback tile server. The runtime library only; no codegen plugin.
     implementation(libs.kotlinx.serialization.json)
+    // The map view. Kept to `implementation`: no MapLibre type is in this module's API.
+    implementation(libs.maplibre.android)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // MbtilesReaderTest opens real SQLite packs, which needs Android's SQLiteDatabase.
     testImplementation(libs.robolectric)
