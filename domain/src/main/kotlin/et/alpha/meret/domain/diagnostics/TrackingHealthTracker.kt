@@ -1,5 +1,7 @@
 package et.alpha.meret.domain.diagnostics
 
+import et.alpha.meret.core.common.telemetry.NoOpTelemetry
+import et.alpha.meret.core.common.telemetry.Telemetry
 import et.alpha.meret.core.common.tracking.TrackingGap
 import et.alpha.meret.core.common.tracking.TrackingHealthMonitor
 
@@ -11,8 +13,13 @@ import et.alpha.meret.core.common.tracking.TrackingHealthMonitor
  * Every method returns the new snapshot, so the caller can publish it as it likes. All times
  * are `elapsedRealtimeNanos`. Thread-safe: the fix collector, the gap ticker and the
  * controller's commands call it from different coroutines.
+ *
+ * Each gap is also sent to [telemetry] once, when it closes, as a `tracking_gap` event with
+ * its duration only: no position, no time of day. The default binding discards it.
  */
-public class TrackingHealthTracker {
+public class TrackingHealthTracker(
+    private val telemetry: Telemetry = NoOpTelemetry,
+) {
     private val lock = Any()
     private var monitor: TrackingHealthMonitor? = null
     private var health = TrackingHealth()
@@ -64,7 +71,10 @@ public class TrackingHealthTracker {
         if (active == null || !active.isRecording) return health
         val closed = active.onFix(atElapsedNanos)
         closeOpenGap(atElapsedNanos)
-        if (closed != null) log(closed.toRecord())
+        if (closed != null) {
+            log(closed.toRecord())
+            report(closed.durationMillis)
+        }
         health =
             health.copy(
                 fixCount = health.fixCount + 1,
@@ -109,13 +119,21 @@ public class TrackingHealthTracker {
     private fun closeOpenGap(atElapsedNanos: Long) {
         replaceOpenGap {
             it.copy(durationMillis = millisBetween(it, atElapsedNanos), isOpen = false)
-        }
+        }?.let { report(it.durationMillis) }
     }
 
-    private inline fun replaceOpenGap(transform: (GapRecord) -> GapRecord) {
+    /** Returns the replacement, or null when no gap is open. */
+    private inline fun replaceOpenGap(transform: (GapRecord) -> GapRecord): GapRecord? {
         val last = health.gaps.lastOrNull()
-        if (last == null || !last.isOpen) return
-        health = health.copy(gaps = health.gaps.dropLast(1) + transform(last))
+        if (last == null || !last.isOpen) return null
+        val replaced = transform(last)
+        health = health.copy(gaps = health.gaps.dropLast(1) + replaced)
+        return replaced
+    }
+
+    /** A gap has closed. Its duration is the only thing sent. */
+    private fun report(durationMillis: Long) {
+        telemetry.recordEvent(GAP_EVENT, mapOf(DURATION_ATTRIBUTE to durationMillis.toString()))
     }
 
     private fun millisBetween(
@@ -134,5 +152,7 @@ public class TrackingHealthTracker {
         public const val MAX_GAPS: Int = 20
 
         private const val NANOS_PER_MILLI = 1_000_000L
+        private const val GAP_EVENT = "tracking_gap"
+        private const val DURATION_ATTRIBUTE = "duration_ms"
     }
 }

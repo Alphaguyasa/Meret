@@ -10,6 +10,7 @@ import et.alpha.meret.core.common.dispatcher.DispatcherProvider
 import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.common.result.errorOrNull
+import et.alpha.meret.core.common.telemetry.NoOpTelemetry
 import et.alpha.meret.core.common.time.SystemTimeProvider
 import et.alpha.meret.core.common.uuid.UuidV7Generator
 import et.alpha.meret.core.database.MeretDatabase
@@ -269,6 +270,7 @@ class DefaultTrackingControllerTest {
         sessionStore = sessionStore,
         configStore = configStore,
         trackDao = database.trackDao(),
+        telemetry = NoOpTelemetry,
     )
 
     private suspend fun status(): TrackStatus? = database.trackDao().getTrack(TRACK_ID)?.status

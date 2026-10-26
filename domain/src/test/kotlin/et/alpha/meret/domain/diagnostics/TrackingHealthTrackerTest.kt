@@ -1,10 +1,12 @@
 package et.alpha.meret.domain.diagnostics
 
 import com.google.common.truth.Truth.assertThat
+import et.alpha.meret.core.common.telemetry.Telemetry
 import org.junit.Test
 
 class TrackingHealthTrackerTest {
-    private val tracker = TrackingHealthTracker()
+    private val telemetry = RecordingTelemetry()
+    private val tracker = TrackingHealthTracker(telemetry)
 
     @Test
     fun `before a recording there is nothing to report`() {
@@ -120,7 +122,83 @@ class TrackingHealthTrackerTest {
         assertThat(next).isEqualTo(TrackingHealth(samplingIntervalMillis = INTERVAL_MS * 2))
     }
 
+    @Test
+    fun `a gap is reported once, when it closes, with its duration only`() {
+        tracker.begin(INTERVAL_MS)
+        tracker.resume(at(seconds = 0))
+        tracker.onFix(at(seconds = 5), accuracyMetres = 5.0, satellitesUsed = 8)
+        tracker.tick(at(seconds = 25))
+        tracker.tick(at(seconds = 65))
+        assertThat(telemetry.events).isEmpty()
+
+        tracker.onFix(at(seconds = 125), accuracyMetres = 5.0, satellitesUsed = 8)
+        tracker.onFix(at(seconds = 130), accuracyMetres = 5.0, satellitesUsed = 8)
+
+        assertThat(telemetry.events)
+            .containsExactly("tracking_gap" to mapOf("duration_ms" to "120000"))
+    }
+
+    @Test
+    fun `a gap the ticker missed is reported when the fix that ends it arrives`() {
+        tracker.begin(INTERVAL_MS)
+        tracker.resume(at(seconds = 0))
+
+        tracker.onFix(at(seconds = 40), accuracyMetres = 5.0, satellitesUsed = null)
+
+        assertThat(telemetry.events)
+            .containsExactly("tracking_gap" to mapOf("duration_ms" to "40000"))
+    }
+
+    @Test
+    fun `a gap ended by a pause is reported, and the paused time is not`() {
+        tracker.begin(INTERVAL_MS)
+        tracker.resume(at(seconds = 0))
+        tracker.tick(at(seconds = 30))
+        tracker.pause(at(seconds = 45))
+
+        tracker.resume(at(seconds = 3_600))
+        tracker.onFix(at(seconds = 3_605), accuracyMetres = 5.0, satellitesUsed = null)
+        tracker.end(at(seconds = 3_606))
+
+        assertThat(telemetry.events)
+            .containsExactly("tracking_gap" to mapOf("duration_ms" to "45000"))
+    }
+
+    @Test
+    fun `fixes on time report nothing`() {
+        tracker.begin(INTERVAL_MS)
+        tracker.resume(at(seconds = 0))
+        (1..10).forEach {
+            tracker.onFix(at(seconds = it * 5L), accuracyMetres = 5.0, satellitesUsed = 8)
+            tracker.tick(at(seconds = it * 5L))
+        }
+        tracker.end(at(seconds = 51))
+
+        assertThat(telemetry.events).isEmpty()
+    }
+
     private fun at(seconds: Long): Long = BASE_NANOS + seconds * NANOS_PER_SECOND
+
+    private class RecordingTelemetry : Telemetry {
+        val events = mutableListOf<Pair<String, Map<String, String>>>()
+
+        override fun recordNonFatal(
+            throwable: Throwable,
+            attributes: Map<String, String>,
+        ): Unit = error("not expected")
+
+        override fun recordEvent(
+            name: String,
+            attributes: Map<String, String>,
+        ) {
+            events += name to attributes
+        }
+
+        override fun setAttribute(
+            key: String,
+            value: String,
+        ): Unit = error("not expected")
+    }
 
     private companion object {
         const val INTERVAL_MS = 5_000L
