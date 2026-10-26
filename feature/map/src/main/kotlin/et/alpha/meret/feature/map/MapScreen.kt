@@ -67,8 +67,11 @@ public data class MapUiState(
     val pendingCount: Int = 0,
     val isOffline: Boolean = true,
     val trackingStats: TrackingStats? = null,
-    val basemapInstalled: Boolean = false,
-)
+    /** The installed pack the map draws, or null when there is none. */
+    val basemapPackId: String? = null,
+) {
+    val basemapInstalled: Boolean get() = basemapPackId != null
+}
 
 /**
  * The home screen.
@@ -76,6 +79,9 @@ public data class MapUiState(
  * Layout follows the field rules rather than convention: the readouts sit at the top
  * where they are glanceable, and every control the user actually presses is in the
  * bottom third, inside thumb reach on a large phone held one-handed.
+ *
+ * [basemap] draws the installed pack. Without one (previews, or no pack installed) a
+ * placeholder surface is drawn instead.
  */
 @Composable
 public fun MapScreen(
@@ -88,14 +94,20 @@ public fun MapScreen(
     onOpenDiagnostics: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    basemap: (@Composable (packId: String, modifier: Modifier) -> Unit)? = null,
 ) {
     var barExpanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize()) {
-        BasemapSurface(
-            installed = state.basemapInstalled,
-            modifier = Modifier.fillMaxSize(),
-        )
+        val packId = state.basemapPackId
+        if (packId != null && basemap != null) {
+            basemap(packId, Modifier.fillMaxSize())
+        } else {
+            BasemapSurface(
+                installed = state.basemapInstalled,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         // --- Top: readouts. Glanceable, never pressed by accident. -------------------
         Column(
@@ -199,13 +211,11 @@ private fun MapControl(
 }
 
 /**
- * Stand-in for the MapLibre surface.
+ * Stand-in for the MapLibre surface, drawn when there is no pack to show and in previews.
  *
- * Real vector tiles arrive in phase 6 with the `.mbtiles` reader and the loopback tile
- * server. Until then this draws a neutral terrain field so the screen composes and the
- * overlay chrome can be judged against something map-shaped — and, when no pack is
- * installed, it says so plainly rather than showing a grey grid the way Google Maps does
- * off-network.
+ * It draws a neutral terrain field so the overlay chrome can be judged against something
+ * map-shaped, and, when no pack is installed, it says so plainly rather than showing a grey
+ * grid the way Google Maps does off-network.
  */
 @Composable
 private fun BasemapSurface(

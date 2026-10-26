@@ -32,8 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import et.alpha.meret.core.designsystem.component.OfflineIndicator
 import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
-import et.alpha.meret.feature.map.MapScreen
-import et.alpha.meret.feature.map.MapUiState
+import et.alpha.meret.feature.map.MapRoute
 import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
 import et.alpha.meret.feature.tiles.TilePackScreen
@@ -141,13 +140,7 @@ private fun MeretShell(
                     // cropping it to a rectangle above the bar wastes the screen. It
                     // receives the padding so its own controls stay clear.
                     composable(MAP_ROUTE) {
-                        MapScreen(
-                            state = MapUiState(),
-                            onRecordTap = {},
-                            onRecordLongPress = {},
-                            onAddWaypoint = {},
-                            onRecentreMap = {},
-                            onOpenSync = {},
+                        MapRoute(
                             onOpenDiagnostics = { navController.navigate(DIAGNOSTICS_ROUTE) },
                             contentPadding = innerPadding,
                         )

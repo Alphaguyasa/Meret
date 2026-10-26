@@ -19,6 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.io.IOException
 import java.net.URI
 
 /** The loopback port is open only while the map's screen is started. Real server, real style. */
@@ -92,12 +93,52 @@ class StyleHoldTest {
         assertThat(server.port).isNull()
     }
 
+    @Test
+    fun `a pack id the server refuses leaves the map blank`() = test { session ->
+        owner.moveTo(Lifecycle.State.STARTED)
+        val job = hold(session, packId = "../etc")
+        runCurrent()
+
+        assertThat(styles).isEmpty()
+        assertThat(server.port).isNull()
+        assertThat(job.isActive).isTrue()
+    }
+
+    @Test
+    fun `a style that cannot be written holds nothing, and the next start retries`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        var full = true
+        val styleProvider =
+            StyleProvider(
+                { if (full) throw IOException("no space left") else template.inputStream() },
+                temp.newFolder(),
+                dispatcher,
+            )
+        owner.moveTo(Lifecycle.State.STARTED)
+        hold(OfflineMapSession(server, styleProvider, dispatcher))
+        runCurrent()
+        assertThat(styles).isEmpty()
+        assertThat(server.port).isNull()
+
+        full = false
+        owner.moveTo(Lifecycle.State.CREATED)
+        owner.moveTo(Lifecycle.State.STARTED)
+        runCurrent()
+
+        assertThat(styles).hasSize(1)
+        assertThat(server.port).isNotNull()
+    }
+
     /**
      * In [TestScope.backgroundScope], so a hold that never ends is cancelled after the test.
      * Background work is not counted by `advanceUntilIdle`, hence `runCurrent` throughout.
      */
-    private fun TestScope.hold(session: OfflineMapSession) = backgroundScope.launch {
-        holdStyleWhileStarted(owner.lifecycle, session, PACK) { styles += it }
+    private fun TestScope.hold(
+        session: OfflineMapSession,
+        packId: String = PACK,
+    ) = backgroundScope.launch {
+        holdStyleWhileStarted(owner.lifecycle, session, packId) { styles += it }
     }
 
     private fun test(block: suspend TestScope.(OfflineMapSession) -> Unit) = runTest {

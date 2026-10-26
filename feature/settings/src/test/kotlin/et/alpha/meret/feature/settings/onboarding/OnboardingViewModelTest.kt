@@ -231,10 +231,17 @@ class OnboardingViewModelTest {
         oemStepRequired = true,
     )
 
-    private fun store(): OnboardingStore =
-        OnboardingStore(PreferenceDataStoreFactory.create(produceFile = { file }))
+    /**
+     * The DataStore runs on the test's scheduler, not on its default `Dispatchers.IO` scope,
+     * so a write is ordered with the test's virtual clock. On the real IO threads the
+     * persisted skip once never reached `first { }` in CI, and `runTest` timed out after
+     * 1 min (PR #41).
+     */
+    private fun TestScope.store(): OnboardingStore = OnboardingStore(
+        PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file }),
+    )
 
-    private fun viewModel(
+    private fun TestScope.viewModel(
         store: OnboardingStore = store(),
         guidance: OemGuidance = DEEP_LINK,
     ) = OnboardingViewModel(
