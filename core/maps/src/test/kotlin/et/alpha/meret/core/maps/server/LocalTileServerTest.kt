@@ -157,7 +157,7 @@ class LocalTileServerTest {
     fun `one connection carries many requests`() {
         val port = server.start()
 
-        Socket("127.0.0.1", port).use { socket ->
+        rawSocket(port).use { socket ->
             val output = socket.getOutputStream()
             val input = socket.getInputStream()
             repeat(3) {
@@ -172,7 +172,7 @@ class LocalTileServerTest {
     fun `a garbled request gets 400 and the connection closes`() {
         val port = server.start()
 
-        Socket("127.0.0.1", port).use { socket ->
+        rawSocket(port).use { socket ->
             socket.getOutputStream().write("NONSENSE\r\n\r\n".toByteArray())
             val response = String(socket.getInputStream().readBytes())
 
@@ -267,6 +267,10 @@ class LocalTileServerTest {
             URI(
                 "http://127.0.0.1:$port$path",
             ).toURL().openConnection() as HttpURLConnection
+        // Every request has a deadline. Without one, a request to a freed port that another
+        // loopback listener has taken (a Gradle worker, say) waits for a reply forever.
+        connection.connectTimeout = CLIENT_TIMEOUT_MS
+        connection.readTimeout = CLIENT_TIMEOUT_MS
         connection.requestMethod = method
         headers.forEach { (name, value) -> connection.setRequestProperty(name, value) }
         val status = connection.responseCode
@@ -275,6 +279,11 @@ class LocalTileServerTest {
                 ?.use { it.readBytes() }
                 ?: ByteArray(0)
         return Response(status, body, connection.headerFields)
+    }
+
+    private fun rawSocket(port: Int): Socket = Socket().apply {
+        connect(InetSocketAddress("127.0.0.1", port), CLIENT_TIMEOUT_MS)
+        soTimeout = CLIENT_TIMEOUT_MS
     }
 
     /** Reads one response by its Content-Length, leaving the connection open. */
@@ -293,5 +302,9 @@ class LocalTileServerTest {
         val out = ByteArrayOutputStream()
         GZIPOutputStream(out).use { it.write(text.toByteArray()) }
         return out.toByteArray()
+    }
+
+    private companion object {
+        const val CLIENT_TIMEOUT_MS = 5_000
     }
 }
