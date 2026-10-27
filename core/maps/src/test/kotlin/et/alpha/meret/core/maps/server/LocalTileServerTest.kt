@@ -281,11 +281,10 @@ class LocalTileServerTest {
         return Response(status, body, connection.headerFields)
     }
 
-    private fun rawSocket(port: Int): Socket =
-        Socket().apply {
-            connect(InetSocketAddress("127.0.0.1", port), CLIENT_TIMEOUT_MS)
-            soTimeout = CLIENT_TIMEOUT_MS
-        }
+    private fun rawSocket(port: Int): Socket = Socket().apply {
+        connect(InetSocketAddress("127.0.0.1", port), CLIENT_TIMEOUT_MS)
+        soTimeout = CLIENT_TIMEOUT_MS
+    }
 
     /** Reads one response by its Content-Length, leaving the connection open. */
     private fun readRawResponse(input: java.io.InputStream): String {
