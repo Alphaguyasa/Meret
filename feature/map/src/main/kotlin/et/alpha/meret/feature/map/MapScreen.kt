@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -38,9 +40,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import et.alpha.meret.core.common.geo.ScaleBars
 import et.alpha.meret.core.designsystem.component.CrosshairGlyph
 import et.alpha.meret.core.designsystem.component.GpsQuality
 import et.alpha.meret.core.designsystem.component.GpsQualityChip
+import et.alpha.meret.core.designsystem.component.MinusGlyph
+import et.alpha.meret.core.designsystem.component.NorthArrowGlyph
 import et.alpha.meret.core.designsystem.component.PlusGlyph
 import et.alpha.meret.core.designsystem.component.RecordButton
 import et.alpha.meret.core.designsystem.component.RecordingState
@@ -52,6 +57,8 @@ import et.alpha.meret.core.designsystem.theme.Elevations
 import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
 import et.alpha.meret.core.designsystem.theme.Spacing
+import et.alpha.meret.core.maps.view.MapCameraReadout
+import kotlin.math.roundToLong
 
 /**
  * Everything the map screen renders. One sealed shape, not an `isLoading` +
@@ -82,6 +89,9 @@ public data class MapUiState(
  *
  * [basemap] draws the installed pack. Without one (previews, or no pack installed) a
  * placeholder surface is drawn instead.
+ *
+ * [camera] is the drawn map's camera. While it is null there is no map to zoom or turn, so
+ * the zoom buttons, compass and scale bar stay hidden.
  */
 @Composable
 public fun MapScreen(
@@ -95,6 +105,10 @@ public fun MapScreen(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     basemap: (@Composable (packId: String, modifier: Modifier) -> Unit)? = null,
+    camera: MapCameraReadout? = null,
+    onZoomIn: () -> Unit = {},
+    onZoomOut: () -> Unit = {},
+    onResetNorth: () -> Unit = {},
 ) {
     var barExpanded by remember { mutableStateOf(false) }
 
@@ -135,6 +149,20 @@ public fun MapScreen(
                     onClick = onOpenSync,
                 )
             }
+            if (camera != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    MapScaleBar(metresPerDp = camera.metresPerDp)
+                    // North up is the normal case; the compass only appears once the map is
+                    // turned, and a tap turns it back.
+                    if (degreesOffNorth(camera.bearingDegrees) > NORTH_UP_TOLERANCE_DEGREES) {
+                        MapCompass(bearingDegrees = camera.bearingDegrees, onClick = onResetNorth)
+                    }
+                }
+            }
         }
 
         // --- Bottom: everything pressable. -------------------------------------------
@@ -164,10 +192,22 @@ public fun MapScreen(
                     onLongPress = onRecordLongPress,
                 )
 
-                MapControl(
-                    onClick = onRecentreMap,
-                    contentDescription = stringResource(R.string.map_recentre),
-                ) { CrosshairGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    if (camera != null) {
+                        MapControl(
+                            onClick = onZoomIn,
+                            contentDescription = stringResource(R.string.map_zoom_in),
+                        ) { PlusGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                        MapControl(
+                            onClick = onZoomOut,
+                            contentDescription = stringResource(R.string.map_zoom_out),
+                        ) { MinusGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                    }
+                    MapControl(
+                        onClick = onRecentreMap,
+                        contentDescription = stringResource(R.string.map_recentre),
+                    ) { CrosshairGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                }
             }
 
             Spacer(Modifier.height(Spacing.sm))
@@ -206,6 +246,76 @@ private fun MapControl(
             modifier = Modifier.semantics { this.contentDescription = contentDescription },
         ) {
             glyph(Modifier.size(Sizes.icon))
+        }
+    }
+}
+
+/** A round distance and a bar that long on the map, e.g. "200 m". */
+@Composable
+private fun MapScaleBar(
+    metresPerDp: Double,
+    modifier: Modifier = Modifier,
+) {
+    val bar = ScaleBars.fit(metresPerDp, SCALE_BAR_MAX_WIDTH.value.toDouble()) ?: return
+    val label =
+        if (bar.metres >= METRES_PER_KILOMETRE) {
+            stringResource(R.string.map_scale_km, (bar.metres / METRES_PER_KILOMETRE).roundToLong())
+        } else {
+            stringResource(R.string.map_scale_m, bar.metres.roundToLong())
+        }
+    val ink = MaterialTheme.colorScheme.onSurface
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs)) {
+            Text(text = label, style = MaterialTheme.typography.labelSmall, color = ink)
+            Canvas(
+                Modifier
+                    .width(bar.length.toFloat().dp)
+                    .height(SCALE_BAR_TICK),
+            ) {
+                val stroke = 2.dp.toPx()
+                val bottom = size.height - stroke / 2
+                drawLine(ink, Offset(0f, bottom), Offset(size.width, bottom), stroke)
+                drawLine(ink, Offset(stroke / 2, 0f), Offset(stroke / 2, size.height), stroke)
+                drawLine(
+                    ink,
+                    Offset(size.width - stroke / 2, 0f),
+                    Offset(size.width - stroke / 2, size.height),
+                    stroke,
+                )
+            }
+        }
+    }
+}
+
+/** Points at north whichever way the map is turned. A tap turns the map north up. */
+@Composable
+private fun MapCompass(
+    bearingDegrees: Double,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(Sizes.touchTargetMin),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = Elevations.card,
+        shadowElevation = Elevations.card,
+    ) {
+        val description = stringResource(R.string.map_north_up)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.semantics { contentDescription = description },
+        ) {
+            NorthArrowGlyph(
+                Modifier
+                    .size(Sizes.icon)
+                    .rotate(-bearingDegrees.toFloat()),
+            )
         }
     }
 }
@@ -344,6 +454,19 @@ private fun MapScreenPreview() {
             onRecentreMap = {},
             onOpenSync = {},
             onOpenDiagnostics = {},
+            camera = MapCameraReadout(bearingDegrees = 35.0, metresPerDp = 2.36),
         )
     }
 }
+
+/** How far [bearingDegrees] is from north the short way round: MapLibre says 359.9, not -0.1. */
+internal fun degreesOffNorth(bearingDegrees: Double): Double {
+    val turned = ((bearingDegrees % FULL_TURN) + FULL_TURN) % FULL_TURN
+    return minOf(turned, FULL_TURN - turned)
+}
+
+private const val FULL_TURN = 360.0
+private val SCALE_BAR_MAX_WIDTH = 96.dp
+private val SCALE_BAR_TICK = 6.dp
+private const val METRES_PER_KILOMETRE = 1_000.0
+private const val NORTH_UP_TOLERANCE_DEGREES = 0.5

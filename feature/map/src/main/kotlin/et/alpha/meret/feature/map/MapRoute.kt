@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import et.alpha.meret.core.maps.view.OfflineMap
+import et.alpha.meret.core.maps.view.rememberOfflineMapController
 
 /** Owns the [MapViewModel] and puts the offline map under the screen's controls. */
 @Composable
@@ -17,6 +18,7 @@ fun MapRoute(
     viewModel: MapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val mapController = rememberOfflineMapController()
 
     MapScreen(
         state = state,
@@ -29,7 +31,16 @@ fun MapRoute(
         modifier = modifier,
         contentPadding = contentPadding,
         basemap = { packId, mapModifier ->
-            OfflineMap(packId = packId, session = viewModel.mapSession, modifier = mapModifier)
+            OfflineMap(
+                packId = packId,
+                session = viewModel.mapSession,
+                modifier = mapModifier,
+                controller = mapController,
+            )
         },
+        camera = mapController.readout,
+        onZoomIn = mapController::zoomIn,
+        onZoomOut = mapController::zoomOut,
+        onResetNorth = mapController::resetNorth,
     )
 }
