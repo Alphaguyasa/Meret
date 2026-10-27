@@ -11,7 +11,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import et.alpha.meret.core.maps.OfflineMapSession
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -23,12 +25,16 @@ import kotlin.coroutines.resume
  *
  * The view follows the host lifecycle, and the server is held only while the host is
  * started. No MapLibre type crosses this function, so callers never depend on MapLibre.
+ *
+ * With a [controller], the screen draws its own zoom buttons, compass and scale bar from it,
+ * and MapLibre's compass is turned off so that only one is shown.
  */
 @Composable
 public fun OfflineMap(
     packId: String,
     session: OfflineMapSession,
     modifier: Modifier = Modifier,
+    controller: OfflineMapController? = null,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -56,7 +62,53 @@ public fun OfflineMap(
         }
     }
 
+    if (controller != null) {
+        LaunchedEffect(mapView, controller) {
+            mapView.awaitMap().bindTo(controller)
+        }
+    }
+
     AndroidView(factory = { mapView }, modifier = modifier)
+}
+
+/** Feeds [controller] this map's camera and takes its commands, until cancelled. */
+private suspend fun MapLibreMap.bindTo(controller: OfflineMapController) {
+    uiSettings.isCompassEnabled = false
+    val target = MapLibreCamera(this)
+    val onMove = MapLibreMap.OnCameraMoveListener { controller.onCameraMoved(readout()) }
+    val onIdle = MapLibreMap.OnCameraIdleListener { controller.onCameraMoved(readout()) }
+    addOnCameraMoveListener(onMove)
+    addOnCameraIdleListener(onIdle)
+    controller.attach(target)
+    controller.onCameraMoved(readout())
+    try {
+        awaitCancellation()
+    } finally {
+        removeOnCameraMoveListener(onMove)
+        removeOnCameraIdleListener(onIdle)
+        controller.detach(target)
+    }
+}
+
+/**
+ * MapLibre works in logical pixels (screen pixels over its pixel ratio, the display density
+ * unless set otherwise), so its metres per pixel are metres per dp.
+ */
+private fun MapLibreMap.readout(): MapCameraReadout {
+    val camera = cameraPosition
+    val latitude = camera.target?.latitude ?: 0.0
+    return MapCameraReadout(
+        bearingDegrees = camera.bearing,
+        metresPerDp = projection.getMetersPerPixelAtLatitude(latitude),
+    )
+}
+
+private class MapLibreCamera(
+    private val map: MapLibreMap,
+) : MapCameraTarget {
+    override fun zoomBy(delta: Double) = map.animateCamera(CameraUpdateFactory.zoomBy(delta))
+
+    override fun resetNorth() = map.resetNorth()
 }
 
 private suspend fun MapView.awaitMap(): MapLibreMap = suspendCancellableCoroutine { cont ->

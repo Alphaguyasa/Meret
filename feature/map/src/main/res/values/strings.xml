@@ -4,4 +4,9 @@
     <string name="map_recentre">Centre on my location</string>
     <string name="map_no_pack_title">No map pack installed</string>
     <string name="map_no_pack_body">Copy an .mbtiles pack to this device, or download a region while you have Wi-Fi.</string>
+    <string name="map_zoom_in">Zoom in</string>
+    <string name="map_zoom_out">Zoom out</string>
+    <string name="map_north_up">Turn the map north up</string>
+    <string name="map_scale_m">%1$d m</string>
+    <string name="map_scale_km">%1$d km</string>
 </resources>

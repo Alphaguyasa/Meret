@@ -132,6 +132,63 @@ public fun PlusGlyph(
     }
 }
 
+/** Minus. Zoom out. */
+@Composable
+public fun MinusGlyph(
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Canvas(modifier.iconSemantics(contentDescription)) {
+        val centre = Offset(size.width / 2, size.height / 2)
+        val arm = size.minDimension * 0.3f
+        drawLine(
+            tint,
+            Offset(centre.x - arm, centre.y),
+            Offset(centre.x + arm, centre.y),
+            strokeWidth = size.width * STROKE_FRACTION,
+            cap = StrokeCap.Round,
+        )
+    }
+}
+
+/**
+ * Compass needle pointing up: the north half in [northTint], the south half outlined.
+ * Rotate it by minus the map's bearing so it keeps pointing at north.
+ */
+@Composable
+public fun NorthArrowGlyph(
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    northTint: Color = MaterialTheme.colorScheme.error,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Canvas(modifier.iconSemantics(contentDescription)) {
+        val w = size.width
+        val h = size.height
+        val north =
+            androidx.compose.ui.graphics.Path().apply {
+                moveTo(w / 2, h * 0.08f)
+                lineTo(w * 0.68f, h / 2)
+                lineTo(w * 0.32f, h / 2)
+                close()
+            }
+        val south =
+            androidx.compose.ui.graphics.Path().apply {
+                moveTo(w / 2, h * 0.92f)
+                lineTo(w * 0.68f, h / 2)
+                lineTo(w * 0.32f, h / 2)
+                close()
+            }
+        drawPath(north, northTint)
+        drawPath(
+            south,
+            tint,
+            style = Stroke(width = w * STROKE_FRACTION * 0.6f, join = StrokeJoin.Round),
+        )
+    }
+}
+
 /** A polyline with vertex dots — the "tracks" affordance. */
 @Composable
 public fun TrackGlyph(

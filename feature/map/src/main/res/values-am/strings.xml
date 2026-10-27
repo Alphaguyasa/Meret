@@ -4,4 +4,9 @@
     <string name="map_recentre">ወደ አካባቢዬ አምጣ</string>
     <string name="map_no_pack_title">የካርታ ጥቅል አልተጫነም</string>
     <string name="map_no_pack_body">የ .mbtiles ጥቅል ወደዚህ መሣሪያ ይቅዱ፣ ወይም ዋይ-ፋይ ሲኖርዎት አካባቢ ያውርዱ።</string>
+    <string name="map_zoom_in">አጉላ</string>
+    <string name="map_zoom_out">አሳንስ</string>
+    <string name="map_north_up">ካርታውን ወደ ሰሜን አዙር</string>
+    <string name="map_scale_m">%1$d ሜ</string>
+    <string name="map_scale_km">%1$d ኪ.ሜ</string>
 </resources>
