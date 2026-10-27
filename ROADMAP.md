@@ -19,11 +19,12 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6e and 6f-1 done)
+### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6e, 6f-1 and 6f-2a done)
 Remaining parts, one PR each, in order:
-6f-2 map screen controls: location puck, follow mode, compass, scale bar, zoom. Check every
-MapLibre call against the 12.3.1 sources jar first (CLAUDE.md); 6f-1 left `onRecentreMap` a
-no-op in `MapRoute`. Choosing the pack that covers the user's position comes with the puck;
+6f-2b location puck and follow mode. Check every MapLibre call against the 12.3.1 sources jar
+first (CLAUDE.md); `onRecentreMap` is still a no-op in `MapRoute`. Extend
+`OfflineMapController` (zoom, north and the camera readout are there) rather than adding a
+second path to the map. Choosing the pack that covers the user's position comes with the puck;
 6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (the layout
 `PackDirectoryResolver` reads; validate with `MbtilesReader`, keep only `format=pbf`) and a
 `tile_pack` row, which `MapViewModel` already observes.
@@ -97,3 +98,5 @@ sideloaded APKs. Drop `x86`/`x86_64` from release only. Record before and after 
 | 13 · 6e-2. MapLibre 12.3.1 `MapView` wrapper, lifecycle, ambient cache off | #40 | `c0829be` |
 | 13 · 6f-1. Map screen draws the installed pack; flaky `OnboardingViewModelTest` fixed, test and CI timeouts | #41 | `2efa101` |
 | 17. Closed tracking gaps go to `Telemetry` (duration only, no-op by default) | #42 | `1b2537a` |
+| Fix: main CI hung in `LocalTileServerTest` (test clients had no timeouts) | #44 | `5d0f73d` |
+| 13 · 6f-2a. Map zoom buttons, compass, scale bar (`OfflineMapController`, `ScaleBars`) | #45 | `026dddf` |

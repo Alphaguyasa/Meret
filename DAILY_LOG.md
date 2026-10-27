@@ -4,6 +4,34 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-27 — Run 13 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Main was red, and that came first.** CI on `1b2537a` (#42's merge) hung in `LocalTileServerTest > stop closes the port...` until the 10-minute task timeout. Run 12 logged #42 as green, which was true for the PR run but not the main run. **Fix:** every test HTTP request and raw socket in `:core:maps` now has a 5 s connect and read timeout ([#44](https://github.com/Alphaguyasa/Meret/pull/44)). **6f-2a**, split from 6f-2: map zoom buttons, a compass that shows only when the map is turned, and a 1-2-5 scale bar. They go through a new `OfflineMapController`, so no MapLibre type reaches `:feature:map` ([#45](https://github.com/Alphaguyasa/Meret/pull/45)). |
+| Merged | #44 yes, `5d0f73d`, after one ktlint fix (attempt 1 of 2). #45 yes, `026dddf`, green on the first attempt. CI took about 2 and 5 minutes. |
+| Failed or blocked | Nothing is blocked. ktlint and detekt could not run locally: auto mode refused the downloaded detekt jar again. CI was the only check, and it caught one ktlint issue (see notes). |
+| Roadmap | 6 open items: 13 (6f-2b and 6g left), 14, 15, 16, 18, 19. No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). I checked Anthropic's models page: there is no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7, A10, A11 unchanged. A9: 5 new Amharic map strings. One new "Needs a device" row: the map controls. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. |
+| Next | 6f-2b (location puck and follow mode, which wires `onRecentreMap`), then 6g (SAF pack import) or 19 (APK size). |
+
+Notes for the next run:
+- **Check the main push run, not only the PR run.** #42 went green as a PR and then hung on
+  main. Look at `list_workflow_runs` with `branch: main` at the start of every run.
+- **Hang cause (likely, not reproduced):** after `stop()`, the test asked the freed port for a
+  tile. Once another loopback listener, such as a Gradle worker, takes that port, a client with
+  no read timeout waits forever. Give every test socket a deadline.
+- **ktlint `function-signature`:** an expression body that spans several lines starts on the
+  signature line (`fun f(): Socket = Socket().apply {`), not on the next line. A one-line
+  expression that is too long goes on the next line.
+- **MapLibre 12.3.1 facts** (sources jar): there is no scale bar in the SDK.
+  `Projection.getMetersPerPixelAtLatitude` is per logical pixel, because `NativeMapView`
+  divides by `pixelRatio`, so it gives metres per dp. `CameraPosition.bearing` runs 0–360,
+  so 359.9 means north up (`degreesOffNorth`). The compass is on by default at top-end;
+  `OfflineMap` turns it off when a controller is attached. The CI log's ktlint report blob is
+  refused by the proxy (403); read the Gradle log instead.
+
 ## 2026-10-26 — Run 12 (scheduled, cloud)
 
 | Field | Content |
