@@ -40,6 +40,8 @@ class OfflineMapSessionTest {
         val sourceUrl = sourceUrl(uri)
         assertThat(sourceUrl).isEqualTo("http://127.0.0.1:${server.port}/$PACK/tiles.json")
         val connection = URI(sourceUrl).toURL().openConnection() as HttpURLConnection
+        connection.connectTimeout = 5_000
+        connection.readTimeout = 5_000
         try {
             assertThat(connection.responseCode).isEqualTo(200)
         } finally {
