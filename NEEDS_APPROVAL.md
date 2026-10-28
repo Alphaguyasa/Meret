@@ -69,6 +69,9 @@ avoid the app name, so the «መሬት»/"Meret" question above does not apply t
 **Run 13 added 5 more** in `feature/map/src/main/res/values-am/strings.xml`: "አጉላ" (Zoom in),
 "አሳንስ" (Zoom out), "ካርታውን ወደ ሰሜን አዙር" (Turn the map north up), and the scale bar units
 "%d ሜ" and "%d ኪ.ሜ". Please check that the abbreviations ሜ and ኪ.ሜ are what field teams read.
+**Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
+እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
+ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
 
 ### A10. Dependabot: turn on alerts, and who merges its PRs (no cost)
 Run 7 added `.github/dependabot.yml` (ROADMAP item 11): monthly, minor and patch versions
@@ -111,6 +114,8 @@ hardware. Steps are in the linked docs.
 | 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
 | 6 | The loopback tile server on a phone: MapLibre loads `tiles.json` and tiles from `127.0.0.1` in aeroplane mode, with no cleartext error, and the server stops when the map leaves the foreground | After 6c (network security config) and 6e (map wrapper) |
 | 6 | The map screen draws a sideloaded pack (adb push to `filesDir/packs/{id}.mbtiles` plus a `tile_pack` row, until 6g) in aeroplane mode. Leaving the screen and coming back redraws it, and the 33.4 MB debug APK installs and starts on a low-RAM phone | After 6f-1 (#41); easier after 6g (pack import) |
+| 6 | Location puck and follow (6f-2b-1, #47): while recording, a blue dot with a shaded accuracy circle follows the phone and the map keeps it centred; a pan stops following; the crosshair button (filled while following) centres again and zooms in to street level. With no recording, the last known position shows grey. With location denied, no dot and no crash. With two packs installed, the one covering the phone is drawn | After a pack is installed; start a track (adb, until Phase 7) to see live fixes |
+| 5 | «Check permissions again» (item 16, #48): skip the battery step in onboarding, open Diagnostics, the button shows; tap it, the battery step appears again; finish, the map returns. On a Tecno/Infinix/Itel or Xiaomi the button always shows | Any phone; a Transsion or Xiaomi for the autostart case |
 | 6 | Map controls (6f-2a, #45): + and − zoom one level; rotating with two fingers shows the compass, which points north, and a tap turns the map north up; the scale bar matches a known distance (for example a 100 m road stretch) | After a pack is installed (6g, or the sideload above) |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 

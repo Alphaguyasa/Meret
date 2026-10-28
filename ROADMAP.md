@@ -19,15 +19,19 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6e, 6f-1 and 6f-2a done)
+### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6e, 6f-1, 6f-2a and 6f-2b-1 done)
 Remaining parts, one PR each, in order:
-6f-2b location puck and follow mode. Check every MapLibre call against the 12.3.1 sources jar
-first (CLAUDE.md); `onRecentreMap` is still a no-op in `MapRoute`. Extend
-`OfflineMapController` (zoom, north and the camera readout are there) rather than adding a
-second path to the map. Choosing the pack that covers the user's position comes with the puck;
+6f-2b-2 live position while no track records. Today the puck only gets live fixes from the
+recording's engine; when idle it shows the cached fix, grey. Needs a map-only request while
+the map is in the foreground, never touching the recording's engine (a second engine from
+`LocationEngineSelector`, or a "preview" mode), and **no batching**: the engine sets
+`maxUpdateDelay` to 5× the interval, which would make the puck jump every 5–15 s. Stop it
+when the map leaves the foreground or a recording starts. `DevicePositionRepository` is the
+seam: the map already reads it;
 6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (the layout
 `PackDirectoryResolver` reads; validate with `MbtilesReader`, keep only `format=pbf`) and a
-`tile_pack` row, which `MapViewModel` already observes.
+`tile_pack` row, which `MapViewModel` already observes (it now prefers the pack that covers
+the user, so write correct bounds and `installedAt`).
 
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
@@ -35,13 +39,6 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 
 ### 15. [P3 · S] Remove Android Studio template leftovers
 `proguard-rules.pro` comments, template comments in `res/xml`, unused launcher assets if any.
-
-### 16. [P2 · S] Re-run permission onboarding from the diagnostics screen
-A skip in onboarding is permanent, and nothing re-asks. Add a "Check permissions again"
-button on the diagnostics screen that clears the stored skips and shows the onboarding flow.
-It is for supervisors fixing a phone that keeps losing tracks.
-- Tests: clearing skips makes the picker offer the skipped step again; the button is only
-  shown when a step is missing.
 
 ### 18. [P3 · S] Cover `tools/package-lock.json` with Dependabot
 `tools/` now has npm dependencies (fontnik, sharp, Maki). Dependabot alerts (A10) will flag
@@ -100,3 +97,5 @@ sideloaded APKs. Drop `x86`/`x86_64` from release only. Record before and after 
 | 17. Closed tracking gaps go to `Telemetry` (duration only, no-op by default) | #42 | `1b2537a` |
 | Fix: main CI hung in `LocalTileServerTest` (test clients had no timeouts) | #44 | `5d0f73d` |
 | 13 · 6f-2a. Map zoom buttons, compass, scale bar (`OfflineMapController`, `ScaleBars`) | #45 | `026dddf` |
+| 13 · 6f-2b-1. Location puck (own GeoJSON layers), follow mode, recentre, pack that covers the user | #47 | `d59bceb` |
+| 16. "Check permissions again" on the diagnostics screen | #48 | `d889766` |

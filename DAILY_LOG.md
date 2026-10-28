@@ -4,6 +4,36 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-28 — Run 14 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **6f-2b-1:** the map has a location puck: a dot with a ground-sized accuracy circle, drawn from our own GeoJSON layers. The cached fix shows grey and fainter. **Follow mode:** on at start, so the first fix centres the map at zoom 16. A pan or pinch turns it off. The recentre button, a no-op until now, turns it back on and is filled while following. The map now draws the newest pack that **covers the user**, else the newest pack ([#47](https://github.com/Alphaguyasa/Meret/pull/47)). **Item 16:** "Check permissions again" on the diagnostics screen. It shows when onboarding would have a step to show, and always on Transsion and Xiaomi phones (no API reports autostart). It clears the stored skips, then shows the onboarding flow ([#48](https://github.com/Alphaguyasa/Meret/pull/48)). |
+| Merged | #47 yes, `d59bceb`. #48 yes, `d889766`. Both were green on the first attempt (CI about 3–4 min each), and the main push run on `d59bceb` was green too. |
+| Failed or blocked | Nothing is blocked. **Limit (6f-2b-2, new):** the puck gets live fixes only while a track records, because the map never starts the recording's engine. When idle it shows the cached fix. |
+| Roadmap | 5 open items: 13 (6f-2b-2 and 6g left), 14, 15, 18, 19. No replan yet; the next run replans if it closes one. Item 16 was taken ahead of 13's next parts: each of those is about a day, and 16 was small. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). I checked Anthropic's models page: there is no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7, A10, A11 unchanged. A9: 2 new Amharic strings (diagnostics). Two new "Needs a device" rows: the puck and follow mode, and the recheck button. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. |
+| Next | 6f-2b-2 (live position when idle, unbatched, map in the foreground only), then 6g (SAF pack import) or 19 (APK size). |
+
+Notes for the next run:
+- **ktlint and detekt ran locally this run.** The ktlint 1.8.0 binary and
+  `detekt-cli-1.23.8-all.jar` were downloaded to the scratchpad and run with `java -jar`.
+  detekt caught `ReturnCount` and `LongParameterList` (the limit is 7 constructor
+  parameters) before push. Both PRs went green on the first try.
+- **MapLibre 12.3.1 facts** (sources jar): `GeoJsonSource(id, String)` and
+  `setGeoJson(String)`, so the puck needs no `org.maplibre.geojson` types.
+  `MapLibreMap.getStyle(OnStyleLoaded)` calls back once the style is *fully* loaded and
+  queues otherwise. `getStyle()` returns null while loading. A new style drops runtime
+  sources, so `OfflineMap` re-adds the puck on `MapView.OnDidFinishLoadingStyleListener`.
+  `OnCameraMoveStartedListener.REASON_API_GESTURE` = 1 is a user gesture; our own
+  `easeCamera` reports 2.
+- **Why not `LocationComponent`:** it brings its own location engine. A second GPS client
+  would draw positions that differ from the recorded track.
+- `hiltViewModel(key = ...)` (hilt-navigation-compose 1.2.0) compiled. The onboarding
+  ViewModel is activity-scoped, so a re-run needs a new key or it keeps the old skips in
+  memory. Google's Maven sources jars return 403 through the proxy; Maven Central works.
+
 ## 2026-10-27 — Run 13 (scheduled, cloud)
 
 | Field | Content |
