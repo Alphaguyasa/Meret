@@ -2,22 +2,33 @@ package et.alpha.meret.core.maps.view
 
 import android.content.ComponentCallbacks
 import android.content.res.Configuration
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.maps.OfflineMapSession
+import et.alpha.meret.core.model.geo.DevicePosition
+import et.alpha.meret.core.model.geo.LatLng
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.style.expressions.Expression
+import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.FillLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.sources.GeoJsonSource
 import kotlin.coroutines.resume
+import org.maplibre.android.geometry.LatLng as MapLibreLatLng
 
 /**
  * A MapLibre map of the installed tile pack [packId], drawn entirely from the phone: tiles
@@ -27,7 +38,9 @@ import kotlin.coroutines.resume
  * started. No MapLibre type crosses this function, so callers never depend on MapLibre.
  *
  * With a [controller], the screen draws its own zoom buttons, compass and scale bar from it,
- * and MapLibre's compass is turned off so that only one is shown.
+ * and MapLibre's compass is turned off so that only one is shown. The controller's position
+ * is drawn as a puck from a GeoJSON source of our own, not MapLibre's location component,
+ * which would run a second location engine beside the app's.
  */
 @Composable
 public fun OfflineMap(
@@ -63,8 +76,14 @@ public fun OfflineMap(
     }
 
     if (controller != null) {
-        LaunchedEffect(mapView, controller) {
-            mapView.awaitMap().bindTo(controller)
+        val colours =
+            PuckColours(
+                live = LocationPuck.hex(MaterialTheme.colorScheme.primary.toArgb()),
+                stale = LocationPuck.hex(MeretTheme.colors.stopped.toArgb()),
+                halo = LocationPuck.hex(MeretTheme.colors.overlayHalo.toArgb()),
+            )
+        LaunchedEffect(mapView, controller, colours) {
+            mapView.awaitMap().bindTo(mapView, controller, colours)
         }
     }
 
@@ -72,13 +91,28 @@ public fun OfflineMap(
 }
 
 /** Feeds [controller] this map's camera and takes its commands, until cancelled. */
-private suspend fun MapLibreMap.bindTo(controller: OfflineMapController) {
+private suspend fun MapLibreMap.bindTo(
+    view: MapView,
+    controller: OfflineMapController,
+    colours: PuckColours,
+) {
     uiSettings.isCompassEnabled = false
-    val target = MapLibreCamera(this)
+    val target = MapLibreCamera(this, colours)
     val onMove = MapLibreMap.OnCameraMoveListener { controller.onCameraMoved(readout()) }
     val onIdle = MapLibreMap.OnCameraIdleListener { controller.onCameraMoved(readout()) }
+    val onMoveStarted =
+        MapLibreMap.OnCameraMoveStartedListener { reason ->
+            if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
+                controller.onUserMovedMap()
+            }
+        }
+    // Every style load starts from the style file, without our source: add it back each time.
+    val onStyle = MapView.OnDidFinishLoadingStyleListener { getStyle(target::install) }
     addOnCameraMoveListener(onMove)
     addOnCameraIdleListener(onIdle)
+    addOnCameraMoveStartedListener(onMoveStarted)
+    view.addOnDidFinishLoadingStyleListener(onStyle)
+    getStyle(target::install)
     controller.attach(target)
     controller.onCameraMoved(readout())
     try {
@@ -86,6 +120,8 @@ private suspend fun MapLibreMap.bindTo(controller: OfflineMapController) {
     } finally {
         removeOnCameraMoveListener(onMove)
         removeOnCameraIdleListener(onIdle)
+        removeOnCameraMoveStartedListener(onMoveStarted)
+        view.removeOnDidFinishLoadingStyleListener(onStyle)
         controller.detach(target)
     }
 }
@@ -105,10 +141,74 @@ private fun MapLibreMap.readout(): MapCameraReadout {
 
 private class MapLibreCamera(
     private val map: MapLibreMap,
+    private val colours: PuckColours,
 ) : MapCameraTarget {
+    private var puckJson: String = LocationPuck.geoJson(null, colours)
+
     override fun zoomBy(delta: Double) = map.animateCamera(CameraUpdateFactory.zoomBy(delta))
 
     override fun resetNorth() = map.resetNorth()
+
+    override fun centreOn(
+        position: LatLng,
+        minZoom: Double?,
+    ) {
+        val centre = MapLibreLatLng(position.latitude, position.longitude)
+        val update =
+            if (minZoom != null) {
+                CameraUpdateFactory.newLatLngZoom(centre, maxOf(minZoom, map.cameraPosition.zoom))
+            } else {
+                CameraUpdateFactory.newLatLng(centre)
+            }
+        map.easeCamera(update, CENTRE_ANIMATION_MS)
+    }
+
+    override fun showPuck(position: DevicePosition?) {
+        puckJson = LocationPuck.geoJson(position, colours)
+        // Null while a style loads; install() then draws the latest puck.
+        map.style?.getSourceAs<GeoJsonSource>(LocationPuck.SOURCE_ID)?.setGeoJson(puckJson)
+    }
+
+    /** Adds the puck's source and layers on top of [style], once per style. */
+    fun install(style: Style) {
+        val source = style.getSourceAs<GeoJsonSource>(LocationPuck.SOURCE_ID)
+        if (source != null) {
+            source.setGeoJson(puckJson)
+            return
+        }
+        style.addSource(GeoJsonSource(LocationPuck.SOURCE_ID, puckJson))
+        style.addLayer(
+            FillLayer(LocationPuck.ACCURACY_LAYER_ID, LocationPuck.SOURCE_ID)
+                .withFilter(kindIs(LocationPuck.KIND_ACCURACY))
+                .withProperties(
+                    PropertyFactory.fillColor(Expression.toColor(colourOfFeature())),
+                    PropertyFactory.fillOpacity(ACCURACY_FILL_OPACITY),
+                ),
+        )
+        style.addLayer(
+            CircleLayer(LocationPuck.DOT_LAYER_ID, LocationPuck.SOURCE_ID)
+                .withFilter(kindIs(LocationPuck.KIND_DOT))
+                .withProperties(
+                    PropertyFactory.circleRadius(DOT_RADIUS_DP),
+                    PropertyFactory.circleColor(Expression.toColor(colourOfFeature())),
+                    PropertyFactory.circleOpacity(Expression.get(LocationPuck.PROPERTY_OPACITY)),
+                    PropertyFactory.circleStrokeWidth(DOT_HALO_DP),
+                    PropertyFactory.circleStrokeColor(colours.halo),
+                ),
+        )
+    }
+
+    private fun kindIs(kind: String): Expression =
+        Expression.eq(Expression.get(LocationPuck.PROPERTY_KIND), kind)
+
+    private fun colourOfFeature(): Expression = Expression.get(LocationPuck.PROPERTY_COLOUR)
+
+    private companion object {
+        const val CENTRE_ANIMATION_MS = 500
+        const val ACCURACY_FILL_OPACITY = 0.15f
+        const val DOT_RADIUS_DP = 7f
+        const val DOT_HALO_DP = 2f
+    }
 }
 
 private suspend fun MapView.awaitMap(): MapLibreMap = suspendCancellableCoroutine { cont ->

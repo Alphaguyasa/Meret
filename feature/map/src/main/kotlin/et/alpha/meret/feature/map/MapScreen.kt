@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -92,6 +93,8 @@ public data class MapUiState(
  *
  * [camera] is the drawn map's camera. While it is null there is no map to zoom or turn, so
  * the zoom buttons, compass and scale bar stay hidden.
+ *
+ * [isFollowing] marks the recentre button as on while the map keeps the user in the centre.
  */
 @Composable
 public fun MapScreen(
@@ -109,6 +112,7 @@ public fun MapScreen(
     onZoomIn: () -> Unit = {},
     onZoomOut: () -> Unit = {},
     onResetNorth: () -> Unit = {},
+    isFollowing: Boolean = false,
 ) {
     var barExpanded by remember { mutableStateOf(false) }
 
@@ -203,10 +207,23 @@ public fun MapScreen(
                             contentDescription = stringResource(R.string.map_zoom_out),
                         ) { MinusGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
                     }
+                    // Follow mode only means something over a drawn map.
+                    val following = isFollowing && camera != null
                     MapControl(
                         onClick = onRecentreMap,
                         contentDescription = stringResource(R.string.map_recentre),
-                    ) { CrosshairGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                        selected = following,
+                    ) {
+                        CrosshairGlyph(
+                            it,
+                            tint =
+                                if (following) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                        )
+                    }
                 }
             }
 
@@ -225,19 +242,31 @@ public fun MapScreen(
     }
 }
 
-/** A round control that floats over the map. Sized for a walking thumb, not a desk. */
+/**
+ * A round control that floats over the map. Sized for a walking thumb, not a desk. A
+ * [selected] control is filled and says so to TalkBack, not by colour alone.
+ */
 @Composable
 private fun MapControl(
     onClick: () -> Unit,
     contentDescription: String,
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
     glyph: @Composable (Modifier) -> Unit,
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.size(Sizes.touchTargetField),
+        modifier =
+            modifier
+                .size(Sizes.touchTargetField)
+                .semantics { this.selected = selected },
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surface,
+        color =
+            if (selected) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
         tonalElevation = Elevations.card,
         shadowElevation = Elevations.card,
     ) {
