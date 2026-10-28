@@ -9,7 +9,9 @@ import dagger.hilt.components.SingletonComponent
 import et.alpha.meret.core.common.dispatcher.DispatcherProvider
 import et.alpha.meret.core.maps.OfflineMapSession
 import et.alpha.meret.core.maps.server.LocalTileServer
+import et.alpha.meret.core.maps.server.MbtilesPackInstaller
 import et.alpha.meret.core.maps.server.PackDirectoryResolver
+import et.alpha.meret.core.maps.server.TilePackInstaller
 import et.alpha.meret.core.maps.style.StyleProvider
 import java.io.File
 import javax.inject.Singleton
@@ -37,4 +39,12 @@ public object MapsModule {
         val server = LocalTileServer(PackDirectoryResolver(packs))
         return OfflineMapSession(server, styles, dispatchers.io)
     }
+
+    /** Singleton: installs run one at a time, and the lock is the instance's. */
+    @Provides
+    @Singleton
+    public fun provideTilePackInstaller(
+        @ApplicationContext context: Context,
+    ): TilePackInstaller =
+        MbtilesPackInstaller(File(context.filesDir, PackDirectoryResolver.APP_DIRECTORY))
 }

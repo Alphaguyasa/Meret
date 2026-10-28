@@ -17,6 +17,8 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:datastore"))
     implementation(project(":core:location"))
+    // The pack import: MbtilesPackInstaller copies and checks, the repository writes the row.
+    implementation(project(":core:maps"))
     implementation(project(":core:network"))
 
     // TrackRecorder runs against a real in-memory Room database under Robolectric: the
