@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.data.location.DevicePositionRepository
 import et.alpha.meret.core.data.tilepack.TilePackRepository
 import et.alpha.meret.core.maps.OfflineMapSession
@@ -29,6 +30,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.io.InputStream
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MapViewModelTest {
@@ -37,6 +39,12 @@ class MapViewModelTest {
     private val repository =
         object : TilePackRepository {
             override fun observeTilePacks(): Flow<List<TilePack>> = packs
+
+            override suspend fun importPack(
+                displayName: String?,
+                sizeBytes: Long?,
+                open: () -> InputStream,
+            ): AppResult<TilePack> = error("not used")
         }
     private val here = MutableStateFlow<DevicePosition?>(null)
     private val positions =
