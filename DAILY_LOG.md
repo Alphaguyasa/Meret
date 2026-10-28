@@ -4,6 +4,31 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-28 — Run 15 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **6f-2b-2:** with no recording, the puck now shows live fixes too. The map has its own request (`PreviewLocationSource`): 1 fix a second, **not batched**, and never touching the recording's engine. It runs only while the map is collecting. It stops 5 s after the map leaves the foreground, and the moment a recording starts. A paused recording gets it back. It uses the same provider (fused or GPS) as the engine ([#50](https://github.com/Alphaguyasa/Meret/pull/50)). **6g-1**, split from 6g: the pack import without its UI. `MbtilesPackInstaller` copies the picked file to a `.partial` file, checks it (readable metadata, `format=pbf`, a `tiles` table), then renames it to `filesDir/packs/{id}.mbtiles`. `TilePackRepository.importPack` writes the `tile_pack` row the map already reads. A failed import leaves no file and no row ([#51](https://github.com/Alphaguyasa/Meret/pull/51)). |
+| Merged | #50 yes, `7eabc40`. #51 yes, `a914448`. Both were green on the first attempt (CI about 4 min each). |
+| Failed or blocked | Nothing is blocked. Users still cannot import a pack: the picker and the pack list are 6g-2. |
+| Roadmap | 5 open items: 13 (only 6g-2 left), 14, 15, 18, 19. No replan yet; the next run replans if it closes one. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). I checked Anthropic's models page: there is no newer Opus. No action. |
+| Needs approval | A2, A3, A5, A6, A7, A9, A10, A11 unchanged; no new strings this run. One new "Needs a device" row: the live puck while idle. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. |
+| Next | 6g-2 (picker, progress, error messages and pack list on the packs screen, en/am), then 19 (APK size). |
+
+Notes for the next run:
+- **Local compile without the SDK works for pure code.** kotlinc 2.2.10 (GitHub release) plus
+  Maven Central jars ran `DevicePositionRepositoryTest` (9/9) on the JVM. For code that
+  touches `android.*`, `com.google.android:android:4.1.1.4` from Maven Central is enough to
+  type-check. Its stubs throw `Stub!`, so tests that construct Android classes fail there
+  but pass in CI (`isReturnDefaultValues`). Google Maven is refused (403), so Room was
+  stubbed with six annotation classes. Robolectric tests still only run in CI.
+- **`TilePackRepository.importPack(displayName, sizeBytes, open)`**: 6g-2 passes
+  `contentResolver.openInputStream(uri) ?: throw FileNotFoundException()` as `open`, and reads
+  `DISPLAY_NAME`/`SIZE` from `OpenableColumns`. A null size skips the free-space check.
+- `:core:data` now depends on `:core:maps` (for the installer). Every `TilePackRepository`
+  fake needs `importPack` (`MapViewModelTest` has one).
+
 ## 2026-10-28 — Run 14 (scheduled, cloud)
 
 | Field | Content |

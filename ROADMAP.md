@@ -19,19 +19,17 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6e, 6f-1, 6f-2a and 6f-2b-1 done)
-Remaining parts, one PR each, in order:
-6f-2b-2 live position while no track records. Today the puck only gets live fixes from the
-recording's engine; when idle it shows the cached fix, grey. Needs a map-only request while
-the map is in the foreground, never touching the recording's engine (a second engine from
-`LocationEngineSelector`, or a "preview" mode), and **no batching**: the engine sets
-`maxUpdateDelay` to 5× the interval, which would make the puck jump every 5–15 s. Stop it
-when the map leaves the foreground or a recording starts. `DevicePositionRepository` is the
-seam: the map already reads it;
-6g SAF tile pack import into `filesDir/packs/{id}.mbtiles` (the layout
-`PackDirectoryResolver` reads; validate with `MbtilesReader`, keep only `format=pbf`) and a
-`tile_pack` row, which `MapViewModel` already observes (it now prefers the pack that covers
-the user, so write correct bounds and `installedAt`).
+### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6f and 6g-1 done)
+Remaining part, one PR:
+6g-2 the import UI on the packs screen: an `OpenDocument` picker (`*/*`, since many file
+managers give `.mbtiles` no MIME type), the file's display name and size from
+`OpenableColumns`, then `TilePackRepository.importPack` (#51). A progress state while it
+copies (a 400 MB pack takes a while on a cheap phone), en/am messages for each
+`AppError.Storage` kind (Corrupt: not a vector map pack; OutOfSpace; ReadFailed;
+WriteFailed), and the list of installed packs with name, size and a delete action
+(`TilePackInstaller.uninstall` plus `TilePackDao.deleteTilePack`). A blank pack name shows
+a translated generic name. Sweep `.mbtiles` files with no row on that screen: a crash
+between the rename and the row insert leaves one.
 
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
@@ -99,3 +97,5 @@ sideloaded APKs. Drop `x86`/`x86_64` from release only. Record before and after 
 | 13 · 6f-2a. Map zoom buttons, compass, scale bar (`OfflineMapController`, `ScaleBars`) | #45 | `026dddf` |
 | 13 · 6f-2b-1. Location puck (own GeoJSON layers), follow mode, recentre, pack that covers the user | #47 | `d59bceb` |
 | 16. "Check permissions again" on the diagnostics screen | #48 | `d889766` |
+| 13 · 6f-2b-2. Live puck while idle: map-only `PreviewLocationSource`, unbatched, foreground only | #50 | `7eabc40` |
+| 13 · 6g-1. Pack import: `MbtilesPackInstaller` (copy, check pbf, rename) and `TilePackRepository.importPack` | #51 | `a914448` |
