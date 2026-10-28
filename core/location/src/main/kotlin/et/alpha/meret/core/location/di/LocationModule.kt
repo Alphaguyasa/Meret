@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import et.alpha.meret.core.common.time.TimeProvider
 import et.alpha.meret.core.location.LocationCallbackThread
 import et.alpha.meret.core.location.LocationEngine
+import et.alpha.meret.core.location.PreviewLocationSource
 import et.alpha.meret.core.location.engine.LocationEngineSelector
 import et.alpha.meret.core.location.gnss.GnssStatusMonitor
 import et.alpha.meret.core.location.time.AndroidTimeProvider
@@ -64,6 +65,13 @@ public object LocationModule {
     @Singleton
     public fun provideLocationEngine(selector: LocationEngineSelector): LocationEngine =
         selector.engine
+
+    /** The map's own live position while idle. Same provider as the engine; see the selector. */
+    @Provides
+    @Singleton
+    public fun providePreviewLocationSource(
+        selector: LocationEngineSelector,
+    ): PreviewLocationSource = selector.preview
 
     @Provides
     @Singleton
