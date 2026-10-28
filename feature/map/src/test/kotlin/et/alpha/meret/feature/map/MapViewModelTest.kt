@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import et.alpha.meret.core.data.location.DevicePositionRepository
 import et.alpha.meret.core.data.tilepack.TilePackRepository
 import et.alpha.meret.core.maps.OfflineMapSession
 import et.alpha.meret.core.maps.server.LocalTileServer
@@ -11,6 +12,8 @@ import et.alpha.meret.core.maps.style.StyleProvider
 import et.alpha.meret.core.model.TilePack
 import et.alpha.meret.core.model.TilePackSource
 import et.alpha.meret.core.model.geo.BoundingBox
+import et.alpha.meret.core.model.geo.DevicePosition
+import et.alpha.meret.core.model.geo.LatLng
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancelAndJoin
@@ -34,6 +37,11 @@ class MapViewModelTest {
     private val repository =
         object : TilePackRepository {
             override fun observeTilePacks(): Flow<List<TilePack>> = packs
+        }
+    private val here = MutableStateFlow<DevicePosition?>(null)
+    private val positions =
+        object : DevicePositionRepository {
+            override fun observePosition(): Flow<DevicePosition?> = here
         }
 
     // Never acquired here: the map view does that, and these tests draw no map.
@@ -89,6 +97,42 @@ class MapViewModelTest {
         }
     }
 
+    @Test
+    fun `an older pack that covers the user wins`() = runMapTest { viewModel ->
+        packs.value = listOf(pack("addis", ADDIS), pack("ethiopia", ETHIOPIA))
+        here.value = position(13.5, 39.47) // Mekelle: outside Addis, inside Ethiopia
+
+        viewModel.uiState.test {
+            awaitPack("ethiopia")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `walking out of every pack keeps the newest one drawn`() = runMapTest { viewModel ->
+        packs.value = listOf(pack("addis", ADDIS), pack("ethiopia", ETHIOPIA))
+
+        viewModel.uiState.test {
+            here.value = position(13.5, 39.47)
+            awaitPack("ethiopia")
+
+            here.value = position(-1.29, 36.82) // Nairobi
+            awaitPack("addis")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `the position reaches the screen for the puck`() = runMapTest { viewModel ->
+        viewModel.position.test {
+            assertThat(awaitItem()).isNull()
+
+            here.value = position(9.03, 38.74)
+            assertThat(awaitItem()).isEqualTo(position(9.03, 38.74))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     /**
      * The first item may be the initial state or the first pack list, depending on when the
      * upstream starts; skip until [packId] is drawn. Times out if it never is.
@@ -100,7 +144,7 @@ class MapViewModelTest {
     }
 
     private fun runMapTest(body: suspend TestScope.(MapViewModel) -> Unit) = runTest(dispatcher) {
-        val viewModel = MapViewModel(repository, session)
+        val viewModel = MapViewModel(repository, positions, session)
         try {
             body(viewModel)
         } finally {
@@ -109,7 +153,15 @@ class MapViewModelTest {
         }
     }
 
-    private fun pack(id: String) = TilePack(
+    private fun position(
+        latitude: Double,
+        longitude: Double,
+    ) = DevicePosition(LatLng(latitude, longitude), accuracyMetres = 5.0, isLive = true)
+
+    private fun pack(
+        id: String,
+        bounds: BoundingBox = ETHIOPIA,
+    ) = TilePack(
         id = id,
         name = id,
         regionCode = "ET",
@@ -117,8 +169,13 @@ class MapViewModelTest {
         bytes = 1L,
         minZoom = 0,
         maxZoom = 14,
-        bounds = BoundingBox(3.4, 33.0, 14.9, 48.0),
+        bounds = bounds,
         source = TilePackSource.SIDELOADED,
         installedAt = 0L,
     )
+
+    private companion object {
+        val ETHIOPIA = BoundingBox(3.4, 33.0, 14.9, 48.0)
+        val ADDIS = BoundingBox(8.8, 38.6, 9.1, 38.95)
+    }
 }

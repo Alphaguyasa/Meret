@@ -1,6 +1,8 @@
 package et.alpha.meret.core.maps.view
 
 import com.google.common.truth.Truth.assertThat
+import et.alpha.meret.core.model.geo.DevicePosition
+import et.alpha.meret.core.model.geo.LatLng
 import org.junit.Test
 
 class OfflineMapControllerTest {
@@ -15,7 +17,7 @@ class OfflineMapControllerTest {
         controller.zoomOut()
         controller.zoomIn()
 
-        assertThat(map.calls).containsExactly("zoom 1.0", "zoom -1.0", "zoom 1.0").inOrder()
+        assertThat(map.cameraCalls).containsExactly("zoom 1.0", "zoom -1.0", "zoom 1.0").inOrder()
     }
 
     @Test
@@ -24,7 +26,7 @@ class OfflineMapControllerTest {
 
         controller.resetNorth()
 
-        assertThat(map.calls).containsExactly("north")
+        assertThat(map.cameraCalls).containsExactly("north")
     }
 
     @Test
@@ -34,7 +36,7 @@ class OfflineMapControllerTest {
 
         controller.attach(map)
 
-        assertThat(map.calls).isEmpty()
+        assertThat(map.cameraCalls).isEmpty()
     }
 
     @Test
@@ -55,7 +57,7 @@ class OfflineMapControllerTest {
         controller.detach(map)
         controller.zoomIn()
 
-        assertThat(map.calls).isEmpty()
+        assertThat(map.cameraCalls).isEmpty()
         assertThat(controller.readout).isNull()
     }
 
@@ -68,19 +70,136 @@ class OfflineMapControllerTest {
         controller.detach(map)
         controller.zoomIn()
 
-        assertThat(newer.calls).containsExactly("zoom 1.0")
-        assertThat(map.calls).isEmpty()
+        assertThat(newer.cameraCalls).containsExactly("zoom 1.0")
+        assertThat(map.cameraCalls).isEmpty()
+    }
+
+    @Test
+    fun `the first fix brings the map to the user, zoomed in to street level`() {
+        controller.attach(map)
+
+        controller.showPosition(HERE)
+
+        assertThat(map.cameraCalls).containsExactly("centre 9.03,38.74 zoom 16.0")
+        assertThat(map.puck).isEqualTo(HERE)
+        assertThat(controller.isFollowing).isTrue()
+    }
+
+    @Test
+    fun `while following, each new fix re-centres and keeps the user's zoom`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+
+        controller.showPosition(NEXT)
+
+        assertThat(map.cameraCalls)
+            .containsExactly("centre 9.03,38.74 zoom 16.0", "centre 9.031,38.74")
+            .inOrder()
+        assertThat(map.puck).isEqualTo(NEXT)
+    }
+
+    @Test
+    fun `the same fix twice does not move the map again`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+
+        controller.showPosition(HERE)
+
+        assertThat(map.cameraCalls).hasSize(1)
+    }
+
+    @Test
+    fun `a pan by the user stops following, but the puck keeps moving`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+
+        controller.onUserMovedMap()
+        controller.showPosition(NEXT)
+
+        assertThat(controller.isFollowing).isFalse()
+        assertThat(map.cameraCalls).containsExactly("centre 9.03,38.74 zoom 16.0")
+        assertThat(map.puck).isEqualTo(NEXT)
+    }
+
+    @Test
+    fun `recentre centres now, zooms in again, and follows the next fixes`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+        controller.onUserMovedMap()
+
+        controller.recentre()
+        controller.showPosition(NEXT)
+
+        assertThat(controller.isFollowing).isTrue()
+        assertThat(map.cameraCalls)
+            .containsExactly(
+                "centre 9.03,38.74 zoom 16.0",
+                "centre 9.03,38.74 zoom 16.0",
+                "centre 9.031,38.74",
+            ).inOrder()
+    }
+
+    @Test
+    fun `recentre with no fix yet centres on the first one when it comes`() {
+        controller.attach(map)
+        controller.onUserMovedMap()
+
+        controller.recentre()
+        assertThat(map.cameraCalls).isEmpty()
+
+        controller.showPosition(HERE)
+        assertThat(map.cameraCalls).containsExactly("centre 9.03,38.74 zoom 16.0")
+    }
+
+    @Test
+    fun `a map that attaches late gets the puck and the centring it missed`() {
+        controller.showPosition(HERE)
+
+        controller.attach(map)
+
+        assertThat(map.puck).isEqualTo(HERE)
+        assertThat(map.cameraCalls).containsExactly("centre 9.03,38.74 zoom 16.0")
+    }
+
+    @Test
+    fun `losing the position removes the puck and leaves the camera alone`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+
+        controller.showPosition(null)
+
+        assertThat(map.puck).isNull()
+        assertThat(map.cameraCalls).hasSize(1)
     }
 
     private class RecordingCamera : MapCameraTarget {
-        val calls = mutableListOf<String>()
+        /** Camera moves only; the puck is kept apart in [puck]. */
+        val cameraCalls = mutableListOf<String>()
+        var puck: DevicePosition? = null
 
         override fun zoomBy(delta: Double) {
-            calls += "zoom $delta"
+            cameraCalls += "zoom $delta"
         }
 
         override fun resetNorth() {
-            calls += "north"
+            cameraCalls += "north"
         }
+
+        override fun centreOn(
+            position: LatLng,
+            minZoom: Double?,
+        ) {
+            val zoom = minZoom?.let { " zoom $it" }.orEmpty()
+            cameraCalls += "centre ${position.latitude},${position.longitude}$zoom"
+        }
+
+        override fun showPuck(position: DevicePosition?) {
+            puck = position
+        }
+    }
+
+    private companion object {
+        val HERE = DevicePosition(LatLng(9.03, 38.74), accuracyMetres = 5.0, isLive = true)
+        val NEXT = DevicePosition(LatLng(9.031, 38.74), accuracyMetres = 4.0, isLive = true)
     }
 }

@@ -2,6 +2,7 @@ package et.alpha.meret.core.model
 
 import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.model.geo.BoundingBox
+import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
 import org.junit.Test
 
@@ -90,6 +91,9 @@ class DomainModelTest {
         assertValueSemantics(tilePack()) { it.copy(bytes = 99L) }
         assertValueSemantics(outboxEntry()) { it.copy(attempts = 99) }
         assertValueSemantics(syncConflict()) { it.copy(detectedAt = 99L) }
+        assertValueSemantics(DevicePosition(LatLng(9.0, 38.0), 5.0, isLive = true)) {
+            it.copy(isLive = false)
+        }
     }
 
     @Test
