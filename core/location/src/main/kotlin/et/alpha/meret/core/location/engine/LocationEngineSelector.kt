@@ -7,6 +7,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import et.alpha.meret.core.location.EngineKind
 import et.alpha.meret.core.location.LocationCallbackThread
 import et.alpha.meret.core.location.LocationEngine
+import et.alpha.meret.core.location.PreviewLocationSource
 
 /**
  * Reports whether Play Services is usable. Extracted so the selector is testable without a
@@ -39,6 +40,8 @@ public class LocationEngineSelector(
     private val availability: PlayServicesAvailability,
     private val fusedEngine: () -> LocationEngine,
     private val platformEngine: () -> LocationEngine,
+    private val fusedPreview: () -> PreviewLocationSource,
+    private val platformPreview: () -> PreviewLocationSource,
 ) {
     /**
      * The engine to use. Resolved once and cached: switching engines mid-track would change
@@ -47,6 +50,14 @@ public class LocationEngineSelector(
      */
     public val engine: LocationEngine by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         if (availability.isUsable()) fusedEngine() else platformEngine()
+    }
+
+    /**
+     * The map's live position while no track records, from the same provider as [engine]:
+     * a puck fed by fused fixes over a track drawn from GPS fixes would sit visibly off it.
+     */
+    public val preview: PreviewLocationSource by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        if (selected == EngineKind.FUSED) fusedPreview() else platformPreview()
     }
 
     /** Which engine was chosen. For the diagnostics screen. */
@@ -73,11 +84,20 @@ public class LocationEngineSelector(
             fusedEngine = { FusedLocationEngine(context, callbackThread.executor) },
             platformEngine = {
                 PlatformLocationEngine(
-                    locationManager =
-                        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager,
+                    locationManager = context.locationManager(),
+                    callbackLooper = callbackThread.looper,
+                )
+            },
+            fusedPreview = { FusedPreviewLocationSource(context, callbackThread.executor) },
+            platformPreview = {
+                PlatformPreviewLocationSource(
+                    locationManager = context.locationManager(),
                     callbackLooper = callbackThread.looper,
                 )
             },
         )
+
+        private fun Context.locationManager(): LocationManager =
+            getSystemService(Context.LOCATION_SERVICE) as LocationManager
     }
 }

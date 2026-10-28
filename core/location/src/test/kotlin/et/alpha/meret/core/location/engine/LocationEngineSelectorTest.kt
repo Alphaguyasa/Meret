@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.location.EngineCapabilities
 import et.alpha.meret.core.location.EngineKind
 import et.alpha.meret.core.location.LocationEngine
+import et.alpha.meret.core.location.PreviewLocationSource
 import et.alpha.meret.core.location.RawFix
 import et.alpha.meret.core.model.TrackingConfig
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +12,9 @@ import kotlinx.coroutines.flow.emptyFlow
 import org.junit.Test
 
 class LocationEngineSelectorTest {
+    private val fusedPreview = PreviewLocationSource { emptyFlow() }
+    private val platformPreview = PreviewLocationSource { emptyFlow() }
+
     @Test
     fun `prefers the fused engine when Play Services is usable`() {
         val selector = selector(playServicesUsable = true)
@@ -47,6 +51,8 @@ class LocationEngineSelectorTest {
                     platformBuilt++
                     FakeEngine(EngineKind.PLATFORM)
                 },
+                fusedPreview = { fusedPreview },
+                platformPreview = { platformPreview },
             )
         selector.engine
 
@@ -70,6 +76,8 @@ class LocationEngineSelectorTest {
                     FakeEngine(EngineKind.FUSED)
                 },
                 platformEngine = { FakeEngine(EngineKind.PLATFORM) },
+                fusedPreview = { fusedPreview },
+                platformPreview = { platformPreview },
             )
 
         val first = selector.engine
@@ -90,6 +98,8 @@ class LocationEngineSelectorTest {
                 },
                 fusedEngine = { FakeEngine(EngineKind.FUSED) },
                 platformEngine = { FakeEngine(EngineKind.PLATFORM) },
+                fusedPreview = { fusedPreview },
+                platformPreview = { platformPreview },
             )
 
         selector.engine
@@ -99,10 +109,22 @@ class LocationEngineSelectorTest {
         assertThat(checks).isEqualTo(1)
     }
 
+    /**
+     * The map's preview comes from the same provider as the recording. A puck from fused fixes
+     * over a track from GPS fixes would sit visibly off the line it is drawing.
+     */
+    @Test
+    fun `the preview uses the same provider as the engine`() {
+        assertThat(selector(playServicesUsable = true).preview).isSameInstanceAs(fusedPreview)
+        assertThat(selector(playServicesUsable = false).preview).isSameInstanceAs(platformPreview)
+    }
+
     private fun selector(playServicesUsable: Boolean) = LocationEngineSelector(
         availability = { playServicesUsable },
         fusedEngine = { FakeEngine(EngineKind.FUSED) },
         platformEngine = { FakeEngine(EngineKind.PLATFORM) },
+        fusedPreview = { fusedPreview },
+        platformPreview = { platformPreview },
     )
 
     private class FakeEngine(
