@@ -9,10 +9,12 @@ sealed interface DiagnosticsUiState {
 
     /**
      * [snapshot] drives the localised screen; [report] is the same facts as the fixed-format
-     * English text that "copy diagnostics" puts on the clipboard.
+     * English text that "copy diagnostics" puts on the clipboard. [canRecheckPermissions]
+     * when the onboarding flow, skips forgotten, would have a step to show.
      */
     data class Ready(
         val snapshot: DiagnosticsSnapshot,
         val report: String,
+        val canRecheckPermissions: Boolean = false,
     ) : DiagnosticsUiState
 }

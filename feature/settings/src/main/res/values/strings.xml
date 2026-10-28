@@ -27,6 +27,8 @@
     <string name="diagnostics_title">Diagnostics</string>
     <string name="diagnostics_copy">Copy diagnostics</string>
     <string name="diagnostics_copied">Copied. Paste it into a message to your supervisor.</string>
+    <string name="diagnostics_recheck_permissions">Check permissions again</string>
+    <string name="diagnostics_recheck_hint">Shows the permission and battery steps again, including any that were skipped.</string>
     <string name="diagnostics_section_phone">This phone</string>
     <string name="diagnostics_section_permissions">Permissions</string>
     <string name="diagnostics_section_tracking">Tracking</string>

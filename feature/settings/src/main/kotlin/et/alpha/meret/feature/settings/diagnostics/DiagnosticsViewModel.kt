@@ -12,7 +12,7 @@ import et.alpha.meret.domain.diagnostics.DiagnosticsReportBuilder
 import et.alpha.meret.domain.diagnostics.DiagnosticsSnapshot
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import et.alpha.meret.domain.diagnostics.TrackingStatus
-import et.alpha.meret.feature.settings.onboarding.PermissionSnapshotSource
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,7 +20,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -30,6 +32,9 @@ import javax.inject.Inject
  * Re-read every [REFRESH_MS] while the screen is visible, and at once when the recording
  * changes, so a supervisor on the phone with a worker sees a gap open and close. Nothing
  * runs while the screen is gone (`WhileSubscribed`).
+ *
+ * [recheckPermissions] forgets the onboarding skips and asks the app to show the flow again,
+ * offered only when the flow would have something to show (see [DiagnosticsPermissions]).
  */
 @HiltViewModel
 class DiagnosticsViewModel
@@ -37,12 +42,16 @@ class DiagnosticsViewModel
     constructor(
         private val controller: TrackingController,
         private val engine: LocationEngine,
-        private val permissions: PermissionSnapshotSource,
+        private val permissions: DiagnosticsPermissions,
         private val deviceInfo: DeviceInfoSource,
         private val timeProvider: TimeProvider,
         dispatchers: DispatcherProvider,
     ) : ViewModel() {
         private val reportBuilder = DiagnosticsReportBuilder()
+        private val onboardingRequests = Channel<Unit>(Channel.BUFFERED)
+
+        /** One item per [recheckPermissions], once the skips are cleared: show onboarding. */
+        val openOnboarding: Flow<Unit> = onboardingRequests.receiveAsFlow()
 
         private val refreshes: Flow<Unit> =
             flow {
@@ -55,13 +64,25 @@ class DiagnosticsViewModel
         val uiState: StateFlow<DiagnosticsUiState> =
             combine(controller.state, controller.health, refreshes) { state, health, _ ->
                 val snapshot = snapshot(state, health)
-                DiagnosticsUiState.Ready(snapshot, reportBuilder.build(snapshot))
+                DiagnosticsUiState.Ready(
+                    snapshot = snapshot,
+                    report = reportBuilder.build(snapshot),
+                    canRecheckPermissions = permissions.canRecheck(snapshot.permissions),
+                )
             }.flowOn(dispatchers.io)
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
                     initialValue = DiagnosticsUiState.Loading,
                 )
+
+        /** Forgets every onboarding skip, then asks for the onboarding flow. */
+        fun recheckPermissions() {
+            viewModelScope.launch {
+                permissions.forgetSkips()
+                onboardingRequests.send(Unit)
+            }
+        }
 
         private fun snapshot(
             state: TrackingState,
@@ -76,8 +97,7 @@ class DiagnosticsViewModel
                 deviceManufacturer = device.manufacturer,
                 deviceModel = device.model,
                 engine = engine.capabilities.kind.name,
-                // Only the onboarding dialog's result can tell a permanent denial apart.
-                permissions = permissions.read(locationPermanentlyDenied = false),
+                permissions = permissions.read(),
                 trackingStatus = state.toStatus(),
                 health = health,
                 freeStorageBytes = device.freeStorageBytes,

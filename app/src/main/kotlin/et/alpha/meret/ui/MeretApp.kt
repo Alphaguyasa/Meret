@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -62,19 +64,30 @@ fun MeretApp(
     // Saveable, so a rotation does not re-run it, while a new process (where the worker may
     // have revoked something in Settings) does.
     var onboarded by rememberSaveable { mutableStateOf(!requireOnboarding) }
+    // Diagnostics can run the flow again. Each run gets its own ViewModel: one kept from the
+    // last run would still hold the skips the worker made then in memory.
+    var onboardingRun by rememberSaveable { mutableIntStateOf(0) }
 
     if (onboarded) {
-        MeretShell(modifier)
+        MeretShell(
+            onRecheckPermissions = {
+                onboardingRun += 1
+                onboarded = false
+            },
+            modifier = modifier,
+        )
     } else {
         OnboardingRoute(
             onFinished = { onboarded = true },
             modifier = modifier.safeDrawingPadding(),
+            viewModel = hiltViewModel(key = "onboarding-$onboardingRun"),
         )
     }
 }
 
 @Composable
 private fun MeretShell(
+    onRecheckPermissions: () -> Unit,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -158,6 +171,7 @@ private fun MeretShell(
                     // Reached from the GPS chip on the map, not the bottom bar.
                     composable(DIAGNOSTICS_ROUTE) {
                         DiagnosticsRoute(
+                            onRecheckPermissions = onRecheckPermissions,
                             modifier = Modifier.padding(innerPadding),
                         )
                     }

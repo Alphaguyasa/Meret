@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ fun DiagnosticsScreen(
     state: DiagnosticsUiState,
     onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onRecheckPermissions: () -> Unit = {},
 ) {
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         when (state) {
@@ -60,8 +62,28 @@ fun DiagnosticsScreen(
                             modifier = Modifier.padding(bottom = Spacing.md),
                         )
                         Facts(state.snapshot)
+                        if (state.canRecheckPermissions) {
+                            Text(
+                                text = stringResource(R.string.diagnostics_recheck_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = Spacing.md),
+                            )
+                        }
                     }
                     // Within thumb reach, below the scrolling facts.
+                    if (state.canRecheckPermissions) {
+                        OutlinedButton(
+                            onClick = onRecheckPermissions,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = Spacing.md)
+                                    .heightIn(min = Sizes.touchTargetField),
+                        ) {
+                            Text(stringResource(R.string.diagnostics_recheck_permissions))
+                        }
+                    }
                     Button(
                         onClick = { onCopy(state.report) },
                         modifier =
