@@ -26,6 +26,8 @@
     <string name="diagnostics_title">ምርመራ</string>
     <string name="diagnostics_copy">ምርመራውን ቅዳ</string>
     <string name="diagnostics_copied">ተቀድቷል። ለተቆጣጣሪዎ በሚልኩት መልዕክት ውስጥ ይለጥፉት።</string>
+    <string name="diagnostics_recheck_permissions">ፈቃዶችን እንደገና ፈትሽ</string>
+    <string name="diagnostics_recheck_hint">የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና ያሳያል።</string>
     <string name="diagnostics_section_phone">ይህ ስልክ</string>
     <string name="diagnostics_section_permissions">ፈቃዶች</string>
     <string name="diagnostics_section_tracking">መስመር መቅዳት</string>

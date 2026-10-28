@@ -32,6 +32,14 @@ public class OnboardingStore(
         }
     }
 
+    /**
+     * Forgets every skip, so the flow offers each missing step again. For a supervisor fixing
+     * a phone that keeps losing tracks, from the diagnostics screen.
+     */
+    public suspend fun clearSkips() {
+        dataStore.edit { preferences -> preferences.remove(SKIPPED) }
+    }
+
     private companion object {
         val SKIPPED = stringSetPreferencesKey("onboarding_skipped_steps")
 

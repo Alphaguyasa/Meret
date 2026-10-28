@@ -66,6 +66,22 @@ class OnboardingStoreTest {
             assertThat(store.skippedSteps.first()).containsExactly("NOTIFICATIONS")
         }
 
+    @Test
+    fun `clearing the skips offers every step again and keeps other settings`() = runTest {
+        // On the test's own scope: DataStore's default IO scope has made such tests flaky.
+        val dataStore = dataStore(backgroundScope)
+        TrackingConfigStore(dataStore).pinProfile(LocationProfile.PRECISE)
+        val store = OnboardingStore(dataStore)
+        store.skip("NOTIFICATIONS")
+        store.skip("OEM_AUTOSTART")
+
+        store.clearSkips()
+
+        assertThat(store.skippedSteps.first()).isEmpty()
+        assertThat(TrackingConfigStore(dataStore).config.first().profile)
+            .isEqualTo(LocationProfile.PRECISE)
+    }
+
     /** The store is shared with tracking settings and the active session. */
     @Test
     fun `skipping leaves other settings in the shared store alone`() = runTest {

@@ -1,5 +1,6 @@
 package et.alpha.meret.feature.settings.diagnostics
 
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.lifecycle.viewModelScope
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
@@ -9,6 +10,7 @@ import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.common.time.TimeProvider
 import et.alpha.meret.core.data.tracking.TrackingController
 import et.alpha.meret.core.data.tracking.TrackingState
+import et.alpha.meret.core.datastore.OnboardingStore
 import et.alpha.meret.core.location.EngineCapabilities
 import et.alpha.meret.core.location.EngineKind
 import et.alpha.meret.core.location.LocationEngine
@@ -28,6 +30,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
@@ -37,7 +40,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
 
 /**
  * The snapshot the screen and the copied report are built from: every source feeds it, the
@@ -49,6 +55,11 @@ class DiagnosticsViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val controller = FakeTrackingController()
     private val viewModels = mutableListOf<DiagnosticsViewModel>()
+    private var permissions = PERMISSIONS
+    private var onboardingStore: OnboardingStore? = null
+
+    @get:Rule
+    val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
     @Before
     fun setUp() {
@@ -113,6 +124,51 @@ class DiagnosticsViewModelTest {
         }
     }
 
+    @Test
+    fun `with every step done there is nothing to check again`() = runDiagnosticsTest {
+        viewModel().uiState.test {
+            assertThat(awaitReady().canRecheckPermissions).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a missing step offers the onboarding flow again`() = runDiagnosticsTest {
+        permissions = PERMISSIONS.copy(ignoringBatteryOptimisations = false)
+
+        viewModel().uiState.test {
+            assertThat(awaitReady().canRecheckPermissions).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    /** No API says whether autostart is on, so a phone that needs the step always offers it. */
+    @Test
+    fun `a phone that needs the autostart step always offers it`() = runDiagnosticsTest {
+        permissions = PERMISSIONS.copy(oemStepRequired = true)
+
+        viewModel().uiState.test {
+            assertThat(awaitReady().canRecheckPermissions).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `checking again forgets the skips before onboarding opens`() = runDiagnosticsTest {
+        val viewModel = viewModel()
+        val store = checkNotNull(onboardingStore)
+        store.skip("NOTIFICATIONS")
+        store.skip("BATTERY_OPTIMISATION")
+
+        viewModel.openOnboarding.test {
+            viewModel.recheckPermissions()
+
+            awaitItem()
+            assertThat(store.skippedSteps.first()).isEmpty()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private suspend fun ReceiveTurbine<DiagnosticsUiState>.awaitReady(): DiagnosticsUiState.Ready {
         while (true) {
             val item = awaitItem()
@@ -132,10 +188,24 @@ class DiagnosticsViewModelTest {
         }
     }
 
-    private fun viewModel() = DiagnosticsViewModel(
+    /**
+     * The onboarding store's DataStore runs on the test's scheduler, not on its default
+     * `Dispatchers.IO` scope, which has made DataStore tests flaky in CI.
+     */
+    private fun TestScope.viewModel() = DiagnosticsViewModel(
         controller = controller,
         engine = FakeEngine(),
-        permissions = { PERMISSIONS },
+        permissions =
+            DiagnosticsPermissions(
+                snapshots = { permissions },
+                onboardingStore =
+                    OnboardingStore(
+                        PreferenceDataStoreFactory.create(
+                            scope = backgroundScope,
+                            produceFile = { File(temporaryFolder.root, "meret.preferences_pb") },
+                        ),
+                    ).also { onboardingStore = it },
+            ),
         deviceInfo = {
             DeviceInfo(
                 appVersionName = "0.1.0",
