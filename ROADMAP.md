@@ -20,29 +20,17 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 20. [P1 · M] Phase 7a — Record button starts, pauses and stops a track
-The map's `RecordButton` and `TrackingBar` are drawn but `MapRoute` passes `{}`. Tap with no
-recording: a `StartTrackingUseCase` writes a new track row (UUIDv7, the current project id or
-a local default; check `TrackEntity.projectId`), then `TrackingController.start` and the
-foreground service, from this user action only (Android 14 rule). Tap while recording:
-pause/resume. Long-press: stop. `TrackingBar` shows the live distance, duration and point
-count from the controller. en/am strings. ViewModel tests with a fake controller; the service
-start stays on a device row.
-
-### 21. [P1 · M] Phase 7b — Live track line on the map
-The recording track as its own `GeoJsonSource` and line layer, refreshed every 2 s from
-`TrackPointDao.observeTrackGeometry` (simplified on `Dispatchers.Default`, raw points
-untouched), re-added after every style load like the puck. Tested on the geometry and the
-refresh cadence; the frame-rate criterion (2-hour track, no drops) is a device row.
-
 ### 22. [P1 · M] Phase 7c — Track list
 Replace the `TrackListScreen` placeholder: newest first, name/date, distance, duration, sync
 state. Delete with an undo window (the row stays until the snackbar times out, and a process
-death inside the window keeps the track). en/am.
+death inside the window keeps the track). en/am. **From item 20:** an open row with no session
+can exist (a start the service accepted but never recorded, or a new start after a reboot
+left a track unfinished). Show it as "not finished", never as recording.
 
 ### 23. [P1 · M] Phase 7d — Track detail and stop undo
 Stats, segment list and elevation profile for one track; "stopped by accident" undo after a
-long-press stop (resume the same track in a new segment). Then Phase 7's acceptance goes to
+long-press stop (resume the same track in a new segment). The tracking bar's segment count
+shows "–" until this item counts segments. Then Phase 7's acceptance goes to
 the device list.
 
 ### 24. [P3 · S] Give the remaining DataStore tests a test scope
@@ -71,7 +59,10 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 
 ### Later phases (expand into items when they reach the top)
 - Phase 8 — Waypoints, forms, photos
-- Phase 9 — Sync (Supabase schema + RLS tests first, free tier only)
+- Phase 9 — Sync (Supabase schema + RLS tests first, free tier only). Tracks recorded before
+  sign-in have `project_id` and `user_id` `"local"` (`RoomNewTrackStore`); sync must give them
+  the signed-in user and a real project before upload. `device_id` is a random per-install id
+  (`DeviceIdentityStore`), never a hardware id.
 - Phase 10 — Measurement
 - Phase 11 — Assignments and coverage
 - Phase 12 — Export
@@ -119,3 +110,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 13 · 6g-1. Pack import: `MbtilesPackInstaller` (copy, check pbf, rename) and `TilePackRepository.importPack` | #51 | `a914448` |
 | 13 · 6g-2. Packs screen: picker, progress, en/am errors, pack list with delete, orphan sweep. **Phase 6 done in CI** (device rows in NEEDS_APPROVAL) | #53 | `b2d474a` |
 | 19. Per-ABI release APKs (`armeabi-v7a`, `arm64-v8a`, universal) and the `release-size` workflow | #54 | `60fa667` |
+| 20. Phase 7a: record button starts, pauses, stops (`StartTrackingUseCase`, `RecordingCommands`, `DeviceIdentityStore`), tracking bar stats | #56 | `fa90463` |
+| 21. Phase 7b: live track line (`TrackingController.activeLine`, `throttleLatest` 2 s, Douglas–Peucker 3 m, own line layer under the puck) | #57 | `ff9a1d4` |
