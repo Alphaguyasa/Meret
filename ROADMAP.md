@@ -8,7 +8,8 @@ step 5) when fewer than 5 items are open.
 product · P2 = important, not blocking · P3 = cleanup.
 **Effort:** S = under half a day · M = about a day · L = split before starting.
 
-Phases refer to `docs/BUILD_PLAN.md`. Phases 1–4 are done (git history to `1fc66f5`).
+Phases refer to `docs/BUILD_PLAN.md`. Phases 1–4 are done (git history to `1fc66f5`). Phases 5
+and 6 are done in CI; their device checks are in `NEEDS_APPROVAL.md`.
 Phase 0 (tile pack) tooling is done (`tools/`, item 12). A real Ethiopia pack has not been
 built yet: Planetiler needs a machine with ~20 GB scratch space, not the cloud container.
 
@@ -19,17 +20,41 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 13. [P2 · L] Phase 6 — Offline map (split; 6a–6f and 6g-1 done)
-Remaining part, one PR:
-6g-2 the import UI on the packs screen: an `OpenDocument` picker (`*/*`, since many file
-managers give `.mbtiles` no MIME type), the file's display name and size from
-`OpenableColumns`, then `TilePackRepository.importPack` (#51). A progress state while it
-copies (a 400 MB pack takes a while on a cheap phone), en/am messages for each
-`AppError.Storage` kind (Corrupt: not a vector map pack; OutOfSpace; ReadFailed;
-WriteFailed), and the list of installed packs with name, size and a delete action
-(`TilePackInstaller.uninstall` plus `TilePackDao.deleteTilePack`). A blank pack name shows
-a translated generic name. Sweep `.mbtiles` files with no row on that screen: a crash
-between the rename and the row insert leaves one.
+### 20. [P1 · M] Phase 7a — Record button starts, pauses and stops a track
+The map's `RecordButton` and `TrackingBar` are drawn but `MapRoute` passes `{}`. Tap with no
+recording: a `StartTrackingUseCase` writes a new track row (UUIDv7, the current project id or
+a local default; check `TrackEntity.projectId`), then `TrackingController.start` and the
+foreground service, from this user action only (Android 14 rule). Tap while recording:
+pause/resume. Long-press: stop. `TrackingBar` shows the live distance, duration and point
+count from the controller. en/am strings. ViewModel tests with a fake controller; the service
+start stays on a device row.
+
+### 21. [P1 · M] Phase 7b — Live track line on the map
+The recording track as its own `GeoJsonSource` and line layer, refreshed every 2 s from
+`TrackPointDao.observeTrackGeometry` (simplified on `Dispatchers.Default`, raw points
+untouched), re-added after every style load like the puck. Tested on the geometry and the
+refresh cadence; the frame-rate criterion (2-hour track, no drops) is a device row.
+
+### 22. [P1 · M] Phase 7c — Track list
+Replace the `TrackListScreen` placeholder: newest first, name/date, distance, duration, sync
+state. Delete with an undo window (the row stays until the snackbar times out, and a process
+death inside the window keeps the track). en/am.
+
+### 23. [P1 · M] Phase 7d — Track detail and stop undo
+Stats, segment list and elevation profile for one track; "stopped by accident" undo after a
+long-press stop (resume the same track in a new segment). Then Phase 7's acceptance goes to
+the device list.
+
+### 24. [P3 · S] Give the remaining DataStore tests a test scope
+Run 12 found a 45-minute CI hang from a DataStore on its default `Dispatchers.IO` scope in a
+`runTest`. `OnboardingViewModelTest` was fixed. `TrackingSessionStoreTest`,
+`OnboardingStoreTest`, `TrackingConfigStoreTest` and `DefaultTrackingControllerTest` still
+build some stores with no scope. Pass `backgroundScope` everywhere and drop the fallback.
+
+### 25. [P2 · S] Release signing (blocked on A12)
+There is no `signingConfig`, so `assembleRelease` makes unsigned APKs that no phone installs.
+Needs Alpha's call on who holds the upload key (A12). Then: the key in GitHub Actions
+secrets, a signed release built by a manual workflow, never a keystore in the repo.
 
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
@@ -44,14 +69,7 @@ advisories in the lockfile, but nothing proposes routine updates. Add an `npm` e
 `/tools`, monthly, sharing the 2-open-PR budget (lower the Gradle limit or group). sharp was
 pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 
-### 19. [P2 · S] Cut the APK size MapLibre added
-MapLibre's native libraries took the debug APK from 13.4 MB to 33.4 MB (#40), for 4 ABIs.
-Field phones are low-end and data is paid by the megabyte. Measure the release build, then
-ship per-ABI: an App Bundle for Play, and ABI splits (`armeabi-v7a`, `arm64-v8a`) for
-sideloaded APKs. Drop `x86`/`x86_64` from release only. Record before and after in the log.
-
 ### Later phases (expand into items when they reach the top)
-- Phase 7 — Tracking UI and track rendering
 - Phase 8 — Waypoints, forms, photos
 - Phase 9 — Sync (Supabase schema + RLS tests first, free tier only)
 - Phase 10 — Measurement
@@ -99,3 +117,5 @@ sideloaded APKs. Drop `x86`/`x86_64` from release only. Record before and after 
 | 16. "Check permissions again" on the diagnostics screen | #48 | `d889766` |
 | 13 · 6f-2b-2. Live puck while idle: map-only `PreviewLocationSource`, unbatched, foreground only | #50 | `7eabc40` |
 | 13 · 6g-1. Pack import: `MbtilesPackInstaller` (copy, check pbf, rename) and `TilePackRepository.importPack` | #51 | `a914448` |
+| 13 · 6g-2. Packs screen: picker, progress, en/am errors, pack list with delete, orphan sweep. **Phase 6 done in CI** (device rows in NEEDS_APPROVAL) | #53 | `b2d474a` |
+| 19. Per-ABI release APKs (`armeabi-v7a`, `arm64-v8a`, universal) and the `release-size` workflow | #54 | `SHA54` |

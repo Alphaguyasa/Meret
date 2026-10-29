@@ -69,6 +69,10 @@ avoid the app name, so the «መሬት»/"Meret" question above does not apply t
 **Run 13 added 5 more** in `feature/map/src/main/res/values-am/strings.xml`: "አጉላ" (Zoom in),
 "አሳንስ" (Zoom out), "ካርታውን ወደ ሰሜን አዙር" (Turn the map north up), and the scale bar units
 "%d ሜ" and "%d ኪ.ሜ". Please check that the abbreviations ሜ and ኪ.ሜ are what field teams read.
+**Run 16 added 15 more, and rewrote 1,** in `feature/tiles/src/main/res/values-am/strings.xml`:
+the pack screen («የካርታ ጥቅል አስገባ» Import map pack, «ሰርዝ» Delete, «ይቅር» Cancel, «እሺ» OK) and
+one message per import failure. The empty-screen text no longer mentions downloading a
+region, which the app cannot do yet.
 **Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
 እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
 ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
@@ -96,6 +100,17 @@ the OFL licence text beside the fonts.
 **Run 10 applied the default:** #37 committed the stack directory and the sprite under
 `core/maps/src/main/assets/map/` with `OFL.txt`. Answer only if you want (b) instead.
 
+### A12. Who holds the app's signing key (no cost)
+Release builds are unsigned: there is no `signingConfig`, and an unsigned APK does not install
+on a phone. Every update must be signed with the **same** key forever, or phones refuse it and
+the user has to uninstall (which deletes unsynced records). Options: (a) you create the
+keystore on your own computer, keep a backup offline, and add it as GitHub Actions secrets
+(`MERET_KEYSTORE_BASE64`, `MERET_KEYSTORE_PASSWORD`, `MERET_KEY_ALIAS`, `MERET_KEY_PASSWORD`);
+the run then adds a manual "signed release" workflow that reads them and never writes the key
+to the repo or logs; (b) Play App Signing later, if the app goes to Play (the $25 developer fee
+is a purchase, so that needs your separate decision). **Default until you answer:** release
+APKs stay unsigned; debug APKs (CI artifact) remain the way to test on a phone. ROADMAP 25.
+
 ---
 
 ## Needs a device
@@ -113,10 +128,11 @@ hardware. Steps are in the linked docs.
 | 5 | Reboot mid-track: after unlocking, the «Track not finished» prompt appears; «Resume recording» continues the same track in a new segment; with no open track, no prompt | Needs a record button (Phase 7) or adb to start a track |
 | 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
 | 6 | The loopback tile server on a phone: MapLibre loads `tiles.json` and tiles from `127.0.0.1` in aeroplane mode, with no cleartext error, and the server stops when the map leaves the foreground | After 6c (network security config) and 6e (map wrapper) |
-| 6 | The map screen draws a sideloaded pack (adb push to `filesDir/packs/{id}.mbtiles` plus a `tile_pack` row, until 6g) in aeroplane mode. Leaving the screen and coming back redraws it, and the 33.4 MB debug APK installs and starts on a low-RAM phone | After 6f-1 (#41); easier after 6g (pack import) |
+| 6 | The map screen draws a sideloaded pack (imported from the Packs tab since 6g-2) in aeroplane mode. Leaving the screen and coming back redraws it, and the 33.4 MB debug APK installs and starts on a low-RAM phone | Any phone with a pack |
 | 6 | Location puck and follow (6f-2b-1, #47): while recording, a blue dot with a shaded accuracy circle follows the phone and the map keeps it centred; a pan stops following; the crosshair button (filled while following) centres again and zooms in to street level. With no recording, the last known position shows grey. With location denied, no dot and no crash. With two packs installed, the one covering the phone is drawn | After a pack is installed; start a track (adb, until Phase 7) to see live fixes |
 | 6 | Live puck while idle (6f-2b-2, #50): with no recording, the dot is blue and moves about once a second as you walk; leave the app, and within ~5 s the status-bar location icon goes away; start a track (adb, until Phase 7): one location request remains and the dot keeps moving; pause it: the dot stays live | Any phone with a pack installed; check on one with no Play Services too |
 | 5 | «Check permissions again» (item 16, #48): skip the battery step in onboarding, open Diagnostics, the button shows; tap it, the battery step appears again; finish, the map returns. On a Tecno/Infinix/Itel or Xiaomi the button always shows | Any phone; a Transsion or Xiaomi for the autostart case |
+| 6 | Pack import (6g-2, #53), in aeroplane mode: Packs tab, «Import map pack», pick a real `.mbtiles` from Downloads; a progress bar shows while it copies, then «… is installed»; the pack is listed with its size and the map draws it. Pick a photo: «This file is not a map pack». Delete the pack: it asks first, then the map goes back to the placeholder. Check the Amharic text too | Any phone, a vector pack from `tools/` |
 | 6 | Map controls (6f-2a, #45): + and − zoom one level; rotating with two fingers shows the compass, which points north, and a tap turns the map north up; the scale bar matches a known distance (for example a 100 m road stretch) | After a pack is installed (6g, or the sideload above) |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 
