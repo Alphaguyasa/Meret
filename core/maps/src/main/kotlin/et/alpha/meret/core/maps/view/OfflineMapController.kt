@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.TrackLine
 
 /** Where the map's camera is, in the units the screen's own controls need. */
 public data class MapCameraReadout(
@@ -34,6 +35,9 @@ internal interface MapCameraTarget {
 
     /** Draws the location puck at [position], or removes it when null. */
     fun showPuck(position: DevicePosition?)
+
+    /** Draws the track being recorded, or removes it when null. */
+    fun showTrackLine(line: TrackLine?)
 }
 
 /**
@@ -63,6 +67,7 @@ public class OfflineMapController internal constructor() {
 
     private var target: MapCameraTarget? = null
     private var position: DevicePosition? = null
+    private var trackLine: TrackLine? = null
     private var zoomInOnNextCentre = true
 
     public fun zoomIn() {
@@ -93,8 +98,16 @@ public class OfflineMapController internal constructor() {
         centreIfFollowing()
     }
 
+    /** The track being recorded, drawn under the puck; null removes it. */
+    public fun showTrackLine(line: TrackLine?) {
+        if (line == trackLine) return
+        trackLine = line
+        target?.showTrackLine(line)
+    }
+
     internal fun attach(target: MapCameraTarget) {
         this.target = target
+        target.showTrackLine(trackLine)
         target.showPuck(position)
         centreIfFollowing()
     }

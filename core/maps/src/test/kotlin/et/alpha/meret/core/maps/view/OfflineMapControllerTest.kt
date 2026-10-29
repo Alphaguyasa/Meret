@@ -3,6 +3,7 @@ package et.alpha.meret.core.maps.view
 import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.TrackLine
 import org.junit.Test
 
 class OfflineMapControllerTest {
@@ -172,10 +173,35 @@ class OfflineMapControllerTest {
         assertThat(map.cameraCalls).hasSize(1)
     }
 
+    @Test
+    fun `a track line given before the map is ready is drawn when it attaches`() {
+        controller.showTrackLine(LINE)
+
+        controller.attach(map)
+
+        assertThat(map.lines).containsExactly(LINE)
+    }
+
+    @Test
+    fun `the track line reaches the map, unchanged lines once, and null removes it`() {
+        controller.attach(map)
+
+        controller.showTrackLine(LINE)
+        controller.showTrackLine(LINE)
+        controller.showTrackLine(null)
+
+        // The first null is the attach: no line yet.
+        assertThat(map.lines).containsExactly(null, LINE, null).inOrder()
+        assertThat(map.cameraCalls).isEmpty()
+    }
+
     private class RecordingCamera : MapCameraTarget {
         /** Camera moves only; the puck is kept apart in [puck]. */
         val cameraCalls = mutableListOf<String>()
         var puck: DevicePosition? = null
+
+        /** Every line handed to the map, in order. */
+        val lines = mutableListOf<TrackLine?>()
 
         override fun zoomBy(delta: Double) {
             cameraCalls += "zoom $delta"
@@ -196,10 +222,15 @@ class OfflineMapControllerTest {
         override fun showPuck(position: DevicePosition?) {
             puck = position
         }
+
+        override fun showTrackLine(line: TrackLine?) {
+            lines += line
+        }
     }
 
     private companion object {
         val HERE = DevicePosition(LatLng(9.03, 38.74), accuracyMetres = 5.0, isLive = true)
         val NEXT = DevicePosition(LatLng(9.031, 38.74), accuracyMetres = 4.0, isLive = true)
+        val LINE = TrackLine(listOf(listOf(LatLng(9.03, 38.74), LatLng(9.031, 38.74))))
     }
 }

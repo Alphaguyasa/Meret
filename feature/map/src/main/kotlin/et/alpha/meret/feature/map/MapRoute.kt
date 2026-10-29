@@ -25,7 +25,8 @@ import et.alpha.meret.core.designsystem.R as DesignR
 /**
  * Owns the [MapViewModel] and puts the offline map under the screen's controls. The phone's
  * position goes to the map as the location puck; the recentre button turns follow mode on.
- * The record button starts, pauses and resumes a track, and a long-press stops it.
+ * The record button starts, pauses and resumes a track, and a long-press stops it; the track
+ * being recorded is drawn under the puck.
  */
 @Composable
 fun MapRoute(
@@ -37,6 +38,7 @@ fun MapRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val position by viewModel.position.collectAsStateWithLifecycle()
     val recording by viewModel.recording.collectAsStateWithLifecycle()
+    val liveLine by viewModel.liveLine.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(viewModel, lifecycle) {
@@ -54,6 +56,9 @@ fun MapRoute(
     val mapController = rememberOfflineMapController()
     LaunchedEffect(mapController, position) {
         mapController.showPosition(position)
+    }
+    LaunchedEffect(mapController, liveLine) {
+        mapController.showTrackLine(liveLine)
     }
 
     val nowMillis = rememberNowMillis(ticking = recording != null)

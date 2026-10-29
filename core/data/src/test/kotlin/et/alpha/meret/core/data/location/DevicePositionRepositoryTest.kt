@@ -15,6 +15,7 @@ import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.TrackingConfig
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.TrackLine
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -267,6 +268,7 @@ class DevicePositionRepositoryTest {
     ) : TrackingController {
         override val state = MutableStateFlow(initial)
         override val activeTrack: Flow<Track?> = emptyFlow()
+        override val activeLine: Flow<TrackLine?> = emptyFlow()
         override val health = MutableStateFlow(TrackingHealth())
 
         override suspend fun start(trackId: String): AppResult<Unit> = error("not used")

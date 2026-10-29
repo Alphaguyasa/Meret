@@ -161,6 +161,30 @@ class DefaultTrackingControllerTest {
     }
 
     @Test
+    fun `the live line follows the recording and goes when it stops`() = runBlocking<Unit> {
+        val engine = FakeEngine()
+        val controller = controller(engine)
+        assertThat(controller.activeLine.first()).isNull()
+
+        controller.start(TRACK_ID)
+        engine.emit(fixes(count = 5))
+        awaitPointCount(5)
+        val line =
+            withTimeout(TIMEOUT_MS) {
+                controller.activeLine.first { (it?.segments?.singleOrNull()?.size ?: 0) >= 2 }
+            }
+
+        // A walk north from the base point, in one segment.
+        val segment = checkNotNull(line).segments.single()
+        assertThat(segment.first().latitude).isWithin(LINE_TOLERANCE_DEGREES).of(BASE_LATITUDE)
+        assertThat(segment.last().latitude).isGreaterThan(segment.first().latitude)
+
+        controller.stop()
+        assertThat(controller.activeLine.first()).isNull()
+        assertThat(database.trackPointDao().countPoints(TRACK_ID)).isEqualTo(5)
+    }
+
+    @Test
     fun `stop completes the track, keeps its points and clears the session`() = runBlocking<Unit> {
         val engine = FakeEngine()
         val controller = controller(engine)
@@ -359,6 +383,9 @@ class DefaultTrackingControllerTest {
 
         const val TIMEOUT_MS = 30_000L
         const val POLL_MS = 10L
+
+        /** About a metre: the line is drawn from filtered positions. */
+        const val LINE_TOLERANCE_DEGREES = 1e-5
 
         const val BASE_LATITUDE = 9.0300
         const val BASE_LONGITUDE = 38.7400

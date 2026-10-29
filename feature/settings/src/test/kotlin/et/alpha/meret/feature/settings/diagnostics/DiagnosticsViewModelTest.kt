@@ -19,6 +19,7 @@ import et.alpha.meret.core.model.LocationProvider
 import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.TrackingConfig
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.TrackLine
 import et.alpha.meret.domain.diagnostics.GapRecord
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import et.alpha.meret.domain.diagnostics.TrackingStatus
@@ -222,6 +223,7 @@ class DiagnosticsViewModelTest {
     private class FakeTrackingController : TrackingController {
         override val state = MutableStateFlow<TrackingState>(TrackingState.Idle)
         override val activeTrack: Flow<Track?> = flowOf(null)
+        override val activeLine: Flow<TrackLine?> = flowOf(null)
         override val health = MutableStateFlow(TrackingHealth())
 
         override suspend fun start(trackId: String): AppResult<Unit> = AppResult.Success(Unit)

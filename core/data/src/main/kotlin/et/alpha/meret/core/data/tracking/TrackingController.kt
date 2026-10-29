@@ -2,6 +2,7 @@ package et.alpha.meret.core.data.tracking
 
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.model.Track
+import et.alpha.meret.core.model.geo.TrackLine
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,12 @@ public interface TrackingController {
 
     /** The track being recorded, if any, as Room has it. For the live notification. */
     public val activeTrack: Flow<Track?>
+
+    /**
+     * The line of the track being recorded, simplified, at most once per two seconds; null
+     * while idle. For the map. Raw points are read, never changed.
+     */
+    public val activeLine: Flow<TrackLine?>
 
     /**
      * Fix rate, last accuracy and the gap log of the recording in this process, for the

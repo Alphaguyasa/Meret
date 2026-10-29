@@ -21,6 +21,7 @@ import et.alpha.meret.core.model.TrackStatus
 import et.alpha.meret.core.model.geo.BoundingBox
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.TrackLine
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import et.alpha.meret.domain.tracking.NewTrackStore
 import et.alpha.meret.domain.tracking.RecordingCommands
@@ -266,6 +267,22 @@ class MapViewModelTest {
     }
 
     @Test
+    fun `the recording's line reaches the map, and goes when it stops`() = runMapTest { viewModel ->
+        val line = TrackLine(listOf(listOf(LatLng(9.03, 38.74), LatLng(9.031, 38.74))))
+
+        viewModel.liveLine.test {
+            assertThat(awaitItem()).isNull()
+
+            tracking.activeLine.value = line
+            assertThat(awaitItem()).isEqualTo(line)
+
+            tracking.activeLine.value = null
+            assertThat(awaitItem()).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `another open track in Room is not shown as the recording`() {
         val readout =
             recordingReadout(
@@ -318,6 +335,7 @@ class MapViewModelTest {
     private class FakeTrackingController : TrackingController {
         override val state = MutableStateFlow<TrackingState>(TrackingState.Idle)
         override val activeTrack = MutableStateFlow<Track?>(null)
+        override val activeLine = MutableStateFlow<TrackLine?>(null)
         override val health = MutableStateFlow(TrackingHealth())
 
         override suspend fun start(trackId: String): AppResult<Unit> = error("the service's call")

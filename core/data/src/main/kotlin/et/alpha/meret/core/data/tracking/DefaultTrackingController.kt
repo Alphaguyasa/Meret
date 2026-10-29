@@ -1,11 +1,14 @@
 package et.alpha.meret.core.data.tracking
 
 import android.Manifest
+import et.alpha.meret.core.common.flow.throttleLatest
+import et.alpha.meret.core.common.geo.TrackLines
 import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.common.result.map
 import et.alpha.meret.core.common.telemetry.Telemetry
 import et.alpha.meret.core.database.dao.TrackDao
+import et.alpha.meret.core.database.entity.TrackGeometryPoint
 import et.alpha.meret.core.database.mapper.toDomain
 import et.alpha.meret.core.datastore.TrackingConfigStore
 import et.alpha.meret.core.datastore.TrackingSessionStore
@@ -14,10 +17,13 @@ import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.TrackStatus
 import et.alpha.meret.core.model.TrackingConfig
 import et.alpha.meret.core.model.TrackingSession
+import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.TrackLine
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import et.alpha.meret.domain.diagnostics.TrackingHealthTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -25,7 +31,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -86,6 +96,15 @@ public class DefaultTrackingController
 
         override val activeTrack: Flow<Track?> =
             trackDao.observeActiveTrack().map { it?.toDomain() }
+
+        @OptIn(ExperimentalCoroutinesApi::class)
+        override val activeLine: Flow<TrackLine?> =
+            mutableState
+                .map { (it as? TrackingState.Recording)?.trackId }
+                .distinctUntilChanged()
+                .flatMapLatest { trackId ->
+                    if (trackId == null) flowOf(null) else lineOf(trackId)
+                }
 
         override val health: StateFlow<TrackingHealth> = mutableHealth.asStateFlow()
 
@@ -269,10 +288,28 @@ public class DefaultTrackingController
             )
         }
 
+        /**
+         * Re-read on every batch Room writes, at most every [LINE_REFRESH_MS], and simplified
+         * off the main thread. Each read is the whole track, four columns a row: a few
+         * thousand rows for a long walk, found through the `(track_id, seq)` index.
+         */
+        private fun lineOf(trackId: String): Flow<TrackLine> =
+            recorder.trackPointDao
+                .observeTrackGeometry(trackId)
+                .throttleLatest(LINE_REFRESH_MS)
+                .map { points -> TrackLines.build(points.map { it.toSegmentPoint() }) }
+                .flowOn(recorder.dispatchers.default)
+
+        private fun TrackGeometryPoint.toSegmentPoint() =
+            TrackLines.SegmentPoint(segmentIndex, LatLng(latitude, longitude))
+
         private fun TrackStatus.isOpen(): Boolean =
             this == TrackStatus.ACTIVE || this == TrackStatus.PAUSED
 
         private companion object {
             const val TRACK_ENTITY = "track"
+
+            /** BUILD_PLAN phase 7: the live line is refreshed every 2 s. */
+            const val LINE_REFRESH_MS = 2_000L
         }
     }

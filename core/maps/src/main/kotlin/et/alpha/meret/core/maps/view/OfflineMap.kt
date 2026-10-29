@@ -16,6 +16,7 @@ import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.maps.OfflineMapSession
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.TrackLine
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -25,6 +26,8 @@ import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.FillLayer
+import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
 import kotlin.coroutines.resume
@@ -81,6 +84,7 @@ public fun OfflineMap(
                 live = LocationPuck.hex(MaterialTheme.colorScheme.primary.toArgb()),
                 stale = LocationPuck.hex(MeretTheme.colors.stopped.toArgb()),
                 halo = LocationPuck.hex(MeretTheme.colors.overlayHalo.toArgb()),
+                track = LocationPuck.hex(MeretTheme.colors.tracking.toArgb()),
             )
         LaunchedEffect(mapView, controller, colours) {
             mapView.awaitMap().bindTo(mapView, controller, colours)
@@ -144,6 +148,7 @@ private class MapLibreCamera(
     private val colours: PuckColours,
 ) : MapCameraTarget {
     private var puckJson: String = LocationPuck.geoJson(null, colours)
+    private var lineJson: String = LiveTrackLine.geoJson(null)
 
     override fun zoomBy(delta: Double) = map.animateCamera(CameraUpdateFactory.zoomBy(delta))
 
@@ -169,8 +174,36 @@ private class MapLibreCamera(
         map.style?.getSourceAs<GeoJsonSource>(LocationPuck.SOURCE_ID)?.setGeoJson(puckJson)
     }
 
-    /** Adds the puck's source and layers on top of [style], once per style. */
+    override fun showTrackLine(line: TrackLine?) {
+        lineJson = LiveTrackLine.geoJson(line)
+        map.style?.getSourceAs<GeoJsonSource>(LiveTrackLine.SOURCE_ID)?.setGeoJson(lineJson)
+    }
+
+    /** Adds the track line, then the puck over it, on top of [style], once per style. */
     fun install(style: Style) {
+        installTrackLine(style)
+        installPuck(style)
+    }
+
+    private fun installTrackLine(style: Style) {
+        val source = style.getSourceAs<GeoJsonSource>(LiveTrackLine.SOURCE_ID)
+        if (source != null) {
+            source.setGeoJson(lineJson)
+            return
+        }
+        style.addSource(GeoJsonSource(LiveTrackLine.SOURCE_ID, lineJson))
+        style.addLayer(
+            LineLayer(LiveTrackLine.LAYER_ID, LiveTrackLine.SOURCE_ID)
+                .withProperties(
+                    PropertyFactory.lineColor(colours.track),
+                    PropertyFactory.lineWidth(TRACK_LINE_WIDTH_DP),
+                    PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                    PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                ),
+        )
+    }
+
+    private fun installPuck(style: Style) {
         val source = style.getSourceAs<GeoJsonSource>(LocationPuck.SOURCE_ID)
         if (source != null) {
             source.setGeoJson(puckJson)
@@ -208,6 +241,7 @@ private class MapLibreCamera(
         const val ACCURACY_FILL_OPACITY = 0.15f
         const val DOT_RADIUS_DP = 7f
         const val DOT_HALO_DP = 2f
+        const val TRACK_LINE_WIDTH_DP = 4f
     }
 }
 
