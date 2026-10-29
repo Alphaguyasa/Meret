@@ -9,11 +9,12 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-/** Colours of the puck as `#RRGGBB`, taken from the theme by [OfflineMap]. */
+/** Colours of the puck, and of the track line under it, as `#RRGGBB`, from the theme. */
 internal data class PuckColours(
     val live: String,
     val stale: String,
     val halo: String,
+    val track: String,
 )
 
 /**

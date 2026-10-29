@@ -13,6 +13,7 @@ import et.alpha.meret.core.maps.OfflineMapSession
 import et.alpha.meret.core.model.TilePack
 import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.geo.DevicePosition
+import et.alpha.meret.core.model.geo.TrackLine
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import et.alpha.meret.domain.tracking.RecordingCommands
 import et.alpha.meret.domain.tracking.StartTrackingUseCase
@@ -64,6 +65,14 @@ class MapViewModel
             combine(tracking.state, tracking.activeTrack, tracking.health) { state, track, health ->
                 recordingReadout(state, track, health)
             }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+                initialValue = null,
+            )
+
+        /** The recording's line for the map, refreshed every 2 s; null while idle. */
+        val liveLine: StateFlow<TrackLine?> =
+            tracking.activeLine.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
                 initialValue = null,
