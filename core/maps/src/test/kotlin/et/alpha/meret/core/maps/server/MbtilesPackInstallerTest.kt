@@ -179,6 +179,28 @@ class MbtilesPackInstallerTest {
         assertThat(File(packs, "$PACK_ID.mbtiles").exists()).isFalse()
     }
 
+    @Test
+    fun `packs with no row are deleted, registered packs and other files are kept`() {
+        packs.mkdirs()
+        val registered = File(packs, "kept.mbtiles").apply { writeText("pack") }
+        val orphan = File(packs, "orphan.mbtiles").apply { writeText("pack") }
+        val leftover = File(packs, "cut.mbtiles.partial").apply { writeText("half") }
+        val notAPack = File(packs, "notes.txt").apply { writeText("text") }
+
+        val deleted = installer.deleteUnregistered(setOf("kept"))
+
+        assertThat(deleted).isEqualTo(1)
+        assertThat(registered.exists()).isTrue()
+        assertThat(notAPack.exists()).isTrue()
+        assertThat(orphan.exists()).isFalse()
+        assertThat(leftover.exists()).isFalse()
+    }
+
+    @Test
+    fun `a sweep of a missing directory deletes nothing`() {
+        assertThat(installer.deleteUnregistered(emptySet())).isEqualTo(0)
+    }
+
     private fun MbtilesFixture.withTile(): MbtilesFixture =
         tile(z = 0, column = 0, tmsRow = 0, blob = MbtilesFixture.gzip("tile"))
 

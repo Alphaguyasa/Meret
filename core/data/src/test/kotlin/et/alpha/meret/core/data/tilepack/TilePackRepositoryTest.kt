@@ -164,6 +164,38 @@ class TilePackRepositoryTest {
         assertThat(installer.uninstalled).containsExactly(installedId)
     }
 
+    @Test
+    fun `a deleted pack loses its row and its file`() = runTest {
+        dao.rows.value = listOf(ETHIOPIA, ETHIOPIA.copy(id = "other"))
+
+        val result = repository.deletePack("ethiopia")
+
+        assertThat(result).isEqualTo(AppResult.Success(Unit))
+        assertThat(repository.observeTilePacks().first().map { it.id }).containsExactly("other")
+        assertThat(installer.uninstalled).containsExactly("ethiopia")
+    }
+
+    @Test
+    fun `when the row cannot be deleted the file stays, so the map can still draw it`() = runTest {
+        dao.rows.value = listOf(ETHIOPIA)
+        dao.failWrites = true
+
+        val result = repository.deletePack("ethiopia")
+
+        assertThat(result.storageKind()).isEqualTo(AppError.Storage.Kind.WriteFailed)
+        assertThat(installer.uninstalled).isEmpty()
+    }
+
+    @Test
+    fun `the sweep keeps every pack that has a row`() = runTest {
+        dao.rows.value = listOf(ETHIOPIA, ETHIOPIA.copy(id = "other"))
+
+        val deleted = repository.deleteUnregisteredPacks()
+
+        assertThat(deleted).isEqualTo(1)
+        assertThat(installer.sweptWith).containsExactly("ethiopia", "other")
+    }
+
     private fun stream(): InputStream = "pack".byteInputStream()
 
     private fun AppResult<*>.storageKind(): AppError.Storage.Kind? =
@@ -204,6 +236,13 @@ class TilePackRepositoryTest {
         override fun uninstall(packId: String) {
             uninstalled += packId
         }
+
+        var sweptWith: Set<String>? = null
+
+        override fun deleteUnregistered(registered: Set<String>): Int {
+            sweptWith = registered
+            return 1
+        }
     }
 
     private object FixedTime : TimeProvider {
@@ -241,7 +280,10 @@ class TilePackRepositoryTest {
             rows.value = listOf(tilePack) + rows.value.filterNot { it.id == tilePack.id }
         }
 
-        override suspend fun deleteTilePack(tilePackId: String): Unit = error("not used")
+        override suspend fun deleteTilePack(tilePackId: String) {
+            if (failWrites) throw SQLException("disk I/O error")
+            rows.value = rows.value.filterNot { it.id == tilePackId }
+        }
     }
 
     private companion object {

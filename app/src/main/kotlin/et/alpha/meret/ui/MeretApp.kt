@@ -37,7 +37,7 @@ import et.alpha.meret.core.designsystem.theme.Sizes
 import et.alpha.meret.feature.map.MapRoute
 import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
-import et.alpha.meret.feature.tiles.TilePackScreen
+import et.alpha.meret.feature.tiles.TilePacksRoute
 import et.alpha.meret.feature.tracking.TrackListScreen
 import et.alpha.meret.feature.waypoint.WaypointListScreen
 import et.alpha.meret.navigation.DIAGNOSTICS_ROUTE
@@ -176,7 +176,7 @@ private fun MeretShell(
                         )
                     }
                     composable(TILE_PACKS_ROUTE) {
-                        TilePackScreen(
+                        TilePacksRoute(
                             modifier = Modifier.padding(innerPadding),
                         )
                     }

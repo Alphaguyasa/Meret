@@ -43,6 +43,13 @@ public interface TilePackInstaller {
 
     /** Deletes the pack's file. A missing file is not an error. */
     public fun uninstall(packId: String)
+
+    /**
+     * Deletes every pack file whose id is not in [registered], and any copy a crash left
+     * behind. A crash between the rename and the `tile_pack` row leaves a pack nobody can see
+     * or delete. Waits for a running install. Returns the number of packs deleted.
+     */
+    public fun deleteUnregistered(registered: Set<String>): Int
 }
 
 /**
@@ -89,6 +96,20 @@ public class MbtilesPackInstaller(
     override fun uninstall(packId: String) {
         require(isValidPackId(packId)) { "not a pack id" }
         File(directory, packId + PackDirectoryResolver.EXTENSION).delete()
+    }
+
+    override fun deleteUnregistered(registered: Set<String>): Int = synchronized(lock) {
+        deleteLeftoverCopies()
+        val orphans =
+            directory
+                .listFiles { file ->
+                    val id = file.name.removeSuffix(PackDirectoryResolver.EXTENSION)
+                    file.isFile &&
+                        file.name.endsWith(PackDirectoryResolver.EXTENSION) &&
+                        isValidPackId(id) &&
+                        id !in registered
+                }.orEmpty()
+        orphans.count { it.delete() }
     }
 
     private fun deleteLeftoverCopies() {

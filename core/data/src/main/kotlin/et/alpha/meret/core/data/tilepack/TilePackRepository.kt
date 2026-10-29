@@ -15,8 +15,12 @@ import et.alpha.meret.core.maps.server.TilePackInstaller
 import et.alpha.meret.core.model.TilePack
 import et.alpha.meret.core.model.TilePackSource
 import et.alpha.meret.core.model.geo.BoundingBox
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
@@ -44,6 +48,19 @@ public interface TilePackRepository {
         sizeBytes: Long?,
         open: () -> InputStream,
     ): AppResult<TilePack>
+
+    /**
+     * Removes an installed pack: its row first, so the map stops drawing it, then its file. A
+     * file the delete leaves behind is removed by [deleteUnregisteredPacks].
+     */
+    public suspend fun deletePack(packId: String): AppResult<Unit>
+
+    /**
+     * Deletes pack files that have no row. A crash between an import's copy and its row
+     * leaves one: the map never draws it and the pack list never shows it, so nothing else
+     * would free its space. Waits for a running import. Returns how many were deleted.
+     */
+    public suspend fun deleteUnregisteredPacks(): Int
 }
 
 public class DefaultTilePackRepository
@@ -55,6 +72,12 @@ public class DefaultTilePackRepository
         private val time: TimeProvider,
         private val dispatchers: DispatcherProvider,
     ) : TilePackRepository {
+        /**
+         * Held from an import's copy to its row, and by the sweep: between the two, the
+         * imported file has no row yet and the sweep would take it for a crash leftover.
+         */
+        private val importLock = Mutex()
+
         override fun observeTilePacks(): Flow<List<TilePack>> =
             dao.observeTilePacks().map { packs -> packs.map { it.toModel() } }
 
@@ -63,10 +86,43 @@ public class DefaultTilePackRepository
             sizeBytes: Long?,
             open: () -> InputStream,
         ): AppResult<TilePack> = withContext(dispatchers.io) {
-            val id = ids.generate()
-            when (val copied = copy(id, sizeBytes, open)) {
-                is AppResult.Failure -> copied
-                is AppResult.Success -> register(id, displayName, copied.value)
+            importLock.withLock {
+                val id = ids.generate()
+                when (val copied = copy(id, sizeBytes, open)) {
+                    is AppResult.Failure -> {
+                        copied
+                    }
+
+                    // A copied pack gets its row even if the caller has gone: leaving the
+                    // screen mid-import must not leave a file nobody can see.
+                    is AppResult.Success -> {
+                        withContext(NonCancellable) { register(id, displayName, copied.value) }
+                    }
+                }
+            }
+        }
+
+        override suspend fun deletePack(packId: String): AppResult<Unit> =
+            withContext(dispatchers.io) {
+                val rowDeleted =
+                    try {
+                        dao.deleteTilePack(packId)
+                        true
+                    } catch (_: SQLException) {
+                        false
+                    }
+                if (rowDeleted) {
+                    installer.uninstall(packId)
+                    AppResult.Success(Unit)
+                } else {
+                    AppResult.Failure(AppError.Storage(AppError.Storage.Kind.WriteFailed))
+                }
+            }
+
+        override suspend fun deleteUnregisteredPacks(): Int = withContext(dispatchers.io) {
+            importLock.withLock {
+                val registered = dao.observeTilePacks().first().mapTo(HashSet()) { it.id }
+                installer.deleteUnregistered(registered)
             }
         }
 
