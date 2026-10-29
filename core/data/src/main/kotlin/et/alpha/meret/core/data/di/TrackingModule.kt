@@ -12,7 +12,11 @@ import et.alpha.meret.core.common.telemetry.Telemetry
 import et.alpha.meret.core.common.time.TimeProvider
 import et.alpha.meret.core.common.uuid.UuidV7Generator
 import et.alpha.meret.core.data.tracking.DefaultTrackingController
+import et.alpha.meret.core.data.tracking.RoomNewTrackStore
 import et.alpha.meret.core.data.tracking.TrackingController
+import et.alpha.meret.domain.tracking.NewTrackStore
+import et.alpha.meret.domain.tracking.RecordingCommands
+import et.alpha.meret.domain.tracking.StartTrackingUseCase
 import javax.inject.Singleton
 
 @Module
@@ -27,6 +31,18 @@ public abstract class TrackingModule {
     public abstract fun bindTrackingController(
         controller: DefaultTrackingController,
     ): TrackingController
+
+    @Binds
+    public abstract fun bindNewTrackStore(store: RoomNewTrackStore): NewTrackStore
+
+    public companion object {
+        /** `:domain` has no `@Inject`. [RecordingCommands] is bound by `:feature:tracking`. */
+        @Provides
+        public fun provideStartTrackingUseCase(
+            tracks: NewTrackStore,
+            commands: RecordingCommands,
+        ): StartTrackingUseCase = StartTrackingUseCase(tracks, commands)
+    }
 }
 
 /**
