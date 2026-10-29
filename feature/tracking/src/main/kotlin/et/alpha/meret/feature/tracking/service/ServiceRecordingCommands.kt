@@ -15,7 +15,7 @@ import javax.inject.Inject
 class ServiceRecordingCommands
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
     ) : RecordingCommands {
         override fun start(trackId: String): AppResult<Unit> = try {
             TrackingService.start(context, trackId)

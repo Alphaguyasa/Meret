@@ -20,7 +20,8 @@ public class DeviceIdentityStore(
 ) {
     /** The stored id, or [newId]'s, stored first. The same id on every later call. */
     public suspend fun deviceId(newId: () -> String): String {
-        dataStore.data.first().storedId()?.let { return it }
+        val stored = dataStore.data.first().storedId()
+        if (stored != null) return stored
         val written =
             dataStore.edit { preferences ->
                 // Checked again inside the edit: two first calls racing keep one id.
