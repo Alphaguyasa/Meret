@@ -18,13 +18,18 @@ val localProperties =
  * libraries. On by default when an `assemble...Release` task is asked for, because AGP has no
  * per-build-type splits and the debug APK must keep x86 for emulators. `-Pmeret.abiSplits=false`
  * builds the single all-ABI release APK, which `release-size.yml` measures as the baseline.
- * App Bundles ignore splits: Play serves each phone its own ABI anyway.
+ * App Bundles do not use splits (Play serves each phone its own ABI), and AGP fails when both
+ * are built in one invocation, so splits stay off whenever a bundle task is asked for.
  */
 val releaseAbiSplits: Boolean =
     providers.gradleProperty("meret.abiSplits").orNull?.toBoolean()
-        ?: gradle.startParameter.taskNames.any { task ->
-            task.contains("assemble", ignoreCase = true) &&
-                task.contains("release", ignoreCase = true)
+        ?: gradle.startParameter.taskNames.let { tasks ->
+            // AGP refuses splits in the same invocation as a bundle (issuetracker 402800800).
+            tasks.none { it.contains("bundle", ignoreCase = true) } &&
+                tasks.any {
+                    it.contains("assemble", ignoreCase = true) &&
+                        it.contains("release", ignoreCase = true)
+                }
         }
 
 fun secret(

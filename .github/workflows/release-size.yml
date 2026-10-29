@@ -59,9 +59,13 @@ jobs:
           } | tee -a "$GITHUB_STEP_SUMMARY"
           rm -rf app/build/outputs/apk/release
 
-      # R8 is up to date from the step above; this only packages again, split by ABI.
-      - name: Release APKs per ABI, and the App Bundle
-        run: ./gradlew --no-daemon :app:assembleRelease :app:bundleRelease
+      # R8 is up to date from the step above; this only packages again, split by ABI. The
+      # bundle needs its own invocation: AGP refuses splits and a bundle in one build.
+      - name: Release APKs per ABI
+        run: ./gradlew --no-daemon :app:assembleRelease
+
+      - name: App Bundle
+        run: ./gradlew --no-daemon :app:bundleRelease
 
       - name: Measure per-ABI APKs and the bundle
         run: |
