@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="packs_empty_title">ምንም የካርታ ጥቅል አልተጫነም</string>
-    <string name="packs_empty_body">የ .mbtiles ፋይል በዩኤስቢ ወደዚህ መሣሪያ ይቅዱ፣ ወይም ዋይ-ፋይ ሲኖርዎት አካባቢ ያውርዱ።</string>
+    <string name="packs_empty_body">ከዚህ ስልክ የ .mbtiles የካርታ ፋይል ያስገቡ። መጀመሪያ ፋይሉን ወደ ስልኩ ይቅዱ፣ ለምሳሌ በዩኤስቢ።</string>
+    <string name="packs_import">የካርታ ጥቅል አስገባ</string>
+    <string name="packs_importing">የካርታ ጥቅሉ እየተቀዳ ነው። ትልቅ ጥቅል ጥቂት ደቂቃዎች ይወስዳል፤ መተግበሪያውን ክፍት ያድርጉት።</string>
+    <string name="packs_imported">%1$s ተጭኗል፤ በካርታው ላይ ዝግጁ ነው።</string>
+    <string name="packs_error_not_a_pack">ይህ ፋይል የካርታ ጥቅል አይደለም። የ .mbtiles የካርታ ፋይል ይምረጡ።</string>
+    <string name="packs_error_out_of_space">በዚህ ስልክ ላይ ለዚህ ጥቅል በቂ ባዶ ቦታ የለም። ቦታ ያስለቅቁና እንደገና ይሞክሩ።</string>
+    <string name="packs_error_read">ፋይሉን ማንበብ አልተቻለም። እንደገና ይምረጡት።</string>
+    <string name="packs_error_write">ጥቅሉን በዚህ ስልክ ላይ ማስቀመጥ አልተቻለም። እንደገና ይሞክሩ።</string>
+    <string name="packs_unnamed">የካርታ ጥቅል</string>
+    <string name="packs_delete">ሰርዝ</string>
+    <string name="packs_delete_title">%1$s ይሰረዝ?</string>
+    <string name="packs_delete_body">ካርታው ይህን አካባቢ ያለ ኢንተርኔት ማሳየት ያቆማል። መስመሮችና ነጥቦች አይነኩም።</string>
+    <string name="packs_delete_failed">ጥቅሉን መሰረዝ አልተቻለም። እንደገና ይሞክሩ።</string>
+    <string name="packs_cancel">ይቅር</string>
+    <string name="packs_ok">እሺ</string>
 </resources>

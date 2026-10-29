@@ -45,6 +45,10 @@ class MapViewModelTest {
                 sizeBytes: Long?,
                 open: () -> InputStream,
             ): AppResult<TilePack> = error("not used")
+
+            override suspend fun deletePack(packId: String): AppResult<Unit> = error("not used")
+
+            override suspend fun deleteUnregisteredPacks(): Int = error("not used")
         }
     private val here = MutableStateFlow<DevicePosition?>(null)
     private val positions =

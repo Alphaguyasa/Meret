@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="packs_empty_title">No map packs installed</string>
-    <string name="packs_empty_body">Copy an .mbtiles file to this device over USB, or download a region while you have Wi-Fi.</string>
+    <string name="packs_empty_body">Import an .mbtiles map file from this phone. Copy the file to the phone first, for example over USB.</string>
+    <string name="packs_import">Import map pack</string>
+    <string name="packs_importing">Copying the map pack. A large pack takes a few minutes; keep the app open.</string>
+    <string name="packs_imported">%1$s is installed and ready on the map.</string>
+    <string name="packs_error_not_a_pack">This file is not a map pack. Pick an .mbtiles vector map file.</string>
+    <string name="packs_error_out_of_space">There is not enough free space on this phone for this pack. Free some space and try again.</string>
+    <string name="packs_error_read">The file could not be read. Pick it again.</string>
+    <string name="packs_error_write">The pack could not be saved on this phone. Try again.</string>
+    <string name="packs_unnamed">Map pack</string>
+    <string name="packs_delete">Delete</string>
+    <string name="packs_delete_title">Delete %1$s?</string>
+    <string name="packs_delete_body">The map will stop showing this area offline. Tracks and waypoints are not affected.</string>
+    <string name="packs_delete_failed">The pack could not be deleted. Try again.</string>
+    <string name="packs_cancel">Cancel</string>
+    <string name="packs_ok">OK</string>
 </resources>
