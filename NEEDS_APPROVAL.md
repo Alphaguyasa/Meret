@@ -73,6 +73,9 @@ avoid the app name, so the «መሬት»/"Meret" question above does not apply t
 the pack screen («የካርታ ጥቅል አስገባ» Import map pack, «ሰርዝ» Delete, «ይቅር» Cancel, «እሺ» OK) and
 one message per import failure. The empty-screen text no longer mentions downloading a
 region, which the app cannot do yet.
+**Run 17 added 1 more** in `feature/map/src/main/res/values-am/strings.xml`: "መቅዳት አልጀመረም።
+መተግበሪያው አካባቢዎን እንዲጠቀም መፈቀዱን አረጋግጠው እንደገና ይንኩ።" (Recording did not start. Check that
+Meret may use your location, then tap again.)
 **Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
 እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
 ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
@@ -125,8 +128,8 @@ hardware. Steps are in the linked docs.
 | 5 | The OEM autostart deep links open the right screen (Tecno/Infinix/Itel Phone Master, Xiaomi Security). If none opens, the manual steps appear instead | The onboarding screen's «Open phone settings» button (item 8b, done) on a real Tecno/Xiaomi |
 | 5 | Onboarding on Android 8, 10, 11+ and 13+: every step appears in order, «Allow all the time» is reachable, and a skipped step does not come back on relaunch | Fresh install, deny then grant each permission |
 | 5 | Diagnostics: tap the GPS chip on the map, check every line in Amharic, «Copy diagnostics», paste into WhatsApp. The paste must hold no coordinates | Any phone, after a few minutes of recording |
-| 5 | Reboot mid-track: after unlocking, the «Track not finished» prompt appears; «Resume recording» continues the same track in a new segment; with no open track, no prompt | Needs a record button (Phase 7) or adb to start a track |
-| 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | After item 8 (permissions); needs a record button (Phase 7) or adb to start a track |
+| 5 | Reboot mid-track: after unlocking, the «Track not finished» prompt appears; «Resume recording» continues the same track in a new segment; with no open track, no prompt | Start a track with the record button (since #56) |
+| 5 | The notification shows Amharic text correctly, and Pause/Stop work from the lock screen | Start a track with the record button (since #56) |
 | 6 | The loopback tile server on a phone: MapLibre loads `tiles.json` and tiles from `127.0.0.1` in aeroplane mode, with no cleartext error, and the server stops when the map leaves the foreground | After 6c (network security config) and 6e (map wrapper) |
 | 6 | The map screen draws a sideloaded pack (imported from the Packs tab since 6g-2) in aeroplane mode. Leaving the screen and coming back redraws it, and the 33.4 MB debug APK installs and starts on a low-RAM phone | Any phone with a pack |
 | 6 | Location puck and follow (6f-2b-1, #47): while recording, a blue dot with a shaded accuracy circle follows the phone and the map keeps it centred; a pan stops following; the crosshair button (filled while following) centres again and zooms in to street level. With no recording, the last known position shows grey. With location denied, no dot and no crash. With two packs installed, the one covering the phone is drawn | After a pack is installed; start a track (adb, until Phase 7) to see live fixes |
@@ -134,6 +137,8 @@ hardware. Steps are in the linked docs.
 | 5 | «Check permissions again» (item 16, #48): skip the battery step in onboarding, open Diagnostics, the button shows; tap it, the battery step appears again; finish, the map returns. On a Tecno/Infinix/Itel or Xiaomi the button always shows | Any phone; a Transsion or Xiaomi for the autostart case |
 | 6 | Pack import (6g-2, #53), in aeroplane mode: Packs tab, «Import map pack», pick a real `.mbtiles` from Downloads; a progress bar shows while it copies, then «… is installed»; the pack is listed with its size and the map draws it. Pick a photo: «This file is not a map pack». Delete the pack: it asks first, then the map goes back to the placeholder. Check the Amharic text too | Any phone, a vector pack from `tools/` |
 | 6 | Map controls (6f-2a, #45): + and − zoom one level; rotating with two fingers shows the compass, which points north, and a tap turns the map north up; the scale bar matches a known distance (for example a 100 m road stretch) | After a pack is installed (6g, or the sideload above) |
+| 7 | Record button (7a, #56): tap the red button on the map; within a second the notification appears, the button pulses and the bar shows 0:00:0x, distance and points rising as you walk. Tap: paused (button and bar change); tap: resumes. Long-press: stops, bar goes. A fast double tap makes one track, not two. With location revoked in settings, a tap shows «Recording did not start…» within 10 s. Amharic text too | Any phone; this also unblocks the Phase 5 rows that needed a record button |
+| 7 | Live track line (7b, #57): walking while recording, a green line follows behind the dot, catching up about every 2 s; pause, walk 50 m, resume: the line has a gap; stop: the line goes. After a 2-hour walk the map still pans without stutter (the Phase 7 frame-rate criterion) | Any phone with a pack; the 2-hour check on a low-end phone |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 
 ---

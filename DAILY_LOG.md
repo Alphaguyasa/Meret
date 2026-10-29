@@ -4,6 +4,34 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-29 — Run 17 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 20 (Phase 7a): the record button works.** Tapping it with nothing recording writes a new track row in Room (UUIDv7), then starts the foreground service from that tap. If the system refuses the service, the empty row is deleted. A tap pauses, the next tap resumes, and a long-press stops. A second tap before the service starts makes no second track. If the service has not started recording within 10 s, an en/am message says so. The tracking bar shows the duration since start, distance, points and accuracy. The map never calls the tracking controller: commands go to the service as intents through a `:domain` interface (ADR-009) ([#56](https://github.com/Alphaguyasa/Meret/pull/56)). **Item 21 (Phase 7b): live track line.** While recording, a green line follows the dot, under the puck. It is refreshed at most every 2 s from Room's filtered positions and simplified (Douglas–Peucker, 3 m) off the main thread. Raw points are never touched. A pause leaves a gap in the line ([#57](https://github.com/Alphaguyasa/Meret/pull/57)). |
+| Merged | #56 yes, `fa90463`, after one fix (attempt 1 of 2): ktlint `chain-method-continuation` (4 calls on one line). #57 yes, `ff9a1d4`, after one fix (attempt 1 of 2): ktlint `function-signature`. CI took about 4 min per run. |
+| Failed or blocked | Nothing is blocked. ktlint and detekt could not run locally again (auto mode refused the downloaded binaries), so both PRs needed one lint fix each. Each fix cost one CI run. See the notes for the two checks I now script. |
+| Roadmap | 7 open items: 22, 23, 24, 25 (blocked on A12), 14 (blocked on A6), 15, 18. No replan needed. Item 22 now notes that an open row with no session can exist. The Phase 9 line notes that tracks have `project_id`/`user_id` `"local"` until sign-in. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). I checked Anthropic's models page: there is no newer Opus. No action. |
+| Needs approval | A9: 1 new Amharic string (map: "Recording did not start…"). 2 new "Needs a device" rows: the record button and the live line, which includes the Phase 7 frame-rate check. The two Phase 5 rows that waited for a record button can now be tested. A2, A3, A5, A6, A7, A10, A11, A12 unchanged. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. |
+| Next | 22 (track list with delete and undo), then 23 (track detail and stop undo). |
+
+Notes for the next run:
+- **Two ktlint rules the eye misses.** I check both with a short Python script before pushing,
+  because the binaries are refused:
+  - `chain-method-continuation`: 4 or more `.`/`?.` calls at the top level of one line must
+    be wrapped, one per line.
+  - `function-signature`: an expression body whose first line fits within 100 columns
+    after `=` must start on the signature line. A block body avoids both.
+- `TrackingController` now has `activeLine`. Every fake needs it (Diagnostics, TrackingService,
+  DevicePositionRepository and MapViewModel tests).
+- `RecordingCommands` (`:domain`) is bound in `:feature:tracking` (`RecordingCommandsModule`).
+  `StartTrackingUseCase` is provided by `:core:data`'s `TrackingModule`, because `:domain` has
+  no `javax.inject`.
+- detekt's `LongParameterList` constructor threshold is 7. `MapViewModel` has 6, so any new
+  dependency there needs to go through an existing one (the live line went through the
+  controller for this reason).
+
 ## 2026-10-29 — Run 16 (scheduled, cloud)
 
 | Field | Content |
