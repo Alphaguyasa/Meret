@@ -13,6 +13,20 @@ val localProperties =
         if (file.exists()) file.inputStream().use { load(it) }
     }
 
+/**
+ * Per-ABI release APKs, for sideloading: a phone downloads only its own MapLibre native
+ * libraries. On by default when an `assemble...Release` task is asked for, because AGP has no
+ * per-build-type splits and the debug APK must keep x86 for emulators. `-Pmeret.abiSplits=false`
+ * builds the single all-ABI release APK, which `release-size.yml` measures as the baseline.
+ * App Bundles ignore splits: Play serves each phone its own ABI anyway.
+ */
+val releaseAbiSplits: Boolean =
+    providers.gradleProperty("meret.abiSplits").orNull?.toBoolean()
+        ?: gradle.startParameter.taskNames.any { task ->
+            task.contains("assemble", ignoreCase = true) &&
+                task.contains("release", ignoreCase = true)
+        }
+
 fun secret(
     key: String,
     fallback: String = "",
@@ -36,6 +50,13 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    // Field phones are 32- or 64-bit ARM. x86 and x86_64 are emulators, so no split APK is
+    // made for them. The universal APK is the fallback for a phone whose ABI nobody knows.
+    splits.abi.isEnable = releaseAbiSplits
+    splits.abi.reset()
+    splits.abi.include("armeabi-v7a", "arm64-v8a")
+    splits.abi.isUniversalApk = true
 
     buildTypes {
         debug {
