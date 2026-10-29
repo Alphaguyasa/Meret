@@ -4,6 +4,27 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-29 — Run 16 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **6g-2, the last part of Phase 6:** the Packs tab now lists the installed packs, with name, size and Delete (it asks first). «Import map pack» opens the system file picker for any file type, because many file managers give `.mbtiles` no type. A progress bar shows while the pack copies. The result is a dialog: installed, or one en/am message per failure (not a map pack, no space, could not read, could not save). Opening the screen deletes pack files that have no row, which a crash mid-import leaves. A lock keeps that sweep away from an import in progress ([#53](https://github.com/Alphaguyasa/Meret/pull/53)). **Item 19:** `assembleRelease` now makes per-ABI APKs. A new `release-size` workflow builds the R8 release, the first time CI ran R8, and reports the sizes ([#54](https://github.com/Alphaguyasa/Meret/pull/54)). **Release APK: 51,440 KiB with every ABI → 15,573 KiB (arm64-v8a) or 12,003 KiB (armeabi-v7a).** The universal APK still carries all four ABIs (51,440 KiB). The AAB is 22,482 KiB. |
+| Merged | #53 yes, `b2d474a`, green on the first attempt. #54 yes, `60fa667`, after one fix (attempt 1 of 2): AGP refuses ABI splits and `bundleRelease` in one Gradle invocation, so the bundle now builds on its own. |
+| Failed or blocked | Nothing is blocked. **The release is unsigned** (there is no signing config), so no phone can install it. A12 asks who holds the key. |
+| Roadmap | **Replan done:** after 13 and 19, only 3 items were open. New: 20–23 (Phase 7: record button, live track line, track list, track detail and stop undo), 24 (DataStore test scopes, the run 12 hang), 25 (release signing, blocked on A12). 9 open in all. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). I checked Anthropic's models page: there is no newer Opus. No action. |
+| Needs approval | **New A12:** the signing key. A9: 15 new Amharic strings and 1 rewritten (the packs screen). New "Needs a device" row: pack import. A2, A3, A5, A6, A7, A10, A11 unchanged. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. It touches the version catalog, so its next rebase also runs `release-size`. |
+| Next | 20 (Phase 7a: the record button starts, pauses and stops a track), then 21 (live track line). |
+
+Notes for the next run:
+- **`release-size.yml`** runs on PRs that touch `app/build.gradle.kts`, `app/proguard-rules.pro`
+  or `gradle/libs.versions.toml`. It takes about 6 minutes. Read the sizes with
+  `get_job_logs(tail_lines=3000)`, then `jq -r .logs_content | grep '| '`.
+- `TilePackRepository` now has `deletePack` and `deleteUnregisteredPacks`. Every fake needs
+  both (`MapViewModelTest` has them).
+- The `RecordButton`/`TrackingBar` on the map are drawn but not wired (`MapRoute` passes `{}`).
+  That is item 20.
+
 ## 2026-10-28 — Run 15 (scheduled, cloud)
 
 | Field | Content |
