@@ -185,6 +185,12 @@ CI (`.github/workflows/ci.yml`) runs all of the above except the connected tests
 Gradle invocation, and uploads the debug APK as the `meret-debug-apk` artifact. A PR that
 changes only `*.md` files runs no CI.
 
+`.github/workflows/release-size.yml` builds the R8 release (unsigned) and reports its sizes:
+the all-ABI APK as a baseline, the per-ABI APKs and the App Bundle. It runs only on PRs that
+touch `app/build.gradle.kts`, `app/proguard-rules.pro`, the version catalog or itself, or by
+hand. `./gradlew :app:assembleRelease` makes one APK per ARM ABI plus a universal one;
+`-Pmeret.abiSplits=false` makes the single all-ABI APK.
+
 There is no dashboard in this repo. The Next.js supervisor dashboard (BUILD_PLAN phase 14)
 is planned as a separate repo, `meret-dashboard`. There is no `supabase/` directory yet
 (phase 9).

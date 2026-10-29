@@ -1,0 +1,80 @@
+name: Release size
+
+# The release APKs field phones actually install, measured. It builds with R8, which takes
+# minutes, so it runs only when something that changes the release build changes, or by
+# hand. The main CI builds only the debug APK.
+on:
+  pull_request:
+    paths:
+      - 'app/build.gradle.kts'
+      - 'app/proguard-rules.pro'
+      - 'gradle/libs.versions.toml'
+      - '.github/workflows/release-size.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  release-size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Dummy values, as in ci.yml: nothing here talks to Supabase.
+    env:
+      SUPABASE_URL: https://example.invalid
+      SUPABASE_ANON_KEY: ci-dummy-anon-key
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The baseline: one release APK with every ABI, which is what release built before
+      # the per-ABI splits. Unsigned; signing does not change the size that matters.
+      - name: Release APK, all ABIs
+        run: ./gradlew --no-daemon :app:assembleRelease -Pmeret.abiSplits=false
+
+      - name: Measure all-ABI APK
+        run: |
+          shopt -s nullglob
+          {
+            echo "### Release, one APK with every ABI (baseline)"
+            echo "| File | KiB |"
+            echo "|---|---|"
+            for f in app/build/outputs/apk/release/*.apk; do
+              echo "| $(basename "$f") | $(( $(stat -c %s "$f") / 1024 )) |"
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          rm -rf app/build/outputs/apk/release
+
+      # R8 is up to date from the step above; this only packages again, split by ABI. The
+      # bundle needs its own invocation: AGP refuses splits and a bundle in one build.
+      - name: Release APKs per ABI
+        run: ./gradlew --no-daemon :app:assembleRelease
+
+      - name: App Bundle
+        run: ./gradlew --no-daemon :app:bundleRelease
+
+      - name: Measure per-ABI APKs and the bundle
+        run: |
+          shopt -s nullglob
+          {
+            echo "### Release, per ABI (what a sideloaded phone installs)"
+            echo "| File | KiB |"
+            echo "|---|---|"
+            for f in app/build/outputs/apk/release/*.apk app/build/outputs/bundle/release/*.aab; do
+              echo "| $(basename "$f") | $(( $(stat -c %s "$f") / 1024 )) |"
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
