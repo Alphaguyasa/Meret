@@ -293,12 +293,13 @@ public class DefaultTrackingController
          * off the main thread. Each read is the whole track, four columns a row: a few
          * thousand rows for a long walk, found through the `(track_id, seq)` index.
          */
-        private fun lineOf(trackId: String): Flow<TrackLine> =
-            recorder.trackPointDao
-                .observeTrackGeometry(trackId)
+        private fun lineOf(trackId: String): Flow<TrackLine> {
+            val geometry = recorder.trackPointDao.observeTrackGeometry(trackId)
+            return geometry
                 .throttleLatest(LINE_REFRESH_MS)
                 .map { points -> TrackLines.build(points.map { it.toSegmentPoint() }) }
                 .flowOn(recorder.dispatchers.default)
+        }
 
         private fun TrackGeometryPoint.toSegmentPoint() =
             TrackLines.SegmentPoint(segmentIndex, LatLng(latitude, longitude))
