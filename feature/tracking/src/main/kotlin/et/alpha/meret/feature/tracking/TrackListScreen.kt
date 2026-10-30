@@ -1,6 +1,6 @@
 package et.alpha.meret.feature.tracking
 
-import android.text.format.DateUtils
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,30 +26,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import et.alpha.meret.core.designsystem.component.EmptyState
 import et.alpha.meret.core.designsystem.component.TrackGlyph
-import et.alpha.meret.core.designsystem.format.formatDistance
-import et.alpha.meret.core.designsystem.format.formatDuration
 import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Spacing
 import et.alpha.meret.core.model.SyncState
-import et.alpha.meret.core.designsystem.R as DesignR
 
 /**
  * The recorded tracks, newest first: name or start date, distance, moving time, and where
  * the track stands (recording, not finished, or its sync state). A fresh install shows the
  * empty state, which reads as "nothing yet", not as "something went wrong".
  *
- * Delete has no confirmation dialog: the row goes at once and the snackbar offers Undo for
- * as long as the view model's undo window is open.
+ * A tap on a row opens the track. Delete has no confirmation dialog: the row goes at once
+ * and the snackbar offers Undo for as long as the view model's undo window is open.
  */
 @Composable
 fun TrackListScreen(
     state: TrackListUiState,
+    onOpenTrack: (trackId: String) -> Unit,
     onDelete: (trackId: String) -> Unit,
     onUndoDelete: () -> Unit,
     onDismissMessage: () -> Unit,
@@ -90,7 +86,11 @@ fun TrackListScreen(
         } else {
             LazyColumn(Modifier.fillMaxSize()) {
                 items(ready.tracks, key = { it.id }) { track ->
-                    TrackRow(track = track, onDelete = { onDelete(track.id) })
+                    TrackRow(
+                        track = track,
+                        onOpen = { onOpenTrack(track.id) },
+                        onDelete = { onDelete(track.id) },
+                    )
                     HorizontalDivider()
                 }
             }
@@ -104,12 +104,14 @@ fun TrackListScreen(
 @Composable
 private fun TrackRow(
     track: TrackItem,
+    onOpen: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .clickable(onClick = onOpen)
                 .padding(start = Spacing.md, end = Spacing.xs)
                 .padding(vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
@@ -149,59 +151,6 @@ private fun MessageDialog(
     )
 }
 
-/** The track's own name, or when it started, in the phone's language and date order. */
-@Composable
-private fun TrackItem.title(): String {
-    if (!name.isNullOrBlank()) return name
-    val context = LocalContext.current
-    return DateUtils.formatDateTime(context, startedAtMillis, DATE_FLAGS)
-}
-
-@Composable
-private fun TrackItem.stats(): String {
-    val distance = formatDistance(distanceMetres)
-    val unit =
-        if (distance.inKilometres) {
-            DesignR.string.unit_kilometres
-        } else {
-            DesignR.string.unit_metres
-        }
-    return stringResource(
-        R.string.tracks_row_stats,
-        distance.value,
-        stringResource(unit),
-        formatDuration(movingDurationMillis),
-    )
-}
-
-/** Recording state first; a finished track shows where it stands with the server. */
-@Composable
-private fun TrackItem.standing(): Pair<String, Color> {
-    val colors = MaterialTheme.colorScheme
-    return when (progress) {
-        TrackProgress.Recording -> stringResource(R.string.tracks_recording) to colors.primary
-        TrackProgress.Paused -> stringResource(R.string.tracks_paused) to colors.primary
-        TrackProgress.NotFinished -> stringResource(R.string.tracks_not_finished) to colors.error
-        TrackProgress.Finished -> syncLabel(syncState) to colors.onSurfaceVariant
-    }
-}
-
-@Composable
-private fun syncLabel(syncState: SyncState): String = stringResource(
-    when (syncState) {
-        SyncState.PENDING -> R.string.tracks_sync_pending
-        SyncState.SYNCING -> R.string.tracks_sync_syncing
-        SyncState.SYNCED -> R.string.tracks_sync_synced
-        SyncState.CONFLICT -> R.string.tracks_sync_conflict
-    },
-)
-
-private const val DATE_FLAGS =
-    DateUtils.FORMAT_SHOW_DATE or
-        DateUtils.FORMAT_SHOW_YEAR or
-        DateUtils.FORMAT_ABBREV_MONTH or
-        DateUtils.FORMAT_SHOW_TIME
-
 @Preview(showBackground = true, widthDp = 390, heightDp = 700)
 @Composable
 private fun EmptyPreview() {
@@ -209,6 +158,7 @@ private fun EmptyPreview() {
         TrackListScreen(
             state =
                 TrackListUiState.Ready(tracks = emptyList(), pendingDelete = null, message = null),
+            onOpenTrack = {},
             onDelete = {},
             onUndoDelete = {},
             onDismissMessage = {},
@@ -232,6 +182,7 @@ private fun ListPreview() {
                     pendingDelete = null,
                     message = null,
                 ),
+            onOpenTrack = {},
             onDelete = {},
             onUndoDelete = {},
             onDismissMessage = {},

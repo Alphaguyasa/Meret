@@ -27,10 +27,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import et.alpha.meret.core.designsystem.component.OfflineIndicator
 import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
@@ -38,14 +40,18 @@ import et.alpha.meret.feature.map.MapRoute
 import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
 import et.alpha.meret.feature.tiles.TilePacksRoute
+import et.alpha.meret.feature.tracking.TrackDetailRoute
+import et.alpha.meret.feature.tracking.TrackDetailViewModel
 import et.alpha.meret.feature.tracking.TrackListRoute
 import et.alpha.meret.feature.waypoint.WaypointListScreen
 import et.alpha.meret.navigation.DIAGNOSTICS_ROUTE
 import et.alpha.meret.navigation.MAP_ROUTE
 import et.alpha.meret.navigation.TILE_PACKS_ROUTE
 import et.alpha.meret.navigation.TRACKS_ROUTE
+import et.alpha.meret.navigation.TRACK_DETAIL_ROUTE
 import et.alpha.meret.navigation.TopLevelDestination
 import et.alpha.meret.navigation.WAYPOINTS_ROUTE
+import et.alpha.meret.navigation.trackDetailRoute
 
 /**
  * App shell: offline strip, content, bottom bar.
@@ -111,10 +117,11 @@ private fun MeretShell(
                 ) {
                     val scheme = MaterialTheme.colorScheme
                     TopLevelDestination.entries.forEach { destination ->
+                        // A track's detail ("tracks/{trackId}") keeps the Tracks tab lit.
                         val selected =
                             currentDestination
                                 ?.hierarchy
-                                ?.any { it.route == destination.route } == true
+                                ?.any { it.route?.isUnder(destination.route) == true } == true
                         val label = stringResource(destination.labelRes)
 
                         NavigationBarItem(
@@ -160,6 +167,21 @@ private fun MeretShell(
                     }
                     composable(TRACKS_ROUTE) {
                         TrackListRoute(
+                            onOpenTrack = { navController.navigate(trackDetailRoute(it)) },
+                            modifier = Modifier.padding(innerPadding),
+                        )
+                    }
+                    composable(
+                        route = TRACK_DETAIL_ROUTE,
+                        arguments =
+                            listOf(
+                                navArgument(TrackDetailViewModel.TRACK_ID_ARG) {
+                                    type = NavType.StringType
+                                },
+                            ),
+                    ) {
+                        TrackDetailRoute(
+                            onBack = { navController.popBackStack() },
                             modifier = Modifier.padding(innerPadding),
                         )
                     }
@@ -185,6 +207,9 @@ private fun MeretShell(
         }
     }
 }
+
+private fun String.isUnder(topLevelRoute: String): Boolean =
+    this == topLevelRoute || startsWith("$topLevelRoute/")
 
 /**
  * Single-top navigation that pops back to the start destination and restores state.

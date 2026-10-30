@@ -7,9 +7,6 @@ import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.data.tracking.TrackRepository
 import et.alpha.meret.core.data.tracking.TrackingController
-import et.alpha.meret.core.data.tracking.TrackingState
-import et.alpha.meret.core.model.Track
-import et.alpha.meret.core.model.TrackStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -104,29 +101,9 @@ class TrackListViewModel
         }
     }
 
-private fun Track.toItem(state: TrackingState): TrackItem = TrackItem(
-    id = id,
-    name = name,
-    startedAtMillis = startedAt,
-    distanceMetres = distanceMeters,
-    movingDurationMillis = movingDurationMillis,
-    progress = progress(state),
-    syncState = syncState,
-)
-
 /** A track already gone needs no message: the list is right without it. */
 private fun AppError.toMessage(): TrackListMessage? = when {
     this is AppError.Conflict -> TrackListMessage.DeleteRefusedRecording
     this is AppError.Storage && kind == AppError.Storage.Kind.NotFound -> null
     else -> TrackListMessage.DeleteFailed
-}
-
-private fun Track.progress(state: TrackingState): TrackProgress {
-    val recording = (state as? TrackingState.Recording)?.takeIf { it.trackId == id }
-    return when {
-        status != TrackStatus.ACTIVE && status != TrackStatus.PAUSED -> TrackProgress.Finished
-        recording == null -> TrackProgress.NotFinished
-        recording.isPaused -> TrackProgress.Paused
-        else -> TrackProgress.Recording
-    }
 }

@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 /** Owns the [TrackListViewModel]. */
 @Composable
 fun TrackListRoute(
+    onOpenTrack: (trackId: String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     viewModel: TrackListViewModel = hiltViewModel(),
@@ -18,6 +19,7 @@ fun TrackListRoute(
 
     TrackListScreen(
         state = state,
+        onOpenTrack = onOpenTrack,
         onDelete = viewModel::deleteTrack,
         onUndoDelete = viewModel::undoDelete,
         onDismissMessage = viewModel::dismissMessage,

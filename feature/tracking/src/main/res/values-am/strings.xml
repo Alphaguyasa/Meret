@@ -30,4 +30,13 @@
     <string name="tracks_delete_refused_recording">ይህ መስመር እንደገና እየተቀዳ ስለሆነ አልተሰረዘም። መጀመሪያ ያቁሙት።</string>
     <string name="tracks_delete_failed">መስመሩ ሊሰረዝ አልቻለም። እንደገና ይሞክሩ።</string>
     <string name="tracks_ok">እሺ</string>
+    <string name="track_detail_back">ወደ መስመሮች ተመለስ</string>
+    <string name="track_detail_not_found">መስመሩ አልተገኘም</string>
+    <string name="track_detail_not_found_body">ይህ መስመር ተሰርዟል፣ ወይም በዚህ ስልክ ላይ የለም።</string>
+    <string name="track_detail_elevation">ከፍታ</string>
+    <string name="track_detail_no_elevation">ለዚህ መስመር ከፍታ አልተመዘገበም።</string>
+    <string name="track_detail_altitude_range">ዝቅተኛ %1$d ሜ · ከፍተኛ %2$d ሜ</string>
+    <string name="track_detail_segments">ክፍሎች</string>
+    <string name="track_detail_segment">ክፍል %1$d</string>
+    <string name="track_detail_segment_stats">%1$s %2$s · %3$s · ነጥቦች፦ %4$d</string>
 </resources>
