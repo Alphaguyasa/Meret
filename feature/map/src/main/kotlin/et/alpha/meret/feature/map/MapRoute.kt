@@ -15,10 +15,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import et.alpha.meret.core.designsystem.component.TrackingStats
+import et.alpha.meret.core.designsystem.format.formatDistance
+import et.alpha.meret.core.designsystem.format.formatDuration
 import et.alpha.meret.core.maps.view.OfflineMap
 import et.alpha.meret.core.maps.view.rememberOfflineMapController
 import kotlinx.coroutines.delay
-import java.util.Locale
 import kotlin.math.roundToInt
 import et.alpha.meret.core.designsystem.R as DesignR
 
@@ -128,36 +129,7 @@ private fun trackingStats(
     )
 }
 
-/** `H:MM:SS`, from zero up. A clock set back mid-track shows 0:00:00, not a negative time. */
-internal fun formatDuration(elapsedMillis: Long): String {
-    val totalSeconds = elapsedMillis.coerceAtLeast(0L) / MILLIS_PER_SECOND
-    val hours = totalSeconds / SECONDS_PER_HOUR
-    val minutes = totalSeconds % SECONDS_PER_HOUR / SECONDS_PER_MINUTE
-    val seconds = totalSeconds % SECONDS_PER_MINUTE
-    return String.format(Locale.ROOT, "%d:%02d:%02d", hours, minutes, seconds)
-}
-
-internal data class FormattedDistance(
-    val value: String,
-    val inKilometres: Boolean,
-)
-
-/** Whole metres below a kilometre, then kilometres to two places. */
-internal fun formatDistance(metres: Double): FormattedDistance =
-    if (metres < METRES_PER_KILOMETRE) {
-        FormattedDistance(metres.coerceAtLeast(0.0).toInt().toString(), inKilometres = false)
-    } else {
-        FormattedDistance(
-            String.format(Locale.ROOT, "%.2f", metres / METRES_PER_KILOMETRE),
-            inKilometres = true,
-        )
-    }
-
 private const val TICK_MS = 1_000L
-private const val MILLIS_PER_SECOND = 1_000L
-private const val SECONDS_PER_MINUTE = 60L
-private const val SECONDS_PER_HOUR = 3_600L
-private const val METRES_PER_KILOMETRE = 1_000.0
 
 /** A dash, not a word: the same in every language. */
 private const val NO_VALUE = "–"

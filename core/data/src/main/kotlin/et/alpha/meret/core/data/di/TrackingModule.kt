@@ -11,8 +11,10 @@ import et.alpha.meret.core.common.telemetry.NoOpTelemetry
 import et.alpha.meret.core.common.telemetry.Telemetry
 import et.alpha.meret.core.common.time.TimeProvider
 import et.alpha.meret.core.common.uuid.UuidV7Generator
+import et.alpha.meret.core.data.tracking.DefaultTrackRepository
 import et.alpha.meret.core.data.tracking.DefaultTrackingController
 import et.alpha.meret.core.data.tracking.RoomNewTrackStore
+import et.alpha.meret.core.data.tracking.TrackRepository
 import et.alpha.meret.core.data.tracking.TrackingController
 import et.alpha.meret.domain.tracking.NewTrackStore
 import et.alpha.meret.domain.tracking.RecordingCommands
@@ -34,6 +36,9 @@ public abstract class TrackingModule {
 
     @Binds
     public abstract fun bindNewTrackStore(store: RoomNewTrackStore): NewTrackStore
+
+    @Binds
+    public abstract fun bindTrackRepository(repository: DefaultTrackRepository): TrackRepository
 
     public companion object {
         /** `:domain` has no `@Inject`. [RecordingCommands] is bound by `:feature:tracking`. */

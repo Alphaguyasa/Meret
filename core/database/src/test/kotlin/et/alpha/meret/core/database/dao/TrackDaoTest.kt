@@ -151,4 +151,45 @@ class TrackDaoTest : DatabaseTest() {
 
         assertThat(trackDao.getTrack(Fixtures.TRACK_ID)).isNotNull()
     }
+
+    @Test
+    fun `the track list holds every project's tracks, newest first, but no discarded ones`() =
+        runTest {
+            trackDao.upsertTracks(
+                listOf(
+                    Fixtures.track(id = "old", startedAt = 1_000L, status = TrackStatus.COMPLETED),
+                    Fixtures.track(id = "local", projectId = "local", startedAt = 5_000L),
+                    Fixtures.track(id = "gone", startedAt = 7_000L, status = TrackStatus.DISCARDED),
+                    Fixtures.track(id = "newest", startedAt = 9_000L),
+                ),
+            )
+
+            trackDao.observeListedTracks().test {
+                assertThat(awaitItem().map { it.id })
+                    .containsExactly("newest", "local", "old")
+                    .inOrder()
+            }
+        }
+
+    @Test
+    fun `discarding a track keeps its row and points and queues it to sync again`() = runTest {
+        trackDao.upsertTrack(Fixtures.track(status = TrackStatus.COMPLETED))
+        pointDao.appendBatch(Fixtures.TRACK_ID, Fixtures.points(1..5), 40.0, 5_000L, 5_000L)
+        trackDao.updateSyncState(Fixtures.TRACK_ID, SyncState.SYNCED)
+
+        val changed = trackDao.discardTrack(Fixtures.TRACK_ID, updatedAt = 9_000L)
+
+        assertThat(changed).isEqualTo(1)
+        val row = requireNotNull(trackDao.getTrack(Fixtures.TRACK_ID))
+        assertThat(row.status).isEqualTo(TrackStatus.DISCARDED)
+        assertThat(row.syncState).isEqualTo(SyncState.PENDING)
+        assertThat(row.updatedAt).isEqualTo(9_000L)
+        assertThat(requireNotNull(trackDao.getTrackWithPoints(Fixtures.TRACK_ID)).points)
+            .hasSize(5)
+    }
+
+    @Test
+    fun `discarding a track that does not exist changes nothing`() = runTest {
+        assertThat(trackDao.discardTrack("missing", updatedAt = 9_000L)).isEqualTo(0)
+    }
 }

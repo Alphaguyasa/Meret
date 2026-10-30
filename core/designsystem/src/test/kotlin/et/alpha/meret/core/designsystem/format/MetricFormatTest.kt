@@ -1,9 +1,9 @@
-package et.alpha.meret.feature.map
+package et.alpha.meret.core.designsystem.format
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class TrackingStatsFormatTest {
+class MetricFormatTest {
     @Test
     fun `durations read as hours, minutes and seconds`() {
         assertThat(formatDuration(0L)).isEqualTo("0:00:00")
