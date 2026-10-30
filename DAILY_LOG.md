@@ -4,6 +4,31 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-30 — Run 18 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 22 (Phase 7c): track list.** The Tracks tab lists every track newest first: name or date, distance, moving time, and where it stands (Recording, Paused, Not finished for an open row no recording holds, or its sync state). Delete hides the row and offers Undo for 10 s; nothing is written until then, so a process death keeps the track. A delete is a soft discard: the row and every point stay in Room, re-queued to sync. The track being recorded cannot be deleted ([#59](https://github.com/Alphaguyasa/Meret/pull/59)). **Item 23a (Phase 7d-1): track detail.** Tapping a track shows totals, an elevation profile with lowest/highest height, and one line per segment (distance, monotonic duration, points), live while recording. `TrackSummariser` derives it from the stored points with the same step gate as the total; raw points untouched ([#60](https://github.com/Alphaguyasa/Meret/pull/60)). Item 23 was split: 23b (stop undo, bar segment count) is next. |
+| Merged | #59 yes, `1aad0d8`, after one fix (attempt 1 of 2): ktlint `function-signature` in the moved `formatDistance`. #60 SHA60RESULT |
+| Failed or blocked | Nothing is blocked. ktlint/detekt still cannot run locally (no SDK, binaries refused), so each PR needed one lint fix. |
+| Roadmap | 7 open: 23b, 26 (new: purge discarded tracks, waits on A13), 24, 25 (A12), 14 (A6), 15, 18. No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | **New A13:** when to purge deleted tracks (default: never, until sync exists). A9: 23 new Amharic strings (track list and detail). 2 new "Needs a device" rows (track list, track detail). A2, A3, A5, A6, A7, A10, A11, A12 unchanged. **Dependabot #30** (Gradle group, 27 updates) still open, unmerged, waiting on A10. |
+| Next | 23b (stop undo and the tracking bar's segment count), then 24 (DataStore test scopes). |
+
+Notes for the next run:
+- **ktlint `chain-method-continuation` counts chains inside arguments too.**
+  `assertThat(a.b().c.d())` has 4 operators and fails. The run-17 script only counted the top
+  level. This regex catches it:
+  `[A-Za-z_]\w*(\([^()]*\))?(\??\.[A-Za-z_]\w*(\([^()]*\)|\s*\{[^{}]*\})?){4,}`.
+- **`function-signature` again:** changing `internal` to `public` changes the line length.
+  Re-check expression bodies after any change to visibility.
+- `TrackRepository` (`:core:data`) has `observeTracks`, `observeTrackDetail` and `discardTrack`.
+  Every fake needs all three (`TrackListViewModelTest`, `TrackDetailViewModelTest`).
+- `formatDuration`/`formatDistance` now live in `:core:designsystem/format`.
+- Shared track text helpers (`title()`, `stats()`, `standing()`, `distanceText()`) are in
+  `feature/tracking/TrackText.kt`; row mapping in `TrackItems.kt`.
+
 ## 2026-10-29 — Run 17 (scheduled, cloud)
 
 | Field | Content |
