@@ -20,18 +20,18 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 22. [P1 · M] Phase 7c — Track list
-Replace the `TrackListScreen` placeholder: newest first, name/date, distance, duration, sync
-state. Delete with an undo window (the row stays until the snackbar times out, and a process
-death inside the window keeps the track). en/am. **From item 20:** an open row with no session
-can exist (a start the service accepted but never recorded, or a new start after a reboot
-left a track unfinished). Show it as "not finished", never as recording.
+### 23b. [P1 · S] Phase 7d-2 — Stop undo and segment count
+"Stopped by accident" undo after a long-press stop: for a few seconds a snackbar on the map
+offers to resume the same track in a new segment (`TrackingController` reopens a just-completed
+track; the row goes back to active, `ended_at` cleared). The tracking bar's segment count shows
+"–" until this item counts segments (`TrackSummariser` from 23a, or the session's segment
+index). Then Phase 7's acceptance goes to the device list.
 
-### 23. [P1 · M] Phase 7d — Track detail and stop undo
-Stats, segment list and elevation profile for one track; "stopped by accident" undo after a
-long-press stop (resume the same track in a new segment). The tracking bar's segment count
-shows "–" until this item counts segments. Then Phase 7's acceptance goes to
-the device list.
+### 26. [P2 · S] Purge discarded tracks (waiting on A13)
+Since #59 a deleted track is marked `discarded` and keeps all its points. Nothing purges
+them, so a phone that records and deletes a lot keeps the storage. The policy (when, and
+whether only after the server has the discard) is Alpha's call, A13. Phase 9 sync must also
+send the discard (the row is re-queued `pending` by `TrackDao.discardTrack`).
 
 ### 24. [P3 · S] Give the remaining DataStore tests a test scope
 Run 12 found a 45-minute CI hang from a DataStore on its default `Dispatchers.IO` scope in a
@@ -112,3 +112,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 19. Per-ABI release APKs (`armeabi-v7a`, `arm64-v8a`, universal) and the `release-size` workflow | #54 | `60fa667` |
 | 20. Phase 7a: record button starts, pauses, stops (`StartTrackingUseCase`, `RecordingCommands`, `DeviceIdentityStore`), tracking bar stats | #56 | `fa90463` |
 | 21. Phase 7b: live track line (`TrackingController.activeLine`, `throttleLatest` 2 s, Douglas–Peucker 3 m, own line layer under the puck) | #57 | `ff9a1d4` |
+| 22. Phase 7c: track list (newest first, distance, moving time, recording / not finished / sync state), delete as a soft discard with a 10 s undo window | #59 | `1aad0d8` |
+| 23a. Phase 7d-1: track detail (totals, elevation profile, segment list; `TrackSummariser`), list rows open it | #60 | `SHA60` |
