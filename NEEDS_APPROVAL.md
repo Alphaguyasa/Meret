@@ -76,6 +76,11 @@ region, which the app cannot do yet.
 **Run 17 added 1 more** in `feature/map/src/main/res/values-am/strings.xml`: "መቅዳት አልጀመረም።
 መተግበሪያው አካባቢዎን እንዲጠቀም መፈቀዱን አረጋግጠው እንደገና ይንኩ።" (Recording did not start. Check that
 Meret may use your location, then tap again.)
+**Run 18 added 23 more** in `feature/tracking/src/main/res/values-am/strings.xml`, for the track
+list and the track detail: «እየተቀዳ ነው» (Recording), «አልተጠናቀቀም» (Not finished), «ገና
+አልተላከም» (Not synced yet), «ተልኳል» (Synced), «መስመሩ ተሰርዟል» (Track deleted), «ቀልብስ»
+(Undo), «ከፍታ» (Elevation), «ክፍል %1$d» (Segment), «ዝቅተኛ %1$d ሜ · ከፍተኛ %2$d ሜ» (Lowest/highest
+height). Please check «ቀልብስ» for Undo in particular.
 **Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
 እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
 ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
@@ -114,6 +119,15 @@ to the repo or logs; (b) Play App Signing later, if the app goes to Play (the $2
 is a purchase, so that needs your separate decision). **Default until you answer:** release
 APKs stay unsigned; debug APKs (CI artifact) remain the way to test on a phone. ROADMAP 25.
 
+### A13. When to purge deleted tracks (no cost, has a default)
+Since #59 a track the user deletes from the list is **not** erased. It is marked
+`discarded`, leaves the list, and keeps every point in Room, so a mistaken delete can still
+be recovered and sync can tell the server about it. The cost is storage: about 100 bytes a
+point, so a full day's track is roughly 1–3 MB. Options: (a) **keep discarded tracks until
+they are synced, then purge them after 30 days** (recommended once sync exists); (b) purge
+after 30 days whether synced or not, which can lose an unsynced record that was deleted by
+mistake; (c) never purge. **Default until you answer:** nothing is purged (c). ROADMAP 26.
+
 ---
 
 ## Needs a device
@@ -138,6 +152,8 @@ hardware. Steps are in the linked docs.
 | 6 | Pack import (6g-2, #53), in aeroplane mode: Packs tab, «Import map pack», pick a real `.mbtiles` from Downloads; a progress bar shows while it copies, then «… is installed»; the pack is listed with its size and the map draws it. Pick a photo: «This file is not a map pack». Delete the pack: it asks first, then the map goes back to the placeholder. Check the Amharic text too | Any phone, a vector pack from `tools/` |
 | 6 | Map controls (6f-2a, #45): + and − zoom one level; rotating with two fingers shows the compass, which points north, and a tap turns the map north up; the scale bar matches a known distance (for example a 100 m road stretch) | After a pack is installed (6g, or the sideload above) |
 | 7 | Record button (7a, #56): tap the red button on the map; within a second the notification appears, the button pulses and the bar shows 0:00:0x, distance and points rising as you walk. Tap: paused (button and bar change); tap: resumes. Long-press: stops, bar goes. A fast double tap makes one track, not two. With location revoked in settings, a tap shows «Recording did not start…» within 10 s. Amharic text too | Any phone; this also unblocks the Phase 5 rows that needed a record button |
+| 7 | Track list (7c, #59): after recording two tracks, the Tracks tab lists them newest first with date, distance, moving time and «Not synced yet»; the one recording shows «Recording» and has no Delete. Delete a finished track: it goes, a snackbar offers Undo; Undo brings it back. Delete again and swipe the app away from recents within 10 s: on reopening the track is still there. Delete and wait 10 s: it stays gone after a restart. Amharic text too | Any phone |
+| 7 | Track detail (7d-1, #60): tap a track: date, distance, moving time, points and segments match the list; walk up or down a slope and the elevation profile shows it, with the lowest and highest height; a track with a pause shows two segments. Open the recording track: the numbers rise as you walk. «Back to tracks» returns to the list | Any phone |
 | 7 | Live track line (7b, #57): walking while recording, a green line follows behind the dot, catching up about every 2 s; pause, walk 50 m, resume: the line has a gap; stop: the line goes. After a 2-hour walk the map still pans without stutter (the Phase 7 frame-rate criterion) | Any phone with a pack; the 2-hour check on a low-end phone |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 
