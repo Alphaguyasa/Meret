@@ -157,10 +157,11 @@ class TrackRepositoryTest {
         val detail = checkNotNull(repository.observeTrackDetail("walk").first())
 
         assertThat(detail.track.id).isEqualTo("walk")
-        assertThat(detail.summary.segments.map { it.pointCount }).containsExactly(2, 1).inOrder()
+        val segments = detail.summary.segments
+        assertThat(segments.map { it.pointCount }).containsExactly(2, 1).inOrder()
         // 0.0001° of latitude is about 11 m: one step, clear of the gate.
-        assertThat(detail.summary.segments.first().distanceMetres).isWithin(0.05).of(11.12)
-        assertThat(detail.summary.segments.first().durationMillis).isEqualTo(10_000L)
+        assertThat(segments.first().distanceMetres).isWithin(0.05).of(11.12)
+        assertThat(segments.first().durationMillis).isEqualTo(10_000L)
         assertThat(detail.summary.elevation.map { it.altitudeMetres })
             .containsExactly(2_400.0, 2_400.0, 2_400.0)
     }

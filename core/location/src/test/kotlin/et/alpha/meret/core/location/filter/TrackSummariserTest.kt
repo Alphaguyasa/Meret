@@ -66,8 +66,9 @@ class TrackSummariserTest {
                 fix(seq = 2, northMetres = -1.0, atSeconds = 6),
             )
 
-        assertThat(TrackSummariser.summarise(points).segments.single().distanceMetres)
-            .isEqualTo(0.0)
+        val segment = TrackSummariser.summarise(points).segments.single()
+
+        assertThat(segment.distanceMetres).isEqualTo(0.0)
     }
 
     @Test
@@ -128,8 +129,9 @@ class TrackSummariserTest {
                 fix(seq = 1, northMetres = 10.0, atSeconds = 2),
             )
 
-        assertThat(TrackSummariser.summarise(points).segments.single().durationMillis)
-            .isEqualTo(0L)
+        val segment = TrackSummariser.summarise(points).segments.single()
+
+        assertThat(segment.durationMillis).isEqualTo(0L)
     }
 
     private fun fix(
