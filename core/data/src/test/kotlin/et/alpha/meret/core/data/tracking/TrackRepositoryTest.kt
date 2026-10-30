@@ -1,5 +1,6 @@
 package et.alpha.meret.core.data.tracking
 
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
@@ -9,13 +10,19 @@ import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.common.time.TimeProvider
 import et.alpha.meret.core.database.MeretDatabase
 import et.alpha.meret.core.database.entity.TrackEntity
+import et.alpha.meret.core.database.entity.TrackPointEntity
+import et.alpha.meret.core.datastore.TrackingConfigStore
+import et.alpha.meret.core.model.LocationProvider
 import et.alpha.meret.core.model.SyncState
 import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.TrackStatus
 import et.alpha.meret.core.model.geo.TrackLine
 import et.alpha.meret.domain.diagnostics.TrackingHealth
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -23,14 +30,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.File
 
-/** Against real Room (in memory), as in `RoomNewTrackStoreTest`. */
+/** Against real Room (in memory) and a real preferences file, as in `RoomNewTrackStoreTest`. */
 @RunWith(RobolectricTestRunner::class)
 class TrackRepositoryTest {
+    @get:Rule
+    val temporaryFolder: TemporaryFolder = TemporaryFolder()
+
     private lateinit var database: MeretDatabase
+    private lateinit var dataStoreScope: CoroutineScope
     private val tracking = FakeTracking()
     private lateinit var repository: DefaultTrackRepository
 
@@ -43,10 +57,17 @@ class TrackRepositoryTest {
                     MeretDatabase::class.java,
                 ).allowMainThreadQueries()
                 .build()
+        dataStoreScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val dataStore =
+            PreferenceDataStoreFactory.create(
+                scope = dataStoreScope,
+                produceFile = { File(temporaryFolder.root, "meret.preferences_pb") },
+            )
         repository =
             DefaultTrackRepository(
                 trackDao = database.trackDao(),
                 tracking = tracking,
+                configStore = TrackingConfigStore(dataStore),
                 time = FixedTime,
                 dispatchers = TestDispatchers(Dispatchers.IO),
             )
@@ -54,6 +75,7 @@ class TrackRepositoryTest {
 
     @After
     fun tearDown() {
+        dataStoreScope.cancel()
         database.close()
     }
 
@@ -120,6 +142,56 @@ class TrackRepositoryTest {
 
         assertThat((error as AppError.Storage).kind).isEqualTo(AppError.Storage.Kind.NotFound)
     }
+
+    @Test
+    fun `the detail holds the track and a summary of its segments`() = runBlocking<Unit> {
+        database.trackDao().upsertTrack(track("walk"))
+        database.trackPointDao().insertPoints(
+            listOf(
+                point("walk", segment = 0, seq = 0, latitude = 8.98000, atSeconds = 0),
+                point("walk", segment = 0, seq = 1, latitude = 8.98010, atSeconds = 10),
+                point("walk", segment = 1, seq = 2, latitude = 8.98100, atSeconds = 60),
+            ),
+        )
+
+        val detail = checkNotNull(repository.observeTrackDetail("walk").first())
+
+        assertThat(detail.track.id).isEqualTo("walk")
+        assertThat(detail.summary.segments.map { it.pointCount }).containsExactly(2, 1).inOrder()
+        // 0.0001° of latitude is about 11 m: one step, clear of the gate.
+        assertThat(detail.summary.segments.first().distanceMetres).isWithin(0.05).of(11.12)
+        assertThat(detail.summary.segments.first().durationMillis).isEqualTo(10_000L)
+        assertThat(detail.summary.elevation.map { it.altitudeMetres })
+            .containsExactly(2_400.0, 2_400.0, 2_400.0)
+    }
+
+    @Test
+    fun `a missing or discarded track has no detail`() = runBlocking<Unit> {
+        database.trackDao().upsertTrack(track("gone", status = TrackStatus.DISCARDED))
+
+        assertThat(repository.observeTrackDetail("gone").first()).isNull()
+        assertThat(repository.observeTrackDetail("missing").first()).isNull()
+    }
+
+    private fun point(
+        trackId: String,
+        segment: Int,
+        seq: Int,
+        latitude: Double,
+        atSeconds: Long,
+    ) = TrackPointEntity(
+        id = "$trackId-$seq",
+        trackId = trackId,
+        segmentIndex = segment,
+        seq = seq,
+        latitude = latitude,
+        longitude = 38.7578,
+        altitudeMeters = 2_400.0,
+        accuracyMeters = 4.0,
+        provider = LocationProvider.GPS,
+        recordedAt = atSeconds * 1_000L,
+        elapsedRealtimeNanos = atSeconds * 1_000_000_000L,
+    )
 
     private fun track(
         id: String,

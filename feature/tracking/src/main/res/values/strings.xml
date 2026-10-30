@@ -30,4 +30,13 @@
     <string name="tracks_delete_refused_recording">This track is recording again, so it was not deleted. Stop it first.</string>
     <string name="tracks_delete_failed">The track could not be deleted. Try again.</string>
     <string name="tracks_ok">OK</string>
+    <string name="track_detail_back">Back to tracks</string>
+    <string name="track_detail_not_found">Track not found</string>
+    <string name="track_detail_not_found_body">This track was deleted, or is not on this phone.</string>
+    <string name="track_detail_elevation">Elevation</string>
+    <string name="track_detail_no_elevation">No height was recorded for this track.</string>
+    <string name="track_detail_altitude_range">Lowest %1$d m · highest %2$d m</string>
+    <string name="track_detail_segments">Segments</string>
+    <string name="track_detail_segment">Segment %1$d</string>
+    <string name="track_detail_segment_stats">%1$s %2$s · %3$s · Points: %4$d</string>
 </resources>
