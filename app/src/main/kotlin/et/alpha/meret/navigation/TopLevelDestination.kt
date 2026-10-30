@@ -49,3 +49,8 @@ const val WAYPOINTS_ROUTE: String = "waypoints"
 const val TILE_PACKS_ROUTE: String = "tile_packs"
 const val SETTINGS_ROUTE: String = "settings"
 const val DIAGNOSTICS_ROUTE: String = "diagnostics"
+
+/** One track, reached from the track list; `trackId` is its argument. */
+const val TRACK_DETAIL_ROUTE: String = "tracks/{trackId}"
+
+fun trackDetailRoute(trackId: String): String = "tracks/$trackId"

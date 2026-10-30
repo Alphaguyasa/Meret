@@ -11,6 +11,7 @@ import et.alpha.meret.core.data.tracking.TrackRepository
 import et.alpha.meret.core.data.tracking.TrackingState
 import et.alpha.meret.core.model.SyncState
 import et.alpha.meret.core.model.Track
+import et.alpha.meret.core.model.TrackDetail
 import et.alpha.meret.core.model.TrackStatus
 import et.alpha.meret.feature.tracking.TrackListViewModel.Companion.UNDO_WINDOW_MS
 import et.alpha.meret.feature.tracking.service.FakeTrackingController
@@ -18,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -252,6 +254,8 @@ class TrackListViewModelTest {
         var result: AppResult<Unit> = AppResult.Success(Unit)
 
         override fun observeTracks(): Flow<List<Track>> = tracks
+
+        override fun observeTrackDetail(trackId: String): Flow<TrackDetail?> = flowOf(null)
 
         override suspend fun discardTrack(trackId: String): AppResult<Unit> {
             val outcome = result
