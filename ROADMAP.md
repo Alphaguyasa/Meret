@@ -113,4 +113,4 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 20. Phase 7a: record button starts, pauses, stops (`StartTrackingUseCase`, `RecordingCommands`, `DeviceIdentityStore`), tracking bar stats | #56 | `fa90463` |
 | 21. Phase 7b: live track line (`TrackingController.activeLine`, `throttleLatest` 2 s, Douglas–Peucker 3 m, own line layer under the puck) | #57 | `ff9a1d4` |
 | 22. Phase 7c: track list (newest first, distance, moving time, recording / not finished / sync state), delete as a soft discard with a 10 s undo window | #59 | `1aad0d8` |
-| 23a. Phase 7d-1: track detail (totals, elevation profile, segment list; `TrackSummariser`), list rows open it | #60 | `SHA60` |
+| 23a. Phase 7d-1: track detail (totals, elevation profile, segment list; `TrackSummariser`), list rows open it | #60 | `6db9994` |
