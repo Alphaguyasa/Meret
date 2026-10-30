@@ -16,4 +16,18 @@
     <string name="tracking_interrupted_title">መስመሩ አልተጠናቀቀም</string>
     <string name="tracking_interrupted_body">መስመር እየተቀዳ ሳለ ስልኩ እንደገና ጀምሯል። የተቀዳው ሁሉ ተቀምጧል። ያንኑ መስመር ለመቀጠል «መቅዳት ቀጥል»ን ይጫኑ።</string>
     <string name="tracking_action_resume_track">መቅዳት ቀጥል</string>
+    <string name="tracks_row_stats">%1$s %2$s · %3$s</string>
+    <string name="tracks_recording">እየተቀዳ ነው</string>
+    <string name="tracks_paused">ለጊዜው ቆሟል</string>
+    <string name="tracks_not_finished">አልተጠናቀቀም</string>
+    <string name="tracks_sync_pending">ገና አልተላከም</string>
+    <string name="tracks_sync_syncing">በመላክ ላይ</string>
+    <string name="tracks_sync_synced">ተልኳል</string>
+    <string name="tracks_sync_conflict">የማመሳሰል ግጭት</string>
+    <string name="tracks_delete">ሰርዝ</string>
+    <string name="tracks_deleted">መስመሩ ተሰርዟል</string>
+    <string name="tracks_undo">ቀልብስ</string>
+    <string name="tracks_delete_refused_recording">ይህ መስመር እንደገና እየተቀዳ ስለሆነ አልተሰረዘም። መጀመሪያ ያቁሙት።</string>
+    <string name="tracks_delete_failed">መስመሩ ሊሰረዝ አልቻለም። እንደገና ይሞክሩ።</string>
+    <string name="tracks_ok">እሺ</string>
 </resources>

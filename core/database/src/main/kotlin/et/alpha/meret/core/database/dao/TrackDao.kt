@@ -16,6 +16,13 @@ public interface TrackDao {
     @Query("SELECT * FROM track WHERE project_id = :projectId ORDER BY started_at DESC")
     public fun observeTracks(projectId: String): Flow<List<TrackEntity>>
 
+    /**
+     * Every track on this device except discarded ones, newest first: the track list. Not per
+     * project, because tracks recorded before sign-in have no real project yet.
+     */
+    @Query("SELECT * FROM track WHERE status != 'discarded' ORDER BY started_at DESC")
+    public fun observeListedTracks(): Flow<List<TrackEntity>>
+
     @Query("SELECT * FROM track WHERE id = :trackId")
     public fun observeTrack(trackId: String): Flow<TrackEntity?>
 
@@ -102,6 +109,23 @@ public interface TrackDao {
         geoJson: String?,
         updatedAt: Long,
     )
+
+    /**
+     * The user's delete: the row and every point stay, marked discarded and queued to sync
+     * again, so the server can learn of it. Returns the number of rows changed, 0 for no such
+     * track.
+     */
+    @Query(
+        """
+        UPDATE track
+        SET status = 'discarded', sync_state = 'pending', updated_at = :updatedAt
+        WHERE id = :trackId
+        """,
+    )
+    public suspend fun discardTrack(
+        trackId: String,
+        updatedAt: Long,
+    ): Int
 
     /** Cascades to `track_point`. */
     @Query("DELETE FROM track WHERE id = :trackId")

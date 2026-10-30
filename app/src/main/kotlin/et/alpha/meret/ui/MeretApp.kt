@@ -38,7 +38,7 @@ import et.alpha.meret.feature.map.MapRoute
 import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
 import et.alpha.meret.feature.tiles.TilePacksRoute
-import et.alpha.meret.feature.tracking.TrackListScreen
+import et.alpha.meret.feature.tracking.TrackListRoute
 import et.alpha.meret.feature.waypoint.WaypointListScreen
 import et.alpha.meret.navigation.DIAGNOSTICS_ROUTE
 import et.alpha.meret.navigation.MAP_ROUTE
@@ -159,7 +159,7 @@ private fun MeretShell(
                         )
                     }
                     composable(TRACKS_ROUTE) {
-                        TrackListScreen(
+                        TrackListRoute(
                             modifier = Modifier.padding(innerPadding),
                         )
                     }

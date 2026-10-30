@@ -16,4 +16,18 @@
     <string name="tracking_interrupted_title">Track not finished</string>
     <string name="tracking_interrupted_body">The phone restarted while a track was recording. Everything recorded is saved. Tap Resume recording to continue the same track.</string>
     <string name="tracking_action_resume_track">Resume recording</string>
+    <string name="tracks_row_stats">%1$s %2$s · %3$s</string>
+    <string name="tracks_recording">Recording</string>
+    <string name="tracks_paused">Paused</string>
+    <string name="tracks_not_finished">Not finished</string>
+    <string name="tracks_sync_pending">Not synced yet</string>
+    <string name="tracks_sync_syncing">Syncing</string>
+    <string name="tracks_sync_synced">Synced</string>
+    <string name="tracks_sync_conflict">Sync conflict</string>
+    <string name="tracks_delete">Delete</string>
+    <string name="tracks_deleted">Track deleted</string>
+    <string name="tracks_undo">Undo</string>
+    <string name="tracks_delete_refused_recording">This track is recording again, so it was not deleted. Stop it first.</string>
+    <string name="tracks_delete_failed">The track could not be deleted. Try again.</string>
+    <string name="tracks_ok">OK</string>
 </resources>
