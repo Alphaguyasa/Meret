@@ -21,15 +21,14 @@ public data class FormattedDistance(
 )
 
 /** Whole metres below a kilometre, then kilometres to two places. */
-public fun formatDistance(metres: Double): FormattedDistance =
-    if (metres < METRES_PER_KILOMETRE) {
-        FormattedDistance(metres.coerceAtLeast(0.0).toInt().toString(), inKilometres = false)
-    } else {
-        FormattedDistance(
-            String.format(Locale.ROOT, "%.2f", metres / METRES_PER_KILOMETRE),
-            inKilometres = true,
-        )
-    }
+public fun formatDistance(metres: Double): FormattedDistance = if (metres < METRES_PER_KILOMETRE) {
+    FormattedDistance(metres.coerceAtLeast(0.0).toInt().toString(), inKilometres = false)
+} else {
+    FormattedDistance(
+        String.format(Locale.ROOT, "%.2f", metres / METRES_PER_KILOMETRE),
+        inKilometres = true,
+    )
+}
 
 private const val MILLIS_PER_SECOND = 1_000L
 private const val SECONDS_PER_MINUTE = 60L
