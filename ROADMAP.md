@@ -23,7 +23,7 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 ### 27. [P1 · M] Phase 7e — Earlier tracks on the map
 The last open bullet of BUILD_PLAN Phase 7: "historical tracks loaded for the viewport". Run 19
 found it had no roadmap item. Draw the device's finished, non-discarded tracks whose bounds
-(`track.min_lat`… columns, already kept by `appendBatch`) intersect the visible area, as one
+(`bbox_min_lat`… columns, already kept by `appendBatch`) intersect the visible area, as one
 GeoJSON source under the live line, from the stored `simplified_geojson` or simplified on
 `Dispatchers.Default` and cached. Reload on camera idle, throttled; cap the number drawn so a
 low-RAM phone stays smooth. Check MapLibre 12.3.1's camera-idle API in the sources jar first.
