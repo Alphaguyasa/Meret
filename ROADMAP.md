@@ -20,24 +20,20 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 23b. [P1 · S] Phase 7d-2 — Stop undo and segment count
-"Stopped by accident" undo after a long-press stop: for a few seconds a snackbar on the map
-offers to resume the same track in a new segment (`TrackingController` reopens a just-completed
-track; the row goes back to active, `ended_at` cleared). The tracking bar's segment count shows
-"–" until this item counts segments (`TrackSummariser` from 23a, or the session's segment
-index). Then Phase 7's acceptance goes to the device list.
+### 27. [P1 · M] Phase 7e — Earlier tracks on the map
+The last open bullet of BUILD_PLAN Phase 7: "historical tracks loaded for the viewport". Run 19
+found it had no roadmap item. Draw the device's finished, non-discarded tracks whose bounds
+(`track.min_lat`… columns, already kept by `appendBatch`) intersect the visible area, as one
+GeoJSON source under the live line, from the stored `simplified_geojson` or simplified on
+`Dispatchers.Default` and cached. Reload on camera idle, throttled; cap the number drawn so a
+low-RAM phone stays smooth. Check MapLibre 12.3.1's camera-idle API in the sources jar first.
+Then Phase 7's "Done when" goes to the device list as a whole.
 
 ### 26. [P2 · S] Purge discarded tracks (waiting on A13)
 Since #59 a deleted track is marked `discarded` and keeps all its points. Nothing purges
 them, so a phone that records and deletes a lot keeps the storage. The policy (when, and
 whether only after the server has the discard) is Alpha's call, A13. Phase 9 sync must also
 send the discard (the row is re-queued `pending` by `TrackDao.discardTrack`).
-
-### 24. [P3 · S] Give the remaining DataStore tests a test scope
-Run 12 found a 45-minute CI hang from a DataStore on its default `Dispatchers.IO` scope in a
-`runTest`. `OnboardingViewModelTest` was fixed. `TrackingSessionStoreTest`,
-`OnboardingStoreTest`, `TrackingConfigStoreTest` and `DefaultTrackingControllerTest` still
-build some stores with no scope. Pass `backgroundScope` everywhere and drop the fallback.
 
 ### 25. [P2 · S] Release signing (blocked on A12)
 There is no `signingConfig`, so `assembleRelease` makes unsigned APKs that no phone installs.
@@ -114,3 +110,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 21. Phase 7b: live track line (`TrackingController.activeLine`, `throttleLatest` 2 s, Douglas–Peucker 3 m, own line layer under the puck) | #57 | `ff9a1d4` |
 | 22. Phase 7c: track list (newest first, distance, moving time, recording / not finished / sync state), delete as a soft discard with a 10 s undo window | #59 | `1aad0d8` |
 | 23a. Phase 7d-1: track detail (totals, elevation profile, segment list; `TrackSummariser`), list rows open it | #60 | `6db9994` |
+| 23b. Phase 7d-2: undo a long-press stop (6 s snackbar, `TrackingController.reopen`, new segment), tracking bar segment count | #62 | `24d9969` |
+| 24. Every DataStore test on a scope that ends with the test (`backgroundScope`, or cancelled in `@After`) | #63 | `74a918f` |
