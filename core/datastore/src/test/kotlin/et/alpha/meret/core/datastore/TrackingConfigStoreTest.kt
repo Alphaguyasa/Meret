@@ -10,6 +10,7 @@ import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.model.LocationProfile
 import et.alpha.meret.core.model.TrackingConfig
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -190,8 +191,11 @@ class TrackingConfigStoreTest {
      * A real `PreferenceDataStoreFactory` over a temp file rather than a fake, because the things
      * worth testing here are the key names and the fallback behaviour — both of which a fake map
      * would let me get wrong in exactly the same way in the test and in the code.
+     *
+     * On the test's scheduler, never DataStore's default `Dispatchers.IO` scope (run 12).
      */
-    private fun dataStore(): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+    private fun TestScope.dataStore(): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+        scope = backgroundScope,
         // A path, not a created file: DataStore writes it itself, and `newFile` would leave a
         // zero-byte file behind for the serializer to interpret.
         produceFile = { File(temporaryFolder.root, "tracking_config.preferences_pb") },

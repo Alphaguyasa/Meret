@@ -12,10 +12,10 @@ import et.alpha.meret.core.datastore.di.preferencesCorruptionHandler
 import et.alpha.meret.core.model.LocationProfile
 import et.alpha.meret.core.model.TrackingSession
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -114,7 +114,7 @@ class TrackingSessionStoreTest {
     @Test
     fun `a new store on the same file sees the session`() = runTest {
         val firstJob = Job()
-        TrackingSessionStore(dataStore(CoroutineScope(Dispatchers.IO + firstJob)))
+        TrackingSessionStore(dataStore(CoroutineScope(backgroundScope.coroutineContext + firstJob)))
             .start(SESSION.copy(segmentIndex = 2, isPaused = true))
         firstJob.cancelAndJoin()
 
@@ -185,20 +185,17 @@ class TrackingSessionStoreTest {
      * A real `PreferenceDataStoreFactory` over a temp file, with production's corruption
      * handler, rather than a fake: the key names and the fallback behaviour are what is under
      * test, and a fake map would get them wrong the same way the code does.
+     *
+     * On the test's scheduler ([TestScope.backgroundScope]), never DataStore's default
+     * `Dispatchers.IO` scope: run 12 traced a 45-minute CI hang to that scope inside `runTest`.
      */
-    private fun dataStore(scope: CoroutineScope? = null): DataStore<Preferences> =
-        if (scope == null) {
-            PreferenceDataStoreFactory.create(
-                corruptionHandler = preferencesCorruptionHandler(),
-                produceFile = { file },
-            )
-        } else {
-            PreferenceDataStoreFactory.create(
-                corruptionHandler = preferencesCorruptionHandler(),
-                scope = scope,
-                produceFile = { file },
-            )
-        }
+    private fun TestScope.dataStore(
+        scope: CoroutineScope = backgroundScope,
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+        corruptionHandler = preferencesCorruptionHandler(),
+        scope = scope,
+        produceFile = { file },
+    )
 
     private companion object {
         const val CORRUPT_LENGTH = 16
