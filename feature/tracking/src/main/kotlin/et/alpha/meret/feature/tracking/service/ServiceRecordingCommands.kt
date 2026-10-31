@@ -17,19 +17,25 @@ class ServiceRecordingCommands
     constructor(
         @param:ApplicationContext private val context: Context,
     ) : RecordingCommands {
-        override fun start(trackId: String): AppResult<Unit> = try {
-            TrackingService.start(context, trackId)
-            AppResult.Success(Unit)
-        } catch (refused: IllegalStateException) {
-            // ForegroundServiceStartNotAllowedException (Android 12+): not a user action.
-            AppResult.Failure(AppError.Unexpected(refused))
-        }
+        override fun start(trackId: String): AppResult<Unit> =
+            startForeground { TrackingService.start(context, trackId) }
+
+        override fun reopen(trackId: String): AppResult<Unit> =
+            startForeground { TrackingService.reopen(context, trackId) }
 
         override fun pause() = send { TrackingService.pause(context) }
 
         override fun resume() = send { TrackingService.resume(context) }
 
         override fun stop() = send { TrackingService.stop(context) }
+
+        private inline fun startForeground(command: () -> Unit): AppResult<Unit> = try {
+            command()
+            AppResult.Success(Unit)
+        } catch (refused: IllegalStateException) {
+            // ForegroundServiceStartNotAllowedException (Android 12+): not a user action.
+            AppResult.Failure(AppError.Unexpected(refused))
+        }
 
         /**
          * The service is running whenever there is something to pause or stop, so the system

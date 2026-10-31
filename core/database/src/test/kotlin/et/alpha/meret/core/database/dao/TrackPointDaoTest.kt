@@ -3,6 +3,7 @@ package et.alpha.meret.core.database.dao
 import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.database.DatabaseTest
 import et.alpha.meret.core.database.Fixtures
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -250,6 +251,22 @@ class TrackPointDaoTest : DatabaseTest() {
         assertThat(pointDao.getTrackGeometry(Fixtures.TRACK_ID).map { it.segmentIndex to it.seq })
             .containsExactly(0 to 1, 0 to 2, 1 to 11, 1 to 12)
             .inOrder()
+    }
+
+    @Test
+    fun `segment count follows the segments written, outlier-only ones included`() = runTest {
+        assertThat(pointDao.observeSegmentCount(Fixtures.TRACK_ID).first()).isEqualTo(0)
+
+        val points =
+            listOf(
+                Fixtures.point(seq = 1, segmentIndex = 0),
+                Fixtures.point(seq = 2, segmentIndex = 0),
+                Fixtures.point(seq = 3, segmentIndex = 1, isOutlier = true),
+                Fixtures.point(seq = 4, segmentIndex = 2),
+            )
+        pointDao.appendBatch(Fixtures.TRACK_ID, points, 0.0, 0L, 5_000L)
+
+        assertThat(pointDao.observeSegmentCount(Fixtures.TRACK_ID).first()).isEqualTo(3)
     }
 
     @Test

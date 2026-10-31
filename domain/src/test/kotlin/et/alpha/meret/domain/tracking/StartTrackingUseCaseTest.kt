@@ -78,5 +78,7 @@ class StartTrackingUseCaseTest {
         override fun resume() = Unit
 
         override fun stop() = Unit
+
+        override fun reopen(trackId: String): AppResult<Unit> = AppResult.Success(Unit)
     }
 }

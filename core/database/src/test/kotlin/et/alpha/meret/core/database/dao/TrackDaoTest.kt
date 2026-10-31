@@ -189,6 +189,38 @@ class TrackDaoTest : DatabaseTest() {
     }
 
     @Test
+    fun `reopening a completed track makes it active with no end time`() = runTest {
+        trackDao.upsertTrack(Fixtures.track())
+        pointDao.appendBatch(Fixtures.TRACK_ID, Fixtures.points(1..3), 20.0, 3_000L, 3_000L)
+        trackDao.endTrack(
+            Fixtures.TRACK_ID,
+            TrackStatus.COMPLETED,
+            endedAt = 8_000L,
+            updatedAt = 8_000L,
+        )
+
+        val changed = trackDao.reopenTrack(Fixtures.TRACK_ID, updatedAt = 9_000L)
+
+        assertThat(changed).isEqualTo(1)
+        val row = requireNotNull(trackDao.getTrack(Fixtures.TRACK_ID))
+        assertThat(row.status).isEqualTo(TrackStatus.ACTIVE)
+        assertThat(row.endedAt).isNull()
+        assertThat(row.updatedAt).isEqualTo(9_000L)
+        assertThat(row.pointCount).isEqualTo(3)
+    }
+
+    @Test
+    fun `only a completed track can be reopened`() = runTest {
+        trackDao.upsertTrack(Fixtures.track(id = "open", status = TrackStatus.ACTIVE))
+        trackDao.upsertTrack(Fixtures.track(id = "deleted", status = TrackStatus.DISCARDED))
+
+        assertThat(trackDao.reopenTrack("open", updatedAt = 9_000L)).isEqualTo(0)
+        assertThat(trackDao.reopenTrack("deleted", updatedAt = 9_000L)).isEqualTo(0)
+        assertThat(trackDao.reopenTrack("missing", updatedAt = 9_000L)).isEqualTo(0)
+        assertThat(trackDao.getTrack("deleted")?.status).isEqualTo(TrackStatus.DISCARDED)
+    }
+
+    @Test
     fun `discarding a track that does not exist changes nothing`() = runTest {
         assertThat(trackDao.discardTrack("missing", updatedAt = 9_000L)).isEqualTo(0)
     }

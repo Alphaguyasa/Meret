@@ -127,6 +127,23 @@ public interface TrackDao {
         updatedAt: Long,
     ): Int
 
+    /**
+     * Undoes a stop: a completed track goes back to active, with no end time. Only a
+     * `completed` row is touched, so a discarded track is never revived. Returns the number of
+     * rows changed, 0 when there is no such completed track.
+     */
+    @Query(
+        """
+        UPDATE track
+        SET status = 'active', ended_at = NULL, updated_at = :updatedAt
+        WHERE id = :trackId AND status = 'completed'
+        """,
+    )
+    public suspend fun reopenTrack(
+        trackId: String,
+        updatedAt: Long,
+    ): Int
+
     /** Cascades to `track_point`. */
     @Query("DELETE FROM track WHERE id = :trackId")
     public suspend fun deleteTrack(trackId: String)

@@ -10,4 +10,6 @@
     <string name="map_scale_m">%1$d m</string>
     <string name="map_scale_km">%1$d km</string>
     <string name="map_recording_not_started">Recording did not start. Check that Meret may use your location, then tap again.</string>
+    <string name="map_recording_stopped">Track saved. Stopped by mistake?</string>
+    <string name="map_recording_resume">Resume recording</string>
 </resources>

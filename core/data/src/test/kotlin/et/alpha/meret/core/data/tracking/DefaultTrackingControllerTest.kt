@@ -203,6 +203,90 @@ class DefaultTrackingControllerTest {
         assertThat(controller.state.value).isEqualTo(TrackingState.Idle)
     }
 
+    @Test
+    fun `reopen after stop continues the same track in a new segment`() = runBlocking<Unit> {
+        val engine = FakeEngine()
+        val controller = controller(engine)
+        val walk = fixes(count = 6)
+        controller.start(TRACK_ID)
+        engine.emit(walk.take(3))
+        awaitPointCount(3)
+        controller.stop()
+
+        val result = controller.reopen(TRACK_ID)
+
+        assertThat(result).isEqualTo(AppResult.Success(Unit))
+        assertThat(engine.isRunning).isTrue()
+        assertThat(controller.state.value)
+            .isEqualTo(TrackingState.Recording(TRACK_ID, isPaused = false))
+        val reopened = checkNotNull(database.trackDao().getTrack(TRACK_ID))
+        assertThat(reopened.status).isEqualTo(TrackStatus.ACTIVE)
+        assertThat(reopened.endedAt).isNull()
+        assertThat(sessionStore.session.first()?.trackId).isEqualTo(TRACK_ID)
+
+        engine.emit(walk.drop(3))
+        awaitPointCount(6)
+        val points = database.trackPointDao().getPoints(TRACK_ID).sortedBy { it.seq }
+        assertThat(points.map { it.seq }).containsExactly(0, 1, 2, 3, 4, 5).inOrder()
+        assertThat(points.map { it.segmentIndex }.distinct()).containsExactly(0, 1).inOrder()
+        val segments =
+            withTimeout(TIMEOUT_MS) { controller.activeSegmentCount.first { it == 2 } }
+        assertThat(segments).isEqualTo(2)
+    }
+
+    @Test
+    fun `only the track stopped last can be reopened, and only while idle`() = runBlocking<Unit> {
+        database.trackDao().upsertTrack(track(OTHER_TRACK_ID).copy(status = TrackStatus.COMPLETED))
+        val engine = FakeEngine()
+        val controller = controller(engine)
+
+        assertThat(controller.reopen(OTHER_TRACK_ID).errorOrNull())
+            .isInstanceOf(AppError.Conflict::class.java)
+
+        controller.start(TRACK_ID)
+        controller.stop()
+        controller.start(OTHER_TRACK_ID)
+
+        assertThat(controller.reopen(TRACK_ID).errorOrNull())
+            .isInstanceOf(AppError.Conflict::class.java)
+        assertThat(database.trackDao().getTrack(TRACK_ID)?.status)
+            .isEqualTo(TrackStatus.COMPLETED)
+    }
+
+    @Test
+    fun `a track deleted after its stop is not reopened`() = runBlocking<Unit> {
+        val engine = FakeEngine()
+        val controller = controller(engine)
+        controller.start(TRACK_ID)
+        controller.stop()
+        database.trackDao().discardTrack(TRACK_ID, updatedAt = BASE_MILLIS)
+
+        val result = controller.reopen(TRACK_ID)
+
+        assertThat(result.errorOrNull()).isInstanceOf(AppError.Storage::class.java)
+        assertThat(engine.isRunning).isFalse()
+        assertThat(controller.state.value).isEqualTo(TrackingState.Idle)
+        assertThat(status()).isEqualTo(TrackStatus.DISCARDED)
+    }
+
+    @Test
+    fun `segment count is null while idle and counts the recording's segments`() =
+        runBlocking<Unit> {
+            val engine = FakeEngine()
+            val controller = controller(engine)
+            assertThat(controller.activeSegmentCount.first()).isNull()
+
+            controller.start(TRACK_ID)
+            engine.emit(fixes(count = 2))
+            awaitPointCount(2)
+
+            val segments =
+                withTimeout(TIMEOUT_MS) { controller.activeSegmentCount.first { it == 1 } }
+            assertThat(segments).isEqualTo(1)
+            controller.stop()
+            assertThat(controller.activeSegmentCount.first()).isNull()
+        }
+
     /** Invariant 7: the restarted service continues the same track, not a new one. */
     @Test
     fun `restore after process death continues the same track`() = runBlocking<Unit> {

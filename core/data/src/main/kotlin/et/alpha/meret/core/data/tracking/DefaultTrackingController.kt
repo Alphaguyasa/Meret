@@ -90,6 +90,9 @@ public class DefaultTrackingController
         private var healthJob: Job? = null
 
         private var recording: TrackRecording? = null
+
+        /** The track [stop] completed last, the only one [reopen] accepts. Memory only. */
+        private var lastStoppedTrackId: String? = null
         private var config: TrackingConfig = TrackingConfig()
 
         override val state: StateFlow<TrackingState> = mutableState.asStateFlow()
@@ -104,6 +107,19 @@ public class DefaultTrackingController
                 .distinctUntilChanged()
                 .flatMapLatest { trackId ->
                     if (trackId == null) flowOf(null) else lineOf(trackId)
+                }
+
+        @OptIn(ExperimentalCoroutinesApi::class)
+        override val activeSegmentCount: Flow<Int?> =
+            mutableState
+                .map { (it as? TrackingState.Recording)?.trackId }
+                .distinctUntilChanged()
+                .flatMapLatest { trackId ->
+                    if (trackId == null) {
+                        flowOf(null)
+                    } else {
+                        recorder.trackPointDao.observeSegmentCount(trackId)
+                    }
                 }
 
         override val health: StateFlow<TrackingHealth> = mutableHealth.asStateFlow()
@@ -149,6 +165,30 @@ public class DefaultTrackingController
             }
         }
 
+        override suspend fun reopen(trackId: String): AppResult<Unit> = mutex.withLock {
+            val current = mutableState.value
+            when {
+                current is TrackingState.Recording && current.trackId == trackId -> {
+                    AppResult.Success(Unit)
+                }
+
+                current is TrackingState.Recording || trackId != lastStoppedTrackId -> {
+                    AppResult.Failure(AppError.Conflict(TRACK_ENTITY, trackId))
+                }
+
+                trackDao.reopenTrack(trackId, timeProvider.nowMillis()) == 0 -> {
+                    lastStoppedTrackId = null
+                    AppResult.Failure(AppError.Storage(AppError.Storage.Kind.NotFound))
+                }
+
+                else -> {
+                    // The recorder picks up the stored seq and segment; the first fix after
+                    // this opens a new segment, as after any restart.
+                    startLocked(trackId)
+                }
+            }
+        }
+
         private suspend fun startLocked(trackId: String): AppResult<Unit> {
             val current = mutableState.value
             val track = if (current is TrackingState.Idle) trackDao.getTrack(trackId) else null
@@ -166,6 +206,7 @@ public class DefaultTrackingController
                 }
 
                 else -> {
+                    lastStoppedTrackId = null
                     sessionStore.start(
                         TrackingSession(
                             trackId = trackId,
@@ -236,6 +277,7 @@ public class DefaultTrackingController
             val now = timeProvider.nowMillis()
             trackDao.endTrack(trackId, TrackStatus.COMPLETED, endedAt = now, updatedAt = now)
             sessionStore.clear()
+            lastStoppedTrackId = trackId
             mutableState.value = TrackingState.Idle
         }
 

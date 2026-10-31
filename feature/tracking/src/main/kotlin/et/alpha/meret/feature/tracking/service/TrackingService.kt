@@ -90,6 +90,7 @@ class TrackingService : Service() {
             TrackingCommand.Pause -> controller.pause()
             TrackingCommand.Resume -> controller.resume()
             TrackingCommand.Stop -> controller.stop()
+            is TrackingCommand.Reopen -> controller.reopen(command.trackId)
             TrackingCommand.Restore -> controller.restore()
         }
         if (controller.state.value == TrackingState.Idle) shutDown()
@@ -154,19 +155,34 @@ class TrackingService : Service() {
         fun start(
             context: Context,
             trackId: String,
-        ) {
-            val intent =
-                Intent(context, TrackingService::class.java)
-                    .setAction(TrackingCommand.ACTION_START)
-                    .putExtra(TrackingCommand.EXTRA_TRACK_ID, trackId)
-            ContextCompat.startForegroundService(context, intent)
-        }
+        ) = startInForeground(context, TrackingCommand.ACTION_START, trackId)
+
+        /**
+         * Records into [trackId] again, just after a stop made by mistake. A user action
+         * only, like [start]: the service has already left the foreground.
+         */
+        fun reopen(
+            context: Context,
+            trackId: String,
+        ) = startInForeground(context, TrackingCommand.ACTION_REOPEN, trackId)
 
         fun pause(context: Context) = send(context, TrackingCommand.ACTION_PAUSE)
 
         fun resume(context: Context) = send(context, TrackingCommand.ACTION_RESUME)
 
         fun stop(context: Context) = send(context, TrackingCommand.ACTION_STOP)
+
+        private fun startInForeground(
+            context: Context,
+            action: String,
+            trackId: String,
+        ) {
+            val intent =
+                Intent(context, TrackingService::class.java)
+                    .setAction(action)
+                    .putExtra(TrackingCommand.EXTRA_TRACK_ID, trackId)
+            ContextCompat.startForegroundService(context, intent)
+        }
 
         private fun send(
             context: Context,

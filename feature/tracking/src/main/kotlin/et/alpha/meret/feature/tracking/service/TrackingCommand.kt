@@ -14,6 +14,11 @@ internal sealed interface TrackingCommand {
 
     data object Stop : TrackingCommand
 
+    /** Undo a stop made by mistake: record into [trackId] again, in a new segment. */
+    data class Reopen(
+        val trackId: String,
+    ) : TrackingCommand
+
     /**
      * Pick up the persisted session. What a `START_STICKY` restart delivers: the system
      * recreates the service after process death with a null intent.
@@ -26,6 +31,7 @@ internal sealed interface TrackingCommand {
         const val ACTION_RESUME = "et.alpha.meret.tracking.RESUME"
         const val ACTION_STOP = "et.alpha.meret.tracking.STOP"
         const val ACTION_RESTORE = "et.alpha.meret.tracking.RESTORE"
+        const val ACTION_REOPEN = "et.alpha.meret.tracking.REOPEN"
         const val EXTRA_TRACK_ID = "et.alpha.meret.tracking.TRACK_ID"
 
         /** Anything unrecognised restores: the safe reading is "carry on with what exists". */
@@ -36,6 +42,7 @@ internal sealed interface TrackingCommand {
                 ACTION_PAUSE -> Pause
                 ACTION_RESUME -> Resume
                 ACTION_STOP -> Stop
+                ACTION_REOPEN -> if (trackId.isNullOrBlank()) Restore else Reopen(trackId)
                 ACTION_RESTORE -> Restore
                 else -> Restore
             }
