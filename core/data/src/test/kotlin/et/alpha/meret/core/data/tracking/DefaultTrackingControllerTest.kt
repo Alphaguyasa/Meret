@@ -27,8 +27,12 @@ import et.alpha.meret.core.model.TrackingConfig
 import et.alpha.meret.core.model.TrackingSession
 import et.alpha.meret.core.model.geo.LatLng
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -59,6 +63,7 @@ class DefaultTrackingControllerTest {
 
     private lateinit var database: MeretDatabase
     private lateinit var thread: ExecutorCoroutineDispatcher
+    private lateinit var dataStoreScope: CoroutineScope
     private lateinit var dataStore: DataStore<Preferences>
     private lateinit var sessionStore: TrackingSessionStore
     private lateinit var configStore: TrackingConfigStore
@@ -73,8 +78,12 @@ class DefaultTrackingControllerTest {
                 ).allowMainThreadQueries()
                 .build()
         thread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        // Its own scope, cancelled after each test: DataStore's default scope is never ended,
+        // so each test would leave a live instance on its file behind (run 12's CI hang).
+        dataStoreScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         dataStore =
             PreferenceDataStoreFactory.create(
+                scope = dataStoreScope,
                 produceFile = { File(temporaryFolder.root, "meret.preferences_pb") },
             )
         sessionStore = TrackingSessionStore(dataStore)
@@ -88,6 +97,7 @@ class DefaultTrackingControllerTest {
 
     @After
     fun tearDown() {
+        dataStoreScope.cancel()
         thread.close()
         database.close()
     }

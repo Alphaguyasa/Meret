@@ -9,10 +9,10 @@ import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.datastore.di.preferencesCorruptionHandler
 import et.alpha.meret.core.model.LocationProfile
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +45,8 @@ class OnboardingStoreTest {
     @Test
     fun `skips survive a new process`() = runTest {
         val firstJob = Job()
-        OnboardingStore(dataStore(CoroutineScope(Dispatchers.IO + firstJob))).skip("OEM_AUTOSTART")
+        OnboardingStore(dataStore(CoroutineScope(backgroundScope.coroutineContext + firstJob)))
+            .skip("OEM_AUTOSTART")
         firstJob.cancelAndJoin()
 
         assertThat(
@@ -68,8 +69,7 @@ class OnboardingStoreTest {
 
     @Test
     fun `clearing the skips offers every step again and keeps other settings`() = runTest {
-        // On the test's own scope: DataStore's default IO scope has made such tests flaky.
-        val dataStore = dataStore(backgroundScope)
+        val dataStore = dataStore()
         TrackingConfigStore(dataStore).pinProfile(LocationProfile.PRECISE)
         val store = OnboardingStore(dataStore)
         store.skip("NOTIFICATIONS")
@@ -94,17 +94,12 @@ class OnboardingStoreTest {
             .isEqualTo(LocationProfile.PRECISE)
     }
 
-    private fun dataStore(scope: CoroutineScope? = null): DataStore<Preferences> =
-        if (scope == null) {
-            PreferenceDataStoreFactory.create(
-                corruptionHandler = preferencesCorruptionHandler(),
-                produceFile = { file },
-            )
-        } else {
-            PreferenceDataStoreFactory.create(
-                corruptionHandler = preferencesCorruptionHandler(),
-                scope = scope,
-                produceFile = { file },
-            )
-        }
+    /** On the test's scheduler, never DataStore's default `Dispatchers.IO` scope (run 12). */
+    private fun TestScope.dataStore(
+        scope: CoroutineScope = backgroundScope,
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+        corruptionHandler = preferencesCorruptionHandler(),
+        scope = scope,
+        produceFile = { file },
+    )
 }
