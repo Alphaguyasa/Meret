@@ -4,6 +4,27 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-31 — Run 20 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 27 (Phase 7e): earlier tracks on the map.** Finished tracks around the area on screen are drawn in dark blue with a white halo, under the green live line and the dot. A stopped track moves from the live line to this layer, and a deleted one leaves the map. At most the 30 newest are drawn. Lines are simplified once, off the main thread, and kept in memory; nothing is written back to the track row. Loading happens when the camera comes to rest, for an area twice the screen, so small pans ask Room nothing ([#65](https://github.com/Alphaguyasa/Meret/pull/65)). **Phase 7 is done in CI.** **Item 15: template leftovers.** The Android-robot launcher icon is replaced by a placeholder of our own (a map pin over a walked line on Meret green, A14). The 10 unused per-density icon bitmaps are removed, and the `gradle.properties` template header is gone ([#66](https://github.com/Alphaguyasa/Meret/pull/66)). |
+| Merged | #65 yes, `de1952a`, green on the first attempt (about 5 min). #66 yes, `8f222f3`, green on the first attempt (about 2 min). |
+| Failed or blocked | Nothing failed. One deviation, explained in #65: `simplified_geojson` is not written, because updating it bumps `updated_at`, which sync will use to detect changes. |
+| Roadmap | **Replan done** (only 4 items were left open, 3 of them blocked). Phase 8 is split into 28 (save a waypoint), 29 (waypoints on the map and in a list), 30 (form schema, `visible_if`), 31 (form renderer), 32 (draft autosave across process death) and 33 (photos). Two small track items were added: 34 (show a track on the map) and 35 (name a track). Open: 28–35, 26 (A13), 25 (A12), 14 (A6), 18. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | **New A14:** the app icon. A placeholder is in place; send a logo to replace it. 1 new "Needs a device" row: earlier tracks, plus Phase 7's "Done when" as a whole. The live-line row now expects the stopped line to turn blue. A2, A3, A5, A6, A7, A9, A10, A11, A12, A13 unchanged. **Dependabot #30** (Gradle group, 27 updates) is still open and unmerged, waiting on A10. |
+| Next | 28 (save a waypoint from the map), then 29 (waypoints on the map and in a list). |
+
+Notes for the next run:
+- **detekt `LongParameterList` counts constructors at 7.** `MapViewModel` is at 6. New map
+  state goes in its own ViewModel (as `EarlierTracksViewModel` did), not a 7th parameter.
+- `MapCameraTarget` has `showEarlierTracks`; every fake needs it. `PuckColours` has `historic`.
+- Layer order on each style load: earlier tracks (halo, line), live line, puck. Waypoint
+  symbols (item 29) belong between the track lines and the puck.
+- MapLibre sources jar: `curl` it from Maven Central into the scratchpad. `unzip` reports
+  "overlapped components" but still extracts the files.
+
 ## 2026-10-31 — Run 19 (scheduled, cloud)
 
 | Field | Content |
