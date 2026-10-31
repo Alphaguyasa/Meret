@@ -4,6 +4,29 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-10-31 — Run 19 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 23b (Phase 7d-2): undo an accidental stop.** After a long-press stop, a snackbar above the record button says «Track saved. Stopped by mistake?» with «Resume recording» for 6 s. The tap reopens the same track: the row goes back to active with no end time, and recording continues in a new segment (seq continues, no distance across the gap). Only the track this process stopped last can be reopened, only while nothing records, and a track deleted in the meantime is never revived. The tracking bar's segment count now shows the real number ([#62](https://github.com/Alphaguyasa/Meret/pull/62)). **Item 24:** every DataStore test now runs on a scope that ends with the test, the cause of run 12's 45-minute CI hang ([#63](https://github.com/Alphaguyasa/Meret/pull/63)). |
+| Merged | #62 yes, `24d9969`, green on the first attempt. #63 yes, `74a918f`, green on the first attempt. CI took about 3 min each. |
+| Failed or blocked | Nothing failed. **Phase 7 is not done:** BUILD_PLAN's "historical tracks loaded for the viewport" never had a roadmap item. It is now item 27. |
+| Roadmap | 6 open: 27 (new, Phase 7e: earlier tracks on the map), 26 (A13), 25 (A12), 14 (A6), 15, 18. No replan needed (5 or more open). |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | A9: 2 new Amharic strings (stop snackbar). 1 new "Needs a device" row (stop undo and segment count). A2, A3, A5, A6, A7, A10, A11, A12, A13 unchanged. **Dependabot #30** (Gradle group, 27 updates) still open, unmerged, waiting on A10. |
+| Next | 27 (earlier tracks on the map, closing Phase 7), then 15 (template leftovers) or 18 (Dependabot for `tools/`). After that, replan: Phase 8 (waypoints, forms, photos). |
+
+Notes for the next run:
+- **ktlint and detekt ran locally this run**, straight from Maven Central:
+  `com/pinterest/ktlint/ktlint-cli/1.8.0/ktlint-cli-1.8.0-all.jar` and
+  `io/gitlab/arturbosch/detekt/detekt-cli/1.23.8/detekt-cli-1.23.8-all.jar`, run with
+  `java -jar` (detekt: `--config config/detekt/detekt.yml --build-upon-default-config`). Both PRs
+  went green on the first try.
+- `TrackingController` now has `activeSegmentCount` and `reopen`; `RecordingCommands` has
+  `reopen`. Every fake needs them (Diagnostics, MapViewModel, TrackingService,
+  DevicePositionRepository, TrackRepository and StartTrackingUseCase tests).
+- `MapScreen` has a `snackbar` slot drawn above the bottom controls.
+
 ## 2026-10-30 — Run 18 (scheduled, cloud)
 
 | Field | Content |

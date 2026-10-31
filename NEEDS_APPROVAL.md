@@ -81,6 +81,9 @@ list and the track detail: «እየተቀዳ ነው» (Recording), «አልተ�
 አልተላከም» (Not synced yet), «ተልኳል» (Synced), «መስመሩ ተሰርዟል» (Track deleted), «ቀልብስ»
 (Undo), «ከፍታ» (Elevation), «ክፍል %1$d» (Segment), «ዝቅተኛ %1$d ሜ · ከፍተኛ %2$d ሜ» (Lowest/highest
 height). Please check «ቀልብስ» for Undo in particular.
+**Run 19 added 2 more** in `feature/map/src/main/res/values-am/strings.xml`, for the snackbar
+after a stop: «መስመሩ ተቀምጧል። በስህተት ነው ያቆሙት?» (Track saved. Stopped by mistake?) and «መቅዳት
+ቀጥል» (Resume recording, the same words as the after-restart prompt).
 **Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
 እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
 ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
@@ -154,6 +157,7 @@ hardware. Steps are in the linked docs.
 | 7 | Record button (7a, #56): tap the red button on the map; within a second the notification appears, the button pulses and the bar shows 0:00:0x, distance and points rising as you walk. Tap: paused (button and bar change); tap: resumes. Long-press: stops, bar goes. A fast double tap makes one track, not two. With location revoked in settings, a tap shows «Recording did not start…» within 10 s. Amharic text too | Any phone; this also unblocks the Phase 5 rows that needed a record button |
 | 7 | Track list (7c, #59): after recording two tracks, the Tracks tab lists them newest first with date, distance, moving time and «Not synced yet»; the one recording shows «Recording» and has no Delete. Delete a finished track: it goes, a snackbar offers Undo; Undo brings it back. Delete again and swipe the app away from recents within 10 s: on reopening the track is still there. Delete and wait 10 s: it stays gone after a restart. Amharic text too | Any phone |
 | 7 | Track detail (7d-1, #60): tap a track: date, distance, moving time, points and segments match the list; walk up or down a slope and the elevation profile shows it, with the lowest and highest height; a track with a pause shows two segments. Open the recording track: the numbers rise as you walk. «Back to tracks» returns to the list | Any phone |
+| 7 | Stop undo and segment count (7d-2, #62): record, pause and resume once: the bar's segment count goes 1 → 2. Long-press stop: «Track saved. Stopped by mistake?» with «Resume recording» shows for about 6 s, above the record button. Tap it: the notification comes back, the same track continues (the Tracks tab still has one track, not two), the segment count goes up by one, and the line has a gap where you stood. Wait 6 s instead: it goes and the track stays finished. Stop from the notification: no snackbar. Amharic text too | Any phone |
 | 7 | Live track line (7b, #57): walking while recording, a green line follows behind the dot, catching up about every 2 s; pause, walk 50 m, resume: the line has a gap; stop: the line goes. After a 2-hour walk the map still pans without stutter (the Phase 7 frame-rate criterion) | Any phone with a pack; the 2-hour check on a low-end phone |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 
