@@ -224,6 +224,7 @@ class DiagnosticsViewModelTest {
         override val state = MutableStateFlow<TrackingState>(TrackingState.Idle)
         override val activeTrack: Flow<Track?> = flowOf(null)
         override val activeLine: Flow<TrackLine?> = flowOf(null)
+        override val activeSegmentCount: Flow<Int?> = flowOf(null)
         override val health = MutableStateFlow(TrackingHealth())
 
         override suspend fun start(trackId: String): AppResult<Unit> = AppResult.Success(Unit)
@@ -237,6 +238,8 @@ class DiagnosticsViewModelTest {
         override suspend fun resume(): AppResult<Unit> = AppResult.Success(Unit)
 
         override suspend fun stop() = Unit
+
+        override suspend fun reopen(trackId: String): AppResult<Unit> = AppResult.Success(Unit)
     }
 
     /** A platform engine holding a fix at a known position, which must never be reported. */

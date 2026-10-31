@@ -46,6 +46,9 @@ public interface TrackingController {
      */
     public val activeLine: Flow<TrackLine?>
 
+    /** How many segments the track being recorded has so far; null while idle. */
+    public val activeSegmentCount: Flow<Int?>
+
     /**
      * Fix rate, last accuracy and the gap log of the recording in this process, for the
      * diagnostics screen. Starts empty after process death; the persisted track does not
@@ -85,4 +88,16 @@ public interface TrackingController {
 
     /** Stops the engine, writes everything received, completes the track, ends the session. */
     public suspend fun stop()
+
+    /**
+     * Undoes a stop made by mistake: [trackId] goes back to active, its end time cleared, and
+     * recording continues into it in a new segment.
+     *
+     * Only the track this process stopped last, and only while nothing records:
+     * otherwise a [et.alpha.meret.core.common.result.AppError.Conflict]. A track that is no
+     * longer completed (deleted since) is
+     * [et.alpha.meret.core.common.result.AppError.Storage]. A revoked permission leaves the
+     * reopened track paused, as [start] does.
+     */
+    public suspend fun reopen(trackId: String): AppResult<Unit>
 }

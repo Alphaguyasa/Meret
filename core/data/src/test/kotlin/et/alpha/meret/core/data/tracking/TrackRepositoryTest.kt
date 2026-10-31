@@ -227,6 +227,7 @@ class TrackRepositoryTest {
         override val state = MutableStateFlow<TrackingState>(TrackingState.Idle)
         override val activeTrack: Flow<Track?> = emptyFlow()
         override val activeLine: Flow<TrackLine?> = emptyFlow()
+        override val activeSegmentCount: Flow<Int?> = emptyFlow()
         override val health = MutableStateFlow(TrackingHealth())
 
         override suspend fun start(trackId: String): AppResult<Unit> = error("not used")
@@ -240,5 +241,7 @@ class TrackRepositoryTest {
         override suspend fun resume(): AppResult<Unit> = error("not used")
 
         override suspend fun stop() = Unit
+
+        override suspend fun reopen(trackId: String): AppResult<Unit> = AppResult.Success(Unit)
     }
 }

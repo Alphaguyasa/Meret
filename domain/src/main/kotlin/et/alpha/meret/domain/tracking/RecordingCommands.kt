@@ -23,4 +23,10 @@ public interface RecordingCommands {
     public fun resume()
 
     public fun stop()
+
+    /**
+     * Records into [trackId] again, just after the user stopped it by mistake; the recording
+     * continues in a new segment. A user action only, like [start].
+     */
+    public fun reopen(trackId: String): AppResult<Unit>
 }

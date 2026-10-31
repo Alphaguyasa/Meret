@@ -113,6 +113,7 @@ public fun MapScreen(
     onZoomOut: () -> Unit = {},
     onResetNorth: () -> Unit = {},
     isFollowing: Boolean = false,
+    snackbar: @Composable () -> Unit = {},
 ) {
     var barExpanded by remember { mutableStateOf(false) }
 
@@ -177,6 +178,9 @@ public fun MapScreen(
                     .padding(bottom = contentPadding.calculateBottomPadding()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // Above the controls, so a message never covers the record button.
+            snackbar()
+
             Row(
                 modifier =
                     Modifier

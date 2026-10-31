@@ -10,4 +10,6 @@
     <string name="map_scale_m">%1$d ሜ</string>
     <string name="map_scale_km">%1$d ኪ.ሜ</string>
     <string name="map_recording_not_started">መቅዳት አልጀመረም። መተግበሪያው አካባቢዎን እንዲጠቀም መፈቀዱን አረጋግጠው እንደገና ይንኩ።</string>
+    <string name="map_recording_stopped">መስመሩ ተቀምጧል። በስህተት ነው ያቆሙት?</string>
+    <string name="map_recording_resume">መቅዳት ቀጥል</string>
 </resources>

@@ -2,10 +2,15 @@ package et.alpha.meret.feature.map
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -20,6 +25,8 @@ import et.alpha.meret.core.designsystem.format.formatDuration
 import et.alpha.meret.core.maps.view.OfflineMap
 import et.alpha.meret.core.maps.view.rememberOfflineMapController
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 import et.alpha.meret.core.designsystem.R as DesignR
 
@@ -27,7 +34,8 @@ import et.alpha.meret.core.designsystem.R as DesignR
  * Owns the [MapViewModel] and puts the offline map under the screen's controls. The phone's
  * position goes to the map as the location puck; the recentre button turns follow mode on.
  * The record button starts, pauses and resumes a track, and a long-press stops it; the track
- * being recorded is drawn under the puck.
+ * being recorded is drawn under the puck. For a few seconds after a long-press stop, a
+ * snackbar offers to resume the same track, in case the stop was a mistake.
  */
 @Composable
 fun MapRoute(
@@ -42,6 +50,9 @@ fun MapRoute(
     val liveLine by viewModel.liveLine.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val snackbarHost = remember { SnackbarHostState() }
+    val stoppedText = stringResource(R.string.map_recording_stopped)
+    val resumeText = stringResource(R.string.map_recording_resume)
     LaunchedEffect(viewModel, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.events.collect { event ->
@@ -49,6 +60,23 @@ fun MapRoute(
                     MapEvent.RecordingNotStarted -> {
                         val message = R.string.map_recording_not_started
                         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    }
+
+                    is MapEvent.RecordingStopped -> {
+                        launch {
+                            // Cancelling showSnackbar takes it down when the window closes.
+                            val result =
+                                withTimeoutOrNull(UNDO_STOP_WINDOW_MS) {
+                                    snackbarHost.showSnackbar(
+                                        message = stoppedText,
+                                        actionLabel = resumeText,
+                                        duration = SnackbarDuration.Indefinite,
+                                    )
+                                }
+                            if (result == SnackbarResult.ActionPerformed) {
+                                viewModel.onUndoStop(event.trackId)
+                            }
+                        }
                     }
                 }
             }
@@ -88,6 +116,7 @@ fun MapRoute(
         onZoomOut = mapController::zoomOut,
         onResetNorth = mapController::resetNorth,
         isFollowing = mapController.isFollowing,
+        snackbar = { SnackbarHost(snackbarHost) },
     )
 }
 
@@ -123,13 +152,15 @@ private fun trackingStats(
                 },
             ),
         pointCount = readout.pointCount.toString(),
-        // Segments are not counted yet (item 23 brings the segment list).
-        segmentCount = NO_VALUE,
+        segmentCount = readout.segmentCount?.toString() ?: NO_VALUE,
         accuracy = readout.accuracyMetres?.roundToInt()?.toString() ?: NO_VALUE,
     )
 }
 
 private const val TICK_MS = 1_000L
+
+/** How long a long-press stop can be undone. Long enough to read, short enough to forget. */
+private const val UNDO_STOP_WINDOW_MS = 6_000L
 
 /** A dash, not a word: the same in every language. */
 private const val NO_VALUE = "–"

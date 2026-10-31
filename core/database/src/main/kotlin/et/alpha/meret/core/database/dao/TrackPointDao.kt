@@ -85,6 +85,10 @@ public interface TrackPointDao {
     @Query("SELECT COUNT(*) FROM track_point WHERE track_id = :trackId")
     public suspend fun countPoints(trackId: String): Int
 
+    /** Segments with at least one point, outliers included, as the track detail lists them. */
+    @Query("SELECT COUNT(DISTINCT segment_index) FROM track_point WHERE track_id = :trackId")
+    public fun observeSegmentCount(trackId: String): Flow<Int>
+
     @Query("SELECT MAX(segment_index) FROM track_point WHERE track_id = :trackId")
     public suspend fun getMaxSegmentIndex(trackId: String): Int?
 

@@ -62,8 +62,13 @@ class MapViewModel
 
         /** The recording in progress, as raw numbers; the route formats and ticks them. */
         val recording: StateFlow<RecordingReadout?> =
-            combine(tracking.state, tracking.activeTrack, tracking.health) { state, track, health ->
-                recordingReadout(state, track, health)
+            combine(
+                tracking.state,
+                tracking.activeTrack,
+                tracking.health,
+                tracking.activeSegmentCount,
+            ) { state, track, health, segments ->
+                recordingReadout(state, track, health, segments)
             }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -111,9 +116,31 @@ class MapViewModel
             }
         }
 
-        /** Long-press: stop. Nothing to stop while idle. */
+        /**
+         * Long-press: stop. Nothing to stop while idle. Once the service has stopped it, the
+         * route is told, so it can offer to undo a stop made by mistake.
+         */
         fun onRecordLongPress() {
-            if (tracking.state.value is TrackingState.Recording) commands.stop()
+            val recording = tracking.state.value as? TrackingState.Recording ?: return
+            commands.stop()
+            viewModelScope.launch {
+                val stopped =
+                    withTimeoutOrNull(START_TIMEOUT_MS) {
+                        tracking.state.first { it == TrackingState.Idle }
+                    }
+                if (stopped != null) {
+                    mutableEvents.send(MapEvent.RecordingStopped(recording.trackId))
+                }
+            }
+        }
+
+        /**
+         * Undo of a stop: the same track records again, in a new segment. Only while nothing
+         * records; a start or undo already on its way is not doubled.
+         */
+        fun onUndoStop(trackId: String) {
+            if (tracking.state.value != TrackingState.Idle) return
+            launchStart { commands.reopen(trackId) }
         }
 
         /**
@@ -122,11 +149,15 @@ class MapViewModel
          * refused, or location was revoked), the worker is told and may tap again.
          */
         private fun start() {
+            launchStart { startTracking() }
+        }
+
+        private fun launchStart(begin: suspend () -> AppResult<*>) {
             if (startJob?.isActive == true) return
             startJob =
                 viewModelScope.launch {
                     val started =
-                        when (startTracking()) {
+                        when (begin()) {
                             is AppResult.Failure -> {
                                 false
                             }
@@ -153,6 +184,7 @@ data class RecordingReadout(
     val startedAtMillis: Long?,
     val distanceMetres: Double,
     val pointCount: Int,
+    val segmentCount: Int?,
     val accuracyMetres: Double?,
 )
 
@@ -160,6 +192,11 @@ data class RecordingReadout(
 sealed interface MapEvent {
     /** A tap on the record button did not start a recording. */
     data object RecordingNotStarted : MapEvent
+
+    /** A long-press stopped [trackId]; it can still be reopened for a few seconds. */
+    data class RecordingStopped(
+        val trackId: String,
+    ) : MapEvent
 }
 
 /**
@@ -170,6 +207,7 @@ internal fun recordingReadout(
     state: TrackingState,
     track: Track?,
     health: TrackingHealth,
+    segmentCount: Int?,
 ): RecordingReadout? {
     val recording = state as? TrackingState.Recording ?: return null
     val ours = track?.takeIf { it.id == recording.trackId }
@@ -178,6 +216,8 @@ internal fun recordingReadout(
         startedAtMillis = ours?.startedAt,
         distanceMetres = ours?.distanceMeters ?: 0.0,
         pointCount = ours?.pointCount ?: 0,
+        // No segment until the first point is written: shown as a dash, not 0.
+        segmentCount = segmentCount?.takeIf { it > 0 },
         accuracyMetres = health.lastAccuracyMetres,
     )
 }

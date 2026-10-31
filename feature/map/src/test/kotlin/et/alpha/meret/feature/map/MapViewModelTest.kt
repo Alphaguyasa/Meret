@@ -214,6 +214,45 @@ class MapViewModelTest {
         }
 
     @Test
+    fun `a long-press stop offers undo, and undo records the same track again`() =
+        runMapTest { viewModel ->
+            tracking.state.value = TrackingState.Recording("track-1", isPaused = false)
+
+            viewModel.events.test {
+                viewModel.onRecordLongPress()
+                assertThat(awaitItem()).isEqualTo(MapEvent.RecordingStopped("track-1"))
+
+                viewModel.onUndoStop("track-1")
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+            assertThat(commands.sent).containsExactly("stop", "reopen track-1").inOrder()
+            assertThat(tracking.state.value).isEqualTo(TrackingState.Recording("track-1", false))
+            assertThat(tracks.created).isEmpty()
+        }
+
+    @Test
+    fun `undo does nothing once something records again`() = runMapTest { viewModel ->
+        tracking.state.value = TrackingState.Recording("track-2", isPaused = false)
+
+        viewModel.onUndoStop("track-1")
+
+        assertThat(commands.sent).isEmpty()
+    }
+
+    @Test
+    fun `an undo the service refuses is reported`() = runMapTest { viewModel ->
+        commands.refuse = true
+
+        viewModel.events.test {
+            viewModel.onUndoStop("track-1")
+
+            assertThat(awaitItem()).isEqualTo(MapEvent.RecordingNotStarted)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `a refused start is reported and leaves no track`() = runMapTest { viewModel ->
         commands.refuse = true
 
@@ -249,6 +288,7 @@ class MapViewModelTest {
         tracking.state.value = TrackingState.Recording("track-1", isPaused = true)
         tracking.activeTrack.value = track("track-1", points = 42, metres = 1_234.5)
         tracking.health.value = TrackingHealth(lastAccuracyMetres = 4.4)
+        tracking.activeSegmentCount.value = 3
 
         viewModel.uiState.test {
             var state = awaitItem()
@@ -261,6 +301,7 @@ class MapViewModelTest {
                 startedAtMillis = 1_000L,
                 distanceMetres = 1_234.5,
                 pointCount = 42,
+                segmentCount = 3,
                 accuracyMetres = 4.4,
             ),
         )
@@ -289,11 +330,14 @@ class MapViewModelTest {
                 TrackingState.Recording("track-2", isPaused = false),
                 track("track-1", points = 42, metres = 10.0),
                 TrackingHealth(),
+                segmentCount = 0,
             )
 
         assertThat(readout?.pointCount).isEqualTo(0)
         assertThat(readout?.startedAtMillis).isNull()
-        assertThat(recordingReadout(TrackingState.Idle, null, TrackingHealth())).isNull()
+        // No point written yet: no segment to show.
+        assertThat(readout?.segmentCount).isNull()
+        assertThat(recordingReadout(TrackingState.Idle, null, TrackingHealth(), null)).isNull()
     }
 
     private fun runMapTest(body: suspend TestScope.(MapViewModel) -> Unit) = runTest(dispatcher) {
@@ -336,9 +380,12 @@ class MapViewModelTest {
         override val state = MutableStateFlow<TrackingState>(TrackingState.Idle)
         override val activeTrack = MutableStateFlow<Track?>(null)
         override val activeLine = MutableStateFlow<TrackLine?>(null)
+        override val activeSegmentCount = MutableStateFlow<Int?>(null)
         override val health = MutableStateFlow(TrackingHealth())
 
         override suspend fun start(trackId: String): AppResult<Unit> = error("the service's call")
+
+        override suspend fun reopen(trackId: String): AppResult<Unit> = error("the service's call")
 
         override suspend fun restore(): AppResult<TrackingState> = error("the service's call")
 
@@ -391,6 +438,14 @@ class MapViewModelTest {
 
         override fun stop() {
             sent += "stop"
+            if (serviceRuns) tracking.state.value = TrackingState.Idle
+        }
+
+        override fun reopen(trackId: String): AppResult<Unit> {
+            if (refuse) return AppResult.Failure(AppError.Unexpected(IllegalStateException()))
+            sent += "reopen $trackId"
+            if (serviceRuns) tracking.state.value = TrackingState.Recording(trackId, false)
+            return AppResult.Success(Unit)
         }
     }
 

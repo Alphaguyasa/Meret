@@ -73,6 +73,30 @@ class TrackingServiceTest {
         assertThat(shadowOf(running.get()).isStoppedBySelf).isFalse()
     }
 
+    @Test
+    fun `reopen after a stop records the same track again in the foreground`() {
+        val running = startService(startIntent())
+        running.withIntent(actionIntent(TrackingCommand.ACTION_STOP)).startCommand(0, 2)
+        idleMainLooper()
+
+        val reopened = startService(reopenIntent()).get()
+
+        assertThat(controller.calls)
+            .containsExactly("start:$TRACK_ID", "stop", "reopen:$TRACK_ID")
+            .inOrder()
+        assertThat(shadowOf(reopened).lastForegroundNotification).isNotNull()
+        assertThat(ShadowPowerManager.getLatestWakeLock().isHeld).isTrue()
+        assertThat(shadowOf(reopened).isStoppedBySelf).isFalse()
+    }
+
+    @Test
+    fun `a reopen with no track id restores instead`() {
+        assertThat(TrackingCommand.from(actionIntent(TrackingCommand.ACTION_REOPEN)))
+            .isEqualTo(TrackingCommand.Restore)
+        assertThat(TrackingCommand.from(reopenIntent()))
+            .isEqualTo(TrackingCommand.Reopen(TRACK_ID))
+    }
+
     /** START_STICKY after process death: no action, and the persisted session resumes. */
     @Test
     fun `a sticky restart restores the persisted session`() {
@@ -126,6 +150,9 @@ class TrackingServiceTest {
     private fun startIntent(): Intent = actionIntent(TrackingCommand.ACTION_START)
         .putExtra(TrackingCommand.EXTRA_TRACK_ID, TRACK_ID)
 
+    private fun reopenIntent(): Intent = actionIntent(TrackingCommand.ACTION_REOPEN)
+        .putExtra(TrackingCommand.EXTRA_TRACK_ID, TRACK_ID)
+
     private fun actionIntent(action: String): Intent = Intent(action)
 
     private fun idleMainLooper() {
@@ -154,6 +181,8 @@ class FakeTrackingController : TrackingController {
     override val activeTrack: Flow<Track?> = MutableStateFlow(null)
 
     override val activeLine: Flow<TrackLine?> = MutableStateFlow(null)
+
+    override val activeSegmentCount: Flow<Int?> = MutableStateFlow(null)
 
     override val health = MutableStateFlow(TrackingHealth())
 
@@ -189,5 +218,11 @@ class FakeTrackingController : TrackingController {
     override suspend fun stop() {
         calls += "stop"
         state.value = TrackingState.Idle
+    }
+
+    override suspend fun reopen(trackId: String): AppResult<Unit> {
+        calls += "reopen:$trackId"
+        state.value = TrackingState.Recording(trackId, isPaused = false)
+        return AppResult.Success(Unit)
     }
 }
