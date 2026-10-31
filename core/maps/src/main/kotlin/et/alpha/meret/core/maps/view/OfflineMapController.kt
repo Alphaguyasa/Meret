@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import et.alpha.meret.core.model.geo.BoundingBox
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.TrackLine
@@ -38,6 +39,9 @@ internal interface MapCameraTarget {
 
     /** Draws the track being recorded, or removes it when null. */
     fun showTrackLine(line: TrackLine?)
+
+    /** Draws these finished tracks under the live one, replacing the last set. */
+    fun showEarlierTracks(lines: List<TrackLine>)
 }
 
 /**
@@ -61,6 +65,13 @@ public class OfflineMapController internal constructor() {
     public var readout: MapCameraReadout? by mutableStateOf(null)
         private set
 
+    /**
+     * The ground on screen when the camera last came to rest, or null while no map is
+     * attached. Not updated during a gesture: what to load is decided once the map stops.
+     */
+    public var visibleArea: BoundingBox? by mutableStateOf(null)
+        private set
+
     /** True while the map keeps the user's position in the centre. */
     public var isFollowing: Boolean by mutableStateOf(true)
         private set
@@ -68,6 +79,7 @@ public class OfflineMapController internal constructor() {
     private var target: MapCameraTarget? = null
     private var position: DevicePosition? = null
     private var trackLine: TrackLine? = null
+    private var earlierTracks: List<TrackLine> = emptyList()
     private var zoomInOnNextCentre = true
 
     public fun zoomIn() {
@@ -105,8 +117,16 @@ public class OfflineMapController internal constructor() {
         target?.showTrackLine(line)
     }
 
+    /** Finished tracks in view, drawn under the live line; empty removes them. */
+    public fun showEarlierTracks(lines: List<TrackLine>) {
+        if (lines == earlierTracks) return
+        earlierTracks = lines
+        target?.showEarlierTracks(lines)
+    }
+
     internal fun attach(target: MapCameraTarget) {
         this.target = target
+        target.showEarlierTracks(earlierTracks)
         target.showTrackLine(trackLine)
         target.showPuck(position)
         centreIfFollowing()
@@ -117,11 +137,17 @@ public class OfflineMapController internal constructor() {
         if (this.target === target) {
             this.target = null
             readout = null
+            visibleArea = null
         }
     }
 
     internal fun onCameraMoved(readout: MapCameraReadout) {
         this.readout = readout
+    }
+
+    /** The camera came to rest showing [area]. */
+    internal fun onCameraIdle(area: BoundingBox) {
+        visibleArea = area
     }
 
     /** The user panned, pinched or turned the map: stop following. */

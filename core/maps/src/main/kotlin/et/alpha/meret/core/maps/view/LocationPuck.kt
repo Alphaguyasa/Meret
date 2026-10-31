@@ -15,6 +15,8 @@ internal data class PuckColours(
     val stale: String,
     val halo: String,
     val track: String,
+    /** The finished tracks drawn under the live one. */
+    val historic: String,
 )
 
 /**

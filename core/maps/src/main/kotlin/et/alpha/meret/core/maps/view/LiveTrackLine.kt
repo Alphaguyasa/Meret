@@ -20,9 +20,30 @@ internal object LiveTrackLine {
      * An empty collection when [line] is null or has nothing to draw: the line disappears, the
      * layer stays. A segment of one point is left out until it has a second.
      */
-    fun geoJson(line: TrackLine?): String {
-        val drawable = line?.segments.orEmpty().filter { it.size >= 2 }
-        val features = if (drawable.isEmpty()) emptyList() else listOf(feature(drawable))
+    fun geoJson(line: TrackLine?): String = TrackLineGeoJson.collection(listOfNotNull(line))
+}
+
+/**
+ * The finished tracks in view, drawn under the live line in a quieter colour with a halo: one
+ * source, one feature per track.
+ */
+internal object EarlierTrackLines {
+    const val SOURCE_ID = "meret-earlier-tracks"
+    const val HALO_LAYER_ID = "meret-earlier-tracks-halo"
+    const val LAYER_ID = "meret-earlier-tracks-line"
+
+    /** An empty collection for no tracks; a track with nothing to draw is left out. */
+    fun geoJson(lines: List<TrackLine>): String = TrackLineGeoJson.collection(lines)
+}
+
+/** Track lines as a GeoJSON `FeatureCollection`, one `MultiLineString` feature per line. */
+private object TrackLineGeoJson {
+    fun collection(lines: List<TrackLine>): String {
+        val features =
+            lines.mapNotNull { line ->
+                val drawable = line.segments.filter { it.size >= 2 }
+                if (drawable.isEmpty()) null else feature(drawable)
+            }
         return buildJsonObject {
             put("type", "FeatureCollection")
             put("features", JsonArray(features))

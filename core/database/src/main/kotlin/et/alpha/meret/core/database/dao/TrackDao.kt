@@ -27,6 +27,33 @@ public interface TrackDao {
     public fun observeTrack(trackId: String): Flow<TrackEntity?>
 
     /**
+     * Finished tracks whose bounds meet the box, newest first, at most [limit]: the earlier
+     * tracks the map draws. A track with no accepted fix has no bounds and is left out, as
+     * are open and discarded ones.
+     *
+     * No index on the `bbox_*` columns: a phone holds hundreds of tracks, not millions, and
+     * the scan is over the small `track` table, never `track_point`.
+     */
+    @Query(
+        """
+        SELECT * FROM track
+        WHERE status = 'completed'
+          AND bbox_min_lat IS NOT NULL
+          AND bbox_min_lat <= :maxLatitude AND bbox_max_lat >= :minLatitude
+          AND bbox_min_lon <= :maxLongitude AND bbox_max_lon >= :minLongitude
+        ORDER BY started_at DESC
+        LIMIT :limit
+        """,
+    )
+    public fun observeFinishedTracksIn(
+        minLatitude: Double,
+        minLongitude: Double,
+        maxLatitude: Double,
+        maxLongitude: Double,
+        limit: Int,
+    ): Flow<List<TrackEntity>>
+
+    /**
      * The at-most-one track this device is recording into, across process death.
      *
      * Ordered so that a device left in a bad state by a kill mid-write surfaces the most

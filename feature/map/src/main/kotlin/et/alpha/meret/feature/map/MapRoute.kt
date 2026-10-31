@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -31,11 +32,12 @@ import kotlin.math.roundToInt
 import et.alpha.meret.core.designsystem.R as DesignR
 
 /**
- * Owns the [MapViewModel] and puts the offline map under the screen's controls. The phone's
- * position goes to the map as the location puck; the recentre button turns follow mode on.
- * The record button starts, pauses and resumes a track, and a long-press stops it; the track
- * being recorded is drawn under the puck. For a few seconds after a long-press stop, a
- * snackbar offers to resume the same track, in case the stop was a mistake.
+ * Owns the [MapViewModel] and [EarlierTracksViewModel] and puts the offline map under the
+ * screen's controls. The phone's position goes to the map as the location puck; the recentre
+ * button turns follow mode on. The record button starts, pauses and resumes a track, and a
+ * long-press stops it; the track being recorded is drawn under the puck, and finished tracks
+ * around the area on screen under that. For a few seconds after a long-press stop, a snackbar
+ * offers to resume the same track, in case the stop was a mistake.
  */
 @Composable
 fun MapRoute(
@@ -43,11 +45,13 @@ fun MapRoute(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     viewModel: MapViewModel = hiltViewModel(),
+    earlierTracksViewModel: EarlierTracksViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val position by viewModel.position.collectAsStateWithLifecycle()
     val recording by viewModel.recording.collectAsStateWithLifecycle()
     val liveLine by viewModel.liveLine.collectAsStateWithLifecycle()
+    val earlierTracks by earlierTracksViewModel.lines.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val snackbarHost = remember { SnackbarHostState() }
@@ -88,6 +92,13 @@ fun MapRoute(
     }
     LaunchedEffect(mapController, liveLine) {
         mapController.showTrackLine(liveLine)
+    }
+    LaunchedEffect(mapController, earlierTracks) {
+        mapController.showEarlierTracks(earlierTracks)
+    }
+    LaunchedEffect(mapController, earlierTracksViewModel) {
+        snapshotFlow { mapController.visibleArea }
+            .collect { area -> earlierTracksViewModel.onVisibleAreaChanged(area) }
     }
 
     val nowMillis = rememberNowMillis(ticking = recording != null)

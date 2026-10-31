@@ -14,7 +14,13 @@ import org.junit.Test
 
 class LocationPuckTest {
     private val colours =
-        PuckColours(live = "#1D4ED8", stale = "#64748B", halo = "#FFFFFF", track = "#DC2626")
+        PuckColours(
+            live = "#1D4ED8",
+            stale = "#64748B",
+            halo = "#FFFFFF",
+            track = "#DC2626",
+            historic = "#1E3A5F",
+        )
 
     @Test
     fun `no position draws nothing`() {
