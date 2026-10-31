@@ -131,6 +131,14 @@ they are synced, then purge them after 30 days** (recommended once sync exists);
 after 30 days whether synced or not, which can lose an unsynced record that was deleted by
 mistake; (c) never purge. **Default until you answer:** nothing is purged (c). ROADMAP 26.
 
+### A14. The app icon (no cost, has a default)
+Until roadmap item 15 the launcher showed Android Studio's green robot. It is now a
+placeholder of our own: a white map pin over a walked line on Meret green (`#1B5E4A`), a
+vector, so it is sharp on every phone and works as an Android 13 themed icon. If you have a
+logo or want a different design, send it (an SVG, or a PNG of at least 432×432) and it
+replaces the two files in `app/src/main/res/drawable/ic_launcher_*.xml`. **Default until you
+answer:** the placeholder stays.
+
 ---
 
 ## Needs a device
