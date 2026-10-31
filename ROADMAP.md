@@ -8,8 +8,8 @@ step 5) when fewer than 5 items are open.
 product · P2 = important, not blocking · P3 = cleanup.
 **Effort:** S = under half a day · M = about a day · L = split before starting.
 
-Phases refer to `docs/BUILD_PLAN.md`. Phases 1–4 are done (git history to `1fc66f5`). Phases 5
-and 6 are done in CI; their device checks are in `NEEDS_APPROVAL.md`.
+Phases refer to `docs/BUILD_PLAN.md`. Phases 1–4 are done (git history to `1fc66f5`). Phases 5,
+6 and 7 are done in CI; their device checks are in `NEEDS_APPROVAL.md`.
 Phase 0 (tile pack) tooling is done (`tools/`, item 12). A real Ethiopia pack has not been
 built yet: Planetiler needs a machine with ~20 GB scratch space, not the cloud container.
 
@@ -20,14 +20,59 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 27. [P1 · M] Phase 7e — Earlier tracks on the map
-The last open bullet of BUILD_PLAN Phase 7: "historical tracks loaded for the viewport". Run 19
-found it had no roadmap item. Draw the device's finished, non-discarded tracks whose bounds
-(`bbox_min_lat`… columns, already kept by `appendBatch`) intersect the visible area, as one
-GeoJSON source under the live line, from the stored `simplified_geojson` or simplified on
-`Dispatchers.Default` and cached. Reload on camera idle, throttled; cap the number drawn so a
-low-RAM phone stays smooth. Check MapLibre 12.3.1's camera-idle API in the sources jar first.
-Then Phase 7's "Done when" goes to the device list as a whole.
+### 28. [P1 · M] Phase 8a — Save a waypoint from the map
+The map's «Add waypoint» button does nothing yet (`onAddWaypoint = {}`). Tap it: a bottom sheet
+over the map with the current position and accuracy, a title, a category and notes; «Save»
+writes a `waypoint` row (UUIDv7, `track_id` set if a recording runs, `sync_state` pending)
+to Room before anything else, through a `WaypointRepository` in `:core:data` and a
+`SaveWaypointUseCase` in `:domain`. No fix yet: the sheet says so and Save waits or is
+refused, never a waypoint at 0,0. en/am strings. Tests: use case (no fix, recording, idle),
+repository against in-memory Room. The existing schema has every column; no migration.
+
+### 29. [P1 · M] Phase 8b — Waypoints on the map and in a list
+A clustered symbol layer for waypoints (MapLibre GeoJSON source with `cluster = true`; check
+12.3.1's `GeoJsonOptions` in the sources jar first), under the puck, over the track lines.
+The Waypoints screen (`feature/waypoint/WaypointListScreen.kt` is a stub) lists them newest
+first with title, category, time and sync state; a tap centres the map on it. en/am.
+
+### 30. [P1 · M] Phase 8c-1 — Form schema: parse, validate, `visible_if`
+Pure Kotlin in `:core:model` / `:domain`, no Android: parse `form_template.schema_json` into
+field types (text, number, select, multiselect, date, photo, GPS point), validate answers
+(required, number range, options), and evaluate `visible_if` (equals, not-equals, in, and/or)
+so hidden fields are neither required nor kept. Unknown field types are kept as
+"unsupported" and shown read-only, never dropped. Fixture templates in test resources;
+85 % coverage. Ship one bundled example template so forms are usable before sync (Phase 9)
+delivers real ones.
+
+### 31. [P1 · M] Phase 8c-2 — Form renderer in Compose
+Stateless composables for each field type from 30, one `FormUiState`, en/am chrome strings
+(field labels come from the template). The waypoint sheet from 28 shows the project's form
+when one exists. Large touch targets; works with TalkBack (labels, errors read aloud).
+
+### 32. [P1 · M] Phase 8d — Draft autosave that survives process death
+Every field change is written to Room (a draft waypoint row, or a `draft` status; a column
+change needs a migration and a migration test) within ~300 ms, off the main thread. Reopening
+the app after a kill restores the sheet with every answer. Acceptance: an instrumented-style
+Robolectric test that writes, recreates the ViewModel from Room only, and finds every value.
+This is BUILD_PLAN Phase 8's "Done when" minus photos.
+
+### 33. [P1 · M] Phase 8e — Photos: CameraX, 1600 px q80, GPS EXIF kept
+CameraX (Apache 2.0, free) capture from the photo field; scale to 1600 px long side at JPEG
+quality 80 on `Dispatchers.Default`, keep the GPS EXIF block, store in app-private storage
+(already excluded from backup), record a `waypoint_photo` row with size and SHA-256. Only the
+`CAMERA` permission, asked at first use, with en/am rationale. Measure the APK size delta
+in the PR (release-size workflow). Then Phase 8's "Done when" (three photos, twelve fields,
+forced process death) goes to the device list.
+
+### 34. [P2 · S] Show a track on the map from its detail screen
+Track detail has no way to see the track on the map. Add «Show on map»: the map opens fitted
+to the track's stored bounds, and the earlier-tracks layer (item 27) draws it. Small,
+high value for supervisors checking coverage on the device.
+
+### 35. [P2 · S] Name a track
+`track.name` exists but nothing sets it; the list shows dates only. A rename action in track
+detail (en/am), saved to Room and re-queued for sync (`sync_state` pending, `updated_at`
+bumped). Enumerators name tracks after the kebele or farm they walked.
 
 ### 26. [P2 · S] Purge discarded tracks (waiting on A13)
 Since #59 a deleted track is marked `discarded` and keeps all its points. Nothing purges
@@ -44,9 +89,6 @@ secrets, a signed release built by a manual workflow, never a keystore in the re
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
 low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 
-### 15. [P3 · S] Remove Android Studio template leftovers
-`proguard-rules.pro` comments, template comments in `res/xml`, unused launcher assets if any.
-
 ### 18. [P3 · S] Cover `tools/package-lock.json` with Dependabot
 `tools/` now has npm dependencies (fontnik, sharp, Maki). Dependabot alerts (A10) will flag
 advisories in the lockfile, but nothing proposes routine updates. Add an `npm` entry for
@@ -54,7 +96,6 @@ advisories in the lockfile, but nothing proposes routine updates. Add an `npm` e
 pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 
 ### Later phases (expand into items when they reach the top)
-- Phase 8 — Waypoints, forms, photos
 - Phase 9 — Sync (Supabase schema + RLS tests first, free tier only). Tracks recorded before
   sign-in have `project_id` and `user_id` `"local"` (`RoomNewTrackStore`); sync must give them
   the signed-in user and a real project before upload. `device_id` is a random per-install id
@@ -112,3 +153,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 23a. Phase 7d-1: track detail (totals, elevation profile, segment list; `TrackSummariser`), list rows open it | #60 | `6db9994` |
 | 23b. Phase 7d-2: undo a long-press stop (6 s snackbar, `TrackingController.reopen`, new segment), tracking bar segment count | #62 | `24d9969` |
 | 24. Every DataStore test on a scope that ends with the test (`backgroundScope`, or cancelled in `@After`) | #63 | `74a918f` |
+| 27. Phase 7e: earlier tracks on the map (completed tracks in view, 30 newest, cached lines, loaded for 2× the screen on camera rest). **Phase 7 done in CI** (device rows in NEEDS_APPROVAL) | #65 | `de1952a` |
+| 15. Template leftovers: placeholder launcher icon (A14) instead of the robot, unused density webps removed, `gradle.properties` header | #66 | `8f222f3` |
