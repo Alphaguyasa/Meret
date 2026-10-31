@@ -56,6 +56,21 @@ class LiveTrackLineTest {
         assertThat(geometry["coordinates"]!!.jsonArray).hasSize(1)
     }
 
+    @Test
+    fun `earlier tracks are one feature each, and a track with nothing to draw is left out`() {
+        val first = TrackLine(listOf(listOf(LatLng(9.0, 38.0), LatLng(9.1, 38.0))))
+        val empty = TrackLine(listOf(listOf(LatLng(9.5, 38.5))))
+        val second = TrackLine(listOf(listOf(LatLng(8.0, 37.0), LatLng(8.1, 37.1))))
+
+        val drawn = features(EarlierTrackLines.geoJson(listOf(first, empty, second)))
+
+        val firstPoints = drawn.map { it["geometry"]!!.jsonObject["coordinates"]!!.jsonArray[0] }
+        assertThat(firstPoints.map { it.coordinates().first() })
+            .containsExactly(listOf(38.0, 9.0), listOf(37.0, 8.0))
+            .inOrder()
+        assertThat(features(EarlierTrackLines.geoJson(emptyList()))).isEmpty()
+    }
+
     private fun features(json: String): List<JsonObject> {
         val collection = Json.parseToJsonElement(json).jsonObject
         assertThat(collection["type"]!!.jsonPrimitive.content).isEqualTo("FeatureCollection")

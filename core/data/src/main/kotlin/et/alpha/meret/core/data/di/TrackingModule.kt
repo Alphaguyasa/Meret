@@ -11,8 +11,10 @@ import et.alpha.meret.core.common.telemetry.NoOpTelemetry
 import et.alpha.meret.core.common.telemetry.Telemetry
 import et.alpha.meret.core.common.time.TimeProvider
 import et.alpha.meret.core.common.uuid.UuidV7Generator
+import et.alpha.meret.core.data.tracking.DefaultEarlierTracksRepository
 import et.alpha.meret.core.data.tracking.DefaultTrackRepository
 import et.alpha.meret.core.data.tracking.DefaultTrackingController
+import et.alpha.meret.core.data.tracking.EarlierTracksRepository
 import et.alpha.meret.core.data.tracking.RoomNewTrackStore
 import et.alpha.meret.core.data.tracking.TrackRepository
 import et.alpha.meret.core.data.tracking.TrackingController
@@ -39,6 +41,13 @@ public abstract class TrackingModule {
 
     @Binds
     public abstract fun bindTrackRepository(repository: DefaultTrackRepository): TrackRepository
+
+    /** Singleton: it caches built lines across visits to the map. */
+    @Binds
+    @Singleton
+    public abstract fun bindEarlierTracksRepository(
+        repository: DefaultEarlierTracksRepository,
+    ): EarlierTracksRepository
 
     public companion object {
         /** `:domain` has no `@Inject`. [RecordingCommands] is bound by `:feature:tracking`. */

@@ -1,6 +1,7 @@
 package et.alpha.meret.core.maps.view
 
 import com.google.common.truth.Truth.assertThat
+import et.alpha.meret.core.model.geo.BoundingBox
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.TrackLine
@@ -195,6 +196,40 @@ class OfflineMapControllerTest {
         assertThat(map.cameraCalls).isEmpty()
     }
 
+    @Test
+    fun `earlier tracks given before the map is ready are drawn when it attaches`() {
+        controller.showEarlierTracks(listOf(LINE))
+
+        controller.attach(map)
+
+        assertThat(map.earlier).containsExactly(listOf(LINE))
+    }
+
+    @Test
+    fun `earlier tracks reach the map once per change`() {
+        controller.attach(map)
+
+        controller.showEarlierTracks(listOf(LINE))
+        controller.showEarlierTracks(listOf(LINE))
+        controller.showEarlierTracks(emptyList())
+
+        // The first empty list is the attach.
+        val none = emptyList<TrackLine>()
+        assertThat(map.earlier).containsExactly(none, listOf(LINE), none).inOrder()
+    }
+
+    @Test
+    fun `the area on screen is known once the camera rests, and forgotten with the map`() {
+        controller.attach(map)
+        assertThat(controller.visibleArea).isNull()
+
+        controller.onCameraIdle(AREA)
+        assertThat(controller.visibleArea).isEqualTo(AREA)
+
+        controller.detach(map)
+        assertThat(controller.visibleArea).isNull()
+    }
+
     private class RecordingCamera : MapCameraTarget {
         /** Camera moves only; the puck is kept apart in [puck]. */
         val cameraCalls = mutableListOf<String>()
@@ -202,6 +237,9 @@ class OfflineMapControllerTest {
 
         /** Every line handed to the map, in order. */
         val lines = mutableListOf<TrackLine?>()
+
+        /** Every set of earlier tracks handed to the map, in order. */
+        val earlier = mutableListOf<List<TrackLine>>()
 
         override fun zoomBy(delta: Double) {
             cameraCalls += "zoom $delta"
@@ -226,11 +264,16 @@ class OfflineMapControllerTest {
         override fun showTrackLine(line: TrackLine?) {
             lines += line
         }
+
+        override fun showEarlierTracks(lines: List<TrackLine>) {
+            earlier += lines
+        }
     }
 
     private companion object {
         val HERE = DevicePosition(LatLng(9.03, 38.74), accuracyMetres = 5.0, isLive = true)
         val NEXT = DevicePosition(LatLng(9.031, 38.74), accuracyMetres = 4.0, isLive = true)
         val LINE = TrackLine(listOf(listOf(LatLng(9.03, 38.74), LatLng(9.031, 38.74))))
+        val AREA = BoundingBox(9.0, 38.7, 9.1, 38.8)
     }
 }
