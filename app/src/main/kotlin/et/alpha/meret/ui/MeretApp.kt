@@ -43,6 +43,7 @@ import et.alpha.meret.feature.tiles.TilePacksRoute
 import et.alpha.meret.feature.tracking.TrackDetailRoute
 import et.alpha.meret.feature.tracking.TrackDetailViewModel
 import et.alpha.meret.feature.tracking.TrackListRoute
+import et.alpha.meret.feature.waypoint.WaypointCaptureRoute
 import et.alpha.meret.feature.waypoint.WaypointListScreen
 import et.alpha.meret.navigation.DIAGNOSTICS_ROUTE
 import et.alpha.meret.navigation.MAP_ROUTE
@@ -163,6 +164,9 @@ private fun MeretShell(
                         MapRoute(
                             onOpenDiagnostics = { navController.navigate(DIAGNOSTICS_ROUTE) },
                             contentPadding = innerPadding,
+                            waypointSheet = { onDismiss ->
+                                WaypointCaptureRoute(onDismiss = onDismiss)
+                            },
                         )
                     }
                     composable(TRACKS_ROUTE) {

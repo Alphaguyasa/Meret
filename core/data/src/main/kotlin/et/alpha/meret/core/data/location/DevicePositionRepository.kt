@@ -76,4 +76,5 @@ private fun RawFix.toDevicePosition(isLive: Boolean): DevicePosition = DevicePos
     position = position,
     accuracyMetres = accuracyMetres,
     isLive = isLive,
+    altitudeMetres = altitudeMetres,
 )

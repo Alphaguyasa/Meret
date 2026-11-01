@@ -9,8 +9,11 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,11 +41,16 @@ import et.alpha.meret.core.designsystem.R as DesignR
  * long-press stops it; the track being recorded is drawn under the puck, and finished tracks
  * around the area on screen under that. For a few seconds after a long-press stop, a snackbar
  * offers to resume the same track, in case the stop was a mistake.
+ *
+ * The «Add waypoint» button shows [waypointSheet] over the map until the sheet calls its
+ * `onDismiss`. The sheet lives in `:feature:waypoint`, which this module may not see; the
+ * app passes it in.
  */
 @Composable
 fun MapRoute(
     onOpenDiagnostics: () -> Unit,
     modifier: Modifier = Modifier,
+    waypointSheet: @Composable (onDismiss: () -> Unit) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     viewModel: MapViewModel = hiltViewModel(),
     earlierTracksViewModel: EarlierTracksViewModel = hiltViewModel(),
@@ -55,6 +63,7 @@ fun MapRoute(
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val snackbarHost = remember { SnackbarHostState() }
+    var addingWaypoint by rememberSaveable { mutableStateOf(false) }
     val stoppedText = stringResource(R.string.map_recording_stopped)
     val resumeText = stringResource(R.string.map_recording_resume)
     LaunchedEffect(viewModel, lifecycle) {
@@ -108,7 +117,7 @@ fun MapRoute(
         state = state.copy(trackingStats = stats),
         onRecordTap = viewModel::onRecordTap,
         onRecordLongPress = viewModel::onRecordLongPress,
-        onAddWaypoint = {},
+        onAddWaypoint = { addingWaypoint = true },
         onRecentreMap = mapController::recentre,
         onOpenSync = {},
         onOpenDiagnostics = onOpenDiagnostics,
@@ -129,6 +138,9 @@ fun MapRoute(
         isFollowing = mapController.isFollowing,
         snackbar = { SnackbarHost(snackbarHost) },
     )
+    if (addingWaypoint) {
+        waypointSheet { addingWaypoint = false }
+    }
 }
 
 /** The wall clock, once a second while [ticking]: the tracking bar's duration. */
