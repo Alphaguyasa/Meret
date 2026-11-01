@@ -20,20 +20,14 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 28. [P1 · M] Phase 8a — Save a waypoint from the map
-The map's «Add waypoint» button does nothing yet (`onAddWaypoint = {}`). Tap it: a bottom sheet
-over the map with the current position and accuracy, a title, a category and notes; «Save»
-writes a `waypoint` row (UUIDv7, `track_id` set if a recording runs, `sync_state` pending)
-to Room before anything else, through a `WaypointRepository` in `:core:data` and a
-`SaveWaypointUseCase` in `:domain`. No fix yet: the sheet says so and Save waits or is
-refused, never a waypoint at 0,0. en/am strings. Tests: use case (no fix, recording, idle),
-repository against in-memory Room. The existing schema has every column; no migration.
-
-### 29. [P1 · M] Phase 8b — Waypoints on the map and in a list
-A clustered symbol layer for waypoints (MapLibre GeoJSON source with `cluster = true`; check
-12.3.1's `GeoJsonOptions` in the sources jar first), under the puck, over the track lines.
-The Waypoints screen (`feature/waypoint/WaypointListScreen.kt` is a stub) lists them newest
-first with title, category, time and sync state; a tap centres the map on it. en/am.
+### 29b. [P1 · S] Phase 8b-2 — Waypoints list; a tap centres the map
+The Waypoints tab (`feature/waypoint/WaypointListScreen.kt` is still a stub) lists them newest
+first with title (or category, or time), category, time and sync state, from
+`WaypointRepository` (add an `observeWaypoints()` list read; the map's marker read from 29a
+carries no title). A tap switches to the map tab and centres on the waypoint: the app passes
+the position through navigation (`:feature:waypoint` cannot see `:feature:map`), and
+`OfflineMapController.centreOn`-style API turns follow mode off. en/am. Tests: ViewModel, list
+order, empty state.
 
 ### 30. [P1 · M] Phase 8c-1 — Form schema: parse, validate, `visible_if`
 Pure Kotlin in `:core:model` / `:domain`, no Android: parse `form_template.schema_json` into
@@ -96,7 +90,9 @@ advisories in the lockfile, but nothing proposes routine updates. Add an `npm` e
 pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 
 ### Later phases (expand into items when they reach the top)
-- Phase 9 — Sync (Supabase schema + RLS tests first, free tier only). Tracks recorded before
+- Phase 9 — Sync (Supabase schema + RLS tests first, free tier only). Waypoints (since #69)
+  are written `pending` with no outbox row, like tracks: sync builds the outbox payload from
+  pending rows once the wire format exists, and must also move them off `project_id` `local`. Tracks recorded before
   sign-in have `project_id` and `user_id` `"local"` (`RoomNewTrackStore`); sync must give them
   the signed-in user and a real project before upload. `device_id` is a random per-install id
   (`DeviceIdentityStore`), never a hardware id.
@@ -155,3 +151,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 24. Every DataStore test on a scope that ends with the test (`backgroundScope`, or cancelled in `@After`) | #63 | `74a918f` |
 | 27. Phase 7e: earlier tracks on the map (completed tracks in view, 30 newest, cached lines, loaded for 2× the screen on camera rest). **Phase 7 done in CI** (device rows in NEEDS_APPROVAL) | #65 | `de1952a` |
 | 15. Template leftovers: placeholder launcher icon (A14) instead of the robot, unused density webps removed, `gradle.properties` header | #66 | `8f222f3` |
+| 28. Phase 8a: save a waypoint from the map (sheet with live position, title, category, notes; Room first, live fix only, `track_id` while recording) | #69 | `ce57e91` |
+| 29a. Phase 8b-1: saved waypoints on the map, clustered (MapLibre cluster source, count labels, marker read capped at 5,000) | #70 | `b48a5c9` |

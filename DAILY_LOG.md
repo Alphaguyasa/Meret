@@ -4,6 +4,29 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-11-01 — Run 21 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 28 (Phase 8a): save a waypoint from the map.** The «+» button on the map opens a sheet with the live position and accuracy, a title, five category chips, notes, and Save. Save writes the waypoint to Room first (UUIDv7, `pending`, attached to the track if one records); no network. Without a live fix (none, or only the phone's cached one) Save stays off and the sheet says why, so no waypoint is ever saved at a stale or made-up place. Typed text survives rotation and a background process death; a swipe-away keeps it, a save clears it ([#69](https://github.com/Alphaguyasa/Meret/pull/69)). **Item 29a (Phase 8b-1): waypoints on the map.** Saved waypoints are ochre dots with a white halo over the track lines and under the position dot; close ones merge into a larger dot with their count, split again at street level. The map reads only position and category, at most 5,000 ([#70](https://github.com/Alphaguyasa/Meret/pull/70)). Item 29 was split: 29b (the list, and a tap that centres the map) is next. |
+| Merged | #69 yes, `ce57e91`, green on the first attempt (about 5 min). #70 yes, `b48a5c9`, green on the first attempt (about 4 min). |
+| Failed or blocked | Nothing failed. Gradle still cannot run in the container (Google Maven blocked); ktlint and detekt ran locally from the Maven Central jars, as in run 19. |
+| Roadmap | 11 open: 29b (new), 30–35, 26 (A13), 25 (A12), 14 (A6), 18. No replan needed. Phase 9 note added: waypoints, like tracks, have no outbox row yet. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | **New A15:** the five waypoint categories (default: farm plot, household, water point, landmark, other). A9: 19 new Amharic strings (waypoint sheet). 2 new "Needs a device" rows (save a waypoint, waypoints on the map). A2, A3, A5, A6, A7, A10, A11, A12, A13, A14 unchanged. **Dependabot:** #30 (Gradle group, 27 updates, 2026-10-21) and a new #68 (Gradle group, 28 updates, 2026-11-01) are both open and unmerged, waiting on A10. #68 looks like #30's successor; #30 can be closed once A10 is answered. |
+| Next | 29b (waypoint list, tap to centre the map), then 30 (form schema: parse, validate, `visible_if`). |
+
+Notes for the next run:
+- **`git fetch origin main` before branching.** This run's clone had a stale
+  `origin/main` (run 18's commit), and the first branch started from it.
+- `MapRoute` has a `waypointSheet` slot that `MeretApp` fills with `WaypointCaptureRoute`; the
+  same pattern (the app connects two features) fits 29b's "tap centres the map".
+- `MapCameraTarget` now has `showWaypoints`; `PuckColours` has `waypoint`. Every fake needs them.
+- `WaypointRepository` (`:core:data`) has `observeMarkers()` and `save()` (via `WaypointStore`
+  in `:domain`). Fakes need both.
+- MapLibre clustering: the count label uses `point_count_abbreviated` and the font stack
+  `["Noto Sans Regular", "Noto Sans Ethiopic Regular"]`, which must match the assets directory.
+
 ## 2026-10-31 — Run 20 (scheduled, cloud)
 
 | Field | Content |
