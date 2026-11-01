@@ -84,6 +84,12 @@ height). Please check «ቀልብስ» for Undo in particular.
 **Run 19 added 2 more** in `feature/map/src/main/res/values-am/strings.xml`, for the snackbar
 after a stop: «መስመሩ ተቀምጧል። በስህተት ነው ያቆሙት?» (Track saved. Stopped by mistake?) and «መቅዳት
 ቀጥል» (Resume recording, the same words as the after-restart prompt).
+**Run 21 added 19 more** in `feature/waypoint/src/main/res/values-am/strings.xml`, for the
+waypoint sheet: «አዲስ ነጥብ» (New waypoint), «ርዕስ» (Title), «ዓይነት» (Category), «ማስታወሻ»
+(Notes), «አስቀምጥ» (Save), «ነጥቡ ተቀምጧል» (Waypoint saved), «እየተቀዳ ካለው መስመር ጋር ይቀመጣል» (Saved
+with the track being recorded), and the categories «የእርሻ ማሳ» (Farm plot), «ቤተሰብ» (Household),
+«የውሃ ቦታ» (Water point), «መለያ ቦታ» (Landmark), «ሌላ» (Other). Please check «ቤተሰብ» for a
+household and «መለያ ቦታ» for a landmark in particular.
 **Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
 እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
 ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
@@ -139,6 +145,14 @@ logo or want a different design, send it (an SVG, or a PNG of at least 432×432)
 replaces the two files in `app/src/main/res/drawable/ic_launcher_*.xml`. **Default until you
 answer:** the placeholder stays.
 
+### A15. Waypoint categories (no cost, has a default)
+The waypoint sheet (#69) offers five fixed categories until projects send their own with
+sync (Phase 9): **farm plot, household, water point, landmark, other**. The stored keys
+(`farm_plot`, `household`, `water_point`, `landmark`, `other`) never change once used, so
+the list is cheap to extend and costly to rename. Tell me if field teams need other ones
+(for example health post, school, market, kebele office). **Default until you answer:** the
+five above.
+
 ---
 
 ## Needs a device
@@ -168,6 +182,8 @@ hardware. Steps are in the linked docs.
 | 7 | Stop undo and segment count (7d-2, #62): record, pause and resume once: the bar's segment count goes 1 → 2. Long-press stop: «Track saved. Stopped by mistake?» with «Resume recording» shows for about 6 s, above the record button. Tap it: the notification comes back, the same track continues (the Tracks tab still has one track, not two), the segment count goes up by one, and the line has a gap where you stood. Wait 6 s instead: it goes and the track stays finished. Stop from the notification: no snackbar. Amharic text too | Any phone |
 | 7 | Live track line (7b, #57): walking while recording, a green line follows behind the dot, catching up about every 2 s; pause, walk 50 m, resume: the line has a gap; stop: the green line goes and the track is drawn in blue as an earlier track (since 7e). After a 2-hour walk the map still pans without stutter (the Phase 7 frame-rate criterion) | Any phone with a pack; the 2-hour check on a low-end phone |
 | 7 | Earlier tracks on the map (7e): after recording three short tracks in different streets, the map shows them in dark blue with a white halo, under the green live line and the dot; pan a few streets away and back: they stay, with no flicker; zoom out to the city: all three show; pan to another town: they go. Delete one in the Tracks tab: it leaves the map; Undo: it comes back. With 40+ tracks recorded, at city zoom the map still pans smoothly on a low-RAM phone (at most 30 are drawn, newest first). **Phase 7 "Done when" as a whole:** a 2-hour walked track renders smoothly, the live line keeps up without frame drops, and an accidental stop is recoverable | Any phone with a pack; the 40-track and 2-hour checks on a low-end phone |
+| 8 | Save a waypoint (8a, #69): on the map, tap «+» (Add waypoint): a sheet rises with «Waiting for a GPS fix» and Save greyed out; outdoors, within seconds it shows the coordinates and ±accuracy and Save turns on. Type a title, pick a category, type notes, Save: «Waypoint saved», the sheet closes. Do it again while recording: the sheet says «Saved with the track being recorded». Swipe the sheet away mid-typing and reopen: the text is still there. The keyboard never covers the field being typed. Amharic text too | Any phone, outdoors |
+| 8 | Waypoints on the map (8b-1, #70): after saving a few waypoints, each shows as an ochre dot with a white halo, over the track lines and under the blue position dot; save five close together and zoom out: they merge into one larger dot with «5»; zoom in to street level: they split again. In aeroplane mode, the count digits draw (glyphs from assets, no boxes). A waypoint saved appears at once, with no restart | Any phone with a pack |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 
 ---
