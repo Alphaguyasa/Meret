@@ -1,0 +1,25 @@
+package et.alpha.meret.domain.waypoint
+
+import et.alpha.meret.core.common.result.AppResult
+import et.alpha.meret.core.model.geo.LatLng
+
+/** What a worker saves at a point. Text is already trimmed; blank text is null. */
+public data class NewWaypoint(
+    public val position: LatLng,
+    public val accuracyMetres: Double,
+    public val altitudeMetres: Double?,
+    /** The track being recorded when the waypoint was saved, if any. */
+    public val trackId: String?,
+    public val category: WaypointCategory?,
+    public val title: String?,
+    public val notes: String?,
+)
+
+/** Writes waypoints. Room, through `:core:data`. */
+public interface WaypointStore {
+    /**
+     * Writes [waypoint] as a new row waiting to be synced and returns its id (a UUIDv7).
+     * Nothing here touches the network.
+     */
+    public suspend fun save(waypoint: NewWaypoint): AppResult<String>
+}

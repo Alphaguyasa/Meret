@@ -2,4 +2,21 @@
 <resources>
     <string name="waypoints_empty_title">እስካሁን ምንም ነጥብ የለም</string>
     <string name="waypoints_empty_body">ቦታን ከፎቶዎችና ከቅጽ ጋር ለመመዝገብ በካርታው ላይ ያለውን የመደመር ቁልፍ ይጫኑ።</string>
+    <string name="waypoint_sheet_title">አዲስ ነጥብ</string>
+    <string name="waypoint_waiting_for_fix">የጂፒኤስ ምልክት በመጠበቅ ላይ። ስልኩ ያለበትን ቦታ ሲያውቅ ማስቀመጥ ይችላሉ።</string>
+    <string name="waypoint_position">%1$s, %2$s · ±%3$d ሜ</string>
+    <string name="waypoint_on_track">እየተቀዳ ካለው መስመር ጋር ይቀመጣል</string>
+    <string name="waypoint_title_label">ርዕስ</string>
+    <string name="waypoint_category_label">ዓይነት</string>
+    <string name="waypoint_notes_label">ማስታወሻ</string>
+    <string name="waypoint_category_farm_plot">የእርሻ ማሳ</string>
+    <string name="waypoint_category_household">ቤተሰብ</string>
+    <string name="waypoint_category_water_point">የውሃ ቦታ</string>
+    <string name="waypoint_category_landmark">መለያ ቦታ</string>
+    <string name="waypoint_category_other">ሌላ</string>
+    <string name="waypoint_save">አስቀምጥ</string>
+    <string name="waypoint_cancel">ይቅር</string>
+    <string name="waypoint_saved">ነጥቡ ተቀምጧል</string>
+    <string name="waypoint_not_saved_no_fix">አልተቀመጠም፦ የጂፒኤስ ምልክት ገና የለም።</string>
+    <string name="waypoint_not_saved_storage">አልተቀመጠም፦ ስልኩ መጻፍ አልቻለም። ቦታ አስለቅቀው እንደገና ይሞክሩ።</string>
 </resources>

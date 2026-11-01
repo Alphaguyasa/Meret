@@ -2,4 +2,21 @@
 <resources>
     <string name="waypoints_empty_title">No waypoints yet</string>
     <string name="waypoints_empty_body">Tap the plus button on the map to record a place, with photos and a form.</string>
+    <string name="waypoint_sheet_title">New waypoint</string>
+    <string name="waypoint_waiting_for_fix">Waiting for a GPS fix. You can save once the phone knows where it is.</string>
+    <string name="waypoint_position">%1$s, %2$s · ±%3$d m</string>
+    <string name="waypoint_on_track">Saved with the track being recorded</string>
+    <string name="waypoint_title_label">Title</string>
+    <string name="waypoint_category_label">Category</string>
+    <string name="waypoint_notes_label">Notes</string>
+    <string name="waypoint_category_farm_plot">Farm plot</string>
+    <string name="waypoint_category_household">Household</string>
+    <string name="waypoint_category_water_point">Water point</string>
+    <string name="waypoint_category_landmark">Landmark</string>
+    <string name="waypoint_category_other">Other</string>
+    <string name="waypoint_save">Save</string>
+    <string name="waypoint_cancel">Cancel</string>
+    <string name="waypoint_saved">Waypoint saved</string>
+    <string name="waypoint_not_saved_no_fix">Not saved: no GPS fix yet.</string>
+    <string name="waypoint_not_saved_storage">Not saved: the phone could not write it. Free some storage and try again.</string>
 </resources>
