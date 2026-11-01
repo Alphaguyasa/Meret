@@ -10,6 +10,7 @@ import et.alpha.meret.core.model.geo.BoundingBox
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.TrackLine
+import et.alpha.meret.core.model.geo.WaypointMarker
 
 /** Where the map's camera is, in the units the screen's own controls need. */
 public data class MapCameraReadout(
@@ -42,6 +43,9 @@ internal interface MapCameraTarget {
 
     /** Draws these finished tracks under the live one, replacing the last set. */
     fun showEarlierTracks(lines: List<TrackLine>)
+
+    /** Draws these waypoints over the tracks and under the puck, replacing the last set. */
+    fun showWaypoints(markers: List<WaypointMarker>)
 }
 
 /**
@@ -80,6 +84,7 @@ public class OfflineMapController internal constructor() {
     private var position: DevicePosition? = null
     private var trackLine: TrackLine? = null
     private var earlierTracks: List<TrackLine> = emptyList()
+    private var waypoints: List<WaypointMarker> = emptyList()
     private var zoomInOnNextCentre = true
 
     public fun zoomIn() {
@@ -124,10 +129,18 @@ public class OfflineMapController internal constructor() {
         target?.showEarlierTracks(lines)
     }
 
+    /** Saved waypoints, clustered where they crowd; empty removes them. */
+    public fun showWaypoints(markers: List<WaypointMarker>) {
+        if (markers == waypoints) return
+        waypoints = markers
+        target?.showWaypoints(markers)
+    }
+
     internal fun attach(target: MapCameraTarget) {
         this.target = target
         target.showEarlierTracks(earlierTracks)
         target.showTrackLine(trackLine)
+        target.showWaypoints(waypoints)
         target.showPuck(position)
         centreIfFollowing()
     }

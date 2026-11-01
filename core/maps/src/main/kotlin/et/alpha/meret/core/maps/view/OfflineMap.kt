@@ -18,6 +18,7 @@ import et.alpha.meret.core.model.geo.BoundingBox
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.TrackLine
+import et.alpha.meret.core.model.geo.WaypointMarker
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -30,6 +31,8 @@ import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonOptions
 import org.maplibre.android.style.sources.GeoJsonSource
 import kotlin.coroutines.resume
 import org.maplibre.android.geometry.LatLng as MapLibreLatLng
@@ -87,6 +90,7 @@ public fun OfflineMap(
                 halo = LocationPuck.hex(MeretTheme.colors.overlayHalo.toArgb()),
                 track = LocationPuck.hex(MeretTheme.colors.tracking.toArgb()),
                 historic = LocationPuck.hex(MeretTheme.colors.trackHistoric.toArgb()),
+                waypoint = LocationPuck.hex(MaterialTheme.colorScheme.tertiary.toArgb()),
             )
         LaunchedEffect(mapView, controller, colours) {
             mapView.awaitMap().bindTo(mapView, controller, colours)
@@ -175,6 +179,7 @@ private class MapLibreCamera(
     private var puckJson: String = LocationPuck.geoJson(null, colours)
     private var lineJson: String = LiveTrackLine.geoJson(null)
     private var earlierJson: String = EarlierTrackLines.geoJson(emptyList())
+    private var waypointsJson: String = WaypointMarkers.geoJson(emptyList())
 
     override fun zoomBy(delta: Double) = map.animateCamera(CameraUpdateFactory.zoomBy(delta))
 
@@ -210,14 +215,75 @@ private class MapLibreCamera(
         map.style?.getSourceAs<GeoJsonSource>(EarlierTrackLines.SOURCE_ID)?.setGeoJson(earlierJson)
     }
 
+    override fun showWaypoints(markers: List<WaypointMarker>) {
+        waypointsJson = WaypointMarkers.geoJson(markers)
+        map.style?.getSourceAs<GeoJsonSource>(WaypointMarkers.SOURCE_ID)?.setGeoJson(waypointsJson)
+    }
+
     /**
-     * Adds the earlier tracks, the live line over them, then the puck over both, on top of
-     * [style], once per style.
+     * Adds the earlier tracks, the live line over them, the waypoints over the lines, then the
+     * puck over everything, on top of [style], once per style.
      */
     fun install(style: Style) {
         installEarlierTracks(style)
         installTrackLine(style)
+        installWaypoints(style)
         installPuck(style)
+    }
+
+    /**
+     * Clustered: a cluster is a larger circle with its count, a single waypoint a small one,
+     * both with a halo so they read over any landcover. Clusters break up at street level.
+     */
+    private fun installWaypoints(style: Style) {
+        val source = style.getSourceAs<GeoJsonSource>(WaypointMarkers.SOURCE_ID)
+        if (source != null) {
+            source.setGeoJson(waypointsJson)
+            return
+        }
+        val options =
+            GeoJsonOptions()
+                .withCluster(true)
+                .withClusterRadius(CLUSTER_RADIUS_DP)
+                .withClusterMaxZoom(CLUSTER_MAX_ZOOM)
+        style.addSource(GeoJsonSource(WaypointMarkers.SOURCE_ID, waypointsJson, options))
+        val isCluster = Expression.has(WaypointMarkers.PROPERTY_POINT_COUNT)
+        style.addLayer(
+            CircleLayer(WaypointMarkers.CLUSTER_LAYER_ID, WaypointMarkers.SOURCE_ID)
+                .withFilter(isCluster)
+                .withProperties(
+                    PropertyFactory.circleRadius(CLUSTER_RADIUS_DRAWN_DP),
+                    PropertyFactory.circleColor(colours.waypoint),
+                    PropertyFactory.circleStrokeWidth(WAYPOINT_HALO_DP),
+                    PropertyFactory.circleStrokeColor(colours.halo),
+                ),
+        )
+        style.addLayer(
+            SymbolLayer(WaypointMarkers.COUNT_LAYER_ID, WaypointMarkers.SOURCE_ID)
+                .withFilter(isCluster)
+                .withProperties(
+                    PropertyFactory.textField(
+                        Expression.toString(
+                            Expression.get(WaypointMarkers.PROPERTY_POINT_COUNT_ABBREVIATED),
+                        ),
+                    ),
+                    PropertyFactory.textFont(MAP_FONT_STACK),
+                    PropertyFactory.textSize(CLUSTER_TEXT_SP),
+                    PropertyFactory.textColor(colours.halo),
+                    PropertyFactory.textAllowOverlap(true),
+                    PropertyFactory.textIgnorePlacement(true),
+                ),
+        )
+        style.addLayer(
+            CircleLayer(WaypointMarkers.POINT_LAYER_ID, WaypointMarkers.SOURCE_ID)
+                .withFilter(Expression.not(isCluster))
+                .withProperties(
+                    PropertyFactory.circleRadius(WAYPOINT_RADIUS_DP),
+                    PropertyFactory.circleColor(colours.waypoint),
+                    PropertyFactory.circleStrokeWidth(WAYPOINT_HALO_DP),
+                    PropertyFactory.circleStrokeColor(colours.halo),
+                ),
+        )
     }
 
     private fun installEarlierTracks(style: Style) {
@@ -307,6 +373,15 @@ private class MapLibreCamera(
         const val TRACK_LINE_WIDTH_DP = 4f
         const val EARLIER_LINE_WIDTH_DP = 3f
         const val EARLIER_HALO_DP = 1f
+        const val CLUSTER_RADIUS_DP = 40
+        const val CLUSTER_MAX_ZOOM = 16
+        const val CLUSTER_RADIUS_DRAWN_DP = 14f
+        const val CLUSTER_TEXT_SP = 12f
+        const val WAYPOINT_RADIUS_DP = 6f
+        const val WAYPOINT_HALO_DP = 2f
+
+        /** The bundled glyph stack (`assets/map/fonts`); the name must match its directory. */
+        val MAP_FONT_STACK = arrayOf("Noto Sans Regular", "Noto Sans Ethiopic Regular")
     }
 }
 

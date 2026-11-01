@@ -38,6 +38,25 @@ class WaypointDaoTest : DatabaseTest() {
     }
 
     @Test
+    fun `markers carry only position and category, newest first, up to the limit`() = runTest {
+        waypointDao.upsertWaypoints(
+            listOf(
+                Fixtures.waypoint(id = "old", recordedAt = 1_000L, latitude = 9.01),
+                Fixtures.waypoint(id = "mid", recordedAt = 2_000L).copy(category = "household"),
+                Fixtures.waypoint(id = "new", recordedAt = 3_000L, longitude = 38.75),
+                Fixtures.waypoint(id = "elsewhere", projectId = "other-project"),
+            ),
+        )
+
+        waypointDao.observeWaypointMarkers(Fixtures.PROJECT_ID, limit = 2).test {
+            val markers = awaitItem()
+            assertThat(markers.map { it.id }).containsExactly("new", "mid").inOrder()
+            assertThat(markers[0].longitude).isEqualTo(38.75)
+            assertThat(markers[1].category).isEqualTo("household")
+        }
+    }
+
+    @Test
     fun `a viewport query returns only what is inside it`() = runTest {
         waypointDao.upsertWaypoints(
             listOf(

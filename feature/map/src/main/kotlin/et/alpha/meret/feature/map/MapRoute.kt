@@ -35,12 +35,13 @@ import kotlin.math.roundToInt
 import et.alpha.meret.core.designsystem.R as DesignR
 
 /**
- * Owns the [MapViewModel] and [EarlierTracksViewModel] and puts the offline map under the
- * screen's controls. The phone's position goes to the map as the location puck; the recentre
- * button turns follow mode on. The record button starts, pauses and resumes a track, and a
- * long-press stops it; the track being recorded is drawn under the puck, and finished tracks
- * around the area on screen under that. For a few seconds after a long-press stop, a snackbar
- * offers to resume the same track, in case the stop was a mistake.
+ * Owns the [MapViewModel], [EarlierTracksViewModel] and [MapWaypointsViewModel], and puts the
+ * offline map under the screen's controls. The phone's position goes to the map as the
+ * location puck; the recentre button turns follow mode on. The record button starts, pauses
+ * and resumes a track, and a long-press stops it; the track being recorded is drawn under the
+ * puck, and finished tracks around the area on screen under that. Saved waypoints are drawn
+ * over the lines, clustered where they crowd. For a few seconds after a long-press stop, a
+ * snackbar offers to resume the same track, in case the stop was a mistake.
  *
  * The «Add waypoint» button shows [waypointSheet] over the map until the sheet calls its
  * `onDismiss`. The sheet lives in `:feature:waypoint`, which this module may not see; the
@@ -54,12 +55,14 @@ fun MapRoute(
     contentPadding: PaddingValues = PaddingValues(),
     viewModel: MapViewModel = hiltViewModel(),
     earlierTracksViewModel: EarlierTracksViewModel = hiltViewModel(),
+    waypointsViewModel: MapWaypointsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val position by viewModel.position.collectAsStateWithLifecycle()
     val recording by viewModel.recording.collectAsStateWithLifecycle()
     val liveLine by viewModel.liveLine.collectAsStateWithLifecycle()
     val earlierTracks by earlierTracksViewModel.lines.collectAsStateWithLifecycle()
+    val waypoints by waypointsViewModel.markers.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val snackbarHost = remember { SnackbarHostState() }
@@ -104,6 +107,9 @@ fun MapRoute(
     }
     LaunchedEffect(mapController, earlierTracks) {
         mapController.showEarlierTracks(earlierTracks)
+    }
+    LaunchedEffect(mapController, waypoints) {
+        mapController.showWaypoints(waypoints)
     }
     LaunchedEffect(mapController, earlierTracksViewModel) {
         snapshotFlow { mapController.visibleArea }

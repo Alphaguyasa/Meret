@@ -5,6 +5,7 @@ import et.alpha.meret.core.model.geo.BoundingBox
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.TrackLine
+import et.alpha.meret.core.model.geo.WaypointMarker
 import org.junit.Test
 
 class OfflineMapControllerTest {
@@ -219,6 +220,19 @@ class OfflineMapControllerTest {
     }
 
     @Test
+    fun `waypoints given before the map is ready are drawn when it attaches, once per change`() {
+        controller.showWaypoints(listOf(MARKER))
+
+        controller.attach(map)
+        controller.showWaypoints(listOf(MARKER))
+        controller.showWaypoints(emptyList())
+
+        assertThat(
+            map.waypoints,
+        ).containsExactly(listOf(MARKER), emptyList<WaypointMarker>()).inOrder()
+    }
+
+    @Test
     fun `the area on screen is known once the camera rests, and forgotten with the map`() {
         controller.attach(map)
         assertThat(controller.visibleArea).isNull()
@@ -240,6 +254,9 @@ class OfflineMapControllerTest {
 
         /** Every set of earlier tracks handed to the map, in order. */
         val earlier = mutableListOf<List<TrackLine>>()
+
+        /** Every set of waypoints handed to the map, in order. */
+        val waypoints = mutableListOf<List<WaypointMarker>>()
 
         override fun zoomBy(delta: Double) {
             cameraCalls += "zoom $delta"
@@ -268,6 +285,10 @@ class OfflineMapControllerTest {
         override fun showEarlierTracks(lines: List<TrackLine>) {
             earlier += lines
         }
+
+        override fun showWaypoints(markers: List<WaypointMarker>) {
+            waypoints += markers
+        }
     }
 
     private companion object {
@@ -275,5 +296,6 @@ class OfflineMapControllerTest {
         val NEXT = DevicePosition(LatLng(9.031, 38.74), accuracyMetres = 4.0, isLive = true)
         val LINE = TrackLine(listOf(listOf(LatLng(9.03, 38.74), LatLng(9.031, 38.74))))
         val AREA = BoundingBox(9.0, 38.7, 9.1, 38.8)
+        val MARKER = WaypointMarker("w-1", LatLng(9.03, 38.74), category = null)
     }
 }
