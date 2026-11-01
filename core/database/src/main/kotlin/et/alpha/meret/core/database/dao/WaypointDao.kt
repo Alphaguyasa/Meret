@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import et.alpha.meret.core.database.entity.WaypointEntity
+import et.alpha.meret.core.database.entity.WaypointMarkerRow
 import et.alpha.meret.core.model.SyncState
 import kotlinx.coroutines.flow.Flow
 
@@ -36,6 +37,24 @@ public interface WaypointDao {
         maxLatitude: Double,
         maxLongitude: Double,
     ): Flow<List<WaypointEntity>>
+
+    /**
+     * What the map draws of each waypoint in [projectId], newest first and at most [limit]:
+     * no title, notes or form data, so thousands of markers stay small. Ties on the wall
+     * clock fall back to the id, which is time-ordered too.
+     */
+    @Query(
+        """
+        SELECT id, lat, lon, category FROM waypoint
+        WHERE project_id = :projectId
+        ORDER BY recorded_at DESC, id DESC
+        LIMIT :limit
+        """,
+    )
+    public fun observeWaypointMarkers(
+        projectId: String,
+        limit: Int,
+    ): Flow<List<WaypointMarkerRow>>
 
     @Query("SELECT * FROM waypoint WHERE id = :waypointId")
     public fun observeWaypoint(waypointId: String): Flow<WaypointEntity?>

@@ -12,10 +12,12 @@ import et.alpha.meret.core.data.tracking.RoomNewTrackStore
 import et.alpha.meret.core.database.MeretDatabase
 import et.alpha.meret.core.model.SyncState
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.core.model.geo.WaypointMarker
 import et.alpha.meret.domain.waypoint.NewWaypoint
 import et.alpha.meret.domain.waypoint.WaypointCategory
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -114,6 +116,25 @@ class RoomWaypointRepositoryTest {
         assertThat(row.title).isNull()
         assertThat(row.notes).isNull()
         assertThat(row.altitudeMeters).isNull()
+    }
+
+    @Test
+    fun `a saved waypoint appears among the map's markers, newest first`() = runBlocking<Unit> {
+        val first = (repository.save(waypoint) as AppResult.Success).value
+        val second =
+            (
+                repository.save(
+                    waypoint.copy(category = null, position = LatLng(9.1, 38.8)),
+                ) as AppResult.Success
+            ).value
+
+        val markers = repository.observeMarkers().first()
+
+        assertThat(markers)
+            .containsExactly(
+                WaypointMarker(second, LatLng(9.1, 38.8), null),
+                WaypointMarker(first, LatLng(9.0301, 38.7402), "water_point"),
+            ).inOrder()
     }
 
     private object FixedTime : TimeProvider {

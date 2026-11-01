@@ -20,6 +20,7 @@ class LocationPuckTest {
             halo = "#FFFFFF",
             track = "#DC2626",
             historic = "#1E3A5F",
+            waypoint = "#B45309",
         )
 
     @Test

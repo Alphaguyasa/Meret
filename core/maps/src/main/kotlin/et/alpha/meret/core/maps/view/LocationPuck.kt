@@ -17,6 +17,8 @@ internal data class PuckColours(
     val track: String,
     /** The finished tracks drawn under the live one. */
     val historic: String,
+    /** Saved waypoints, single or clustered. */
+    val waypoint: String,
 )
 
 /**
