@@ -137,6 +137,23 @@ class RoomWaypointRepositoryTest {
             ).inOrder()
     }
 
+    @Test
+    fun `the list holds every saved waypoint, newest first, with what the worker entered`() =
+        runBlocking<Unit> {
+            val first = (repository.save(waypoint) as AppResult.Success).value
+            val second =
+                (repository.save(waypoint.copy(title = null)) as AppResult.Success).value
+
+            val list = repository.observeWaypoints().first()
+
+            assertThat(list.map { it.id }).containsExactly(second, first).inOrder()
+            assertThat(list[0].title).isNull()
+            assertThat(list[1].title).isEqualTo("Borehole")
+            assertThat(list[1].category).isEqualTo("water_point")
+            assertThat(list[1].position).isEqualTo(LatLng(9.0301, 38.7402))
+            assertThat(list[1].syncState).isEqualTo(SyncState.PENDING)
+        }
+
     private object FixedTime : TimeProvider {
         override fun nowMillis(): Long = 1_761_000_000_000L
 

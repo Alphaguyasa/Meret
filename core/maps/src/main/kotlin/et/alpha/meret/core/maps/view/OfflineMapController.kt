@@ -62,6 +62,10 @@ internal interface MapCameraTarget {
  * button turns it back on and centres now, or at the next fix if there is none yet. The
  * first centring after it turns on zooms in to street level, so a recentre from the
  * whole-country view is useful; later ones keep the user's zoom.
+ *
+ * [centreOn] shows a place that is not the user, such as a waypoint picked from the list: it
+ * turns follow mode off, so the next fix does not pull the map away again. Given before a map
+ * is attached (the map tab is still opening), it is kept and applied when one attaches.
  */
 @Stable
 public class OfflineMapController internal constructor() {
@@ -86,6 +90,7 @@ public class OfflineMapController internal constructor() {
     private var earlierTracks: List<TrackLine> = emptyList()
     private var waypoints: List<WaypointMarker> = emptyList()
     private var zoomInOnNextCentre = true
+    private var pendingCentre: LatLng? = null
 
     public fun zoomIn() {
         target?.zoomBy(ZOOM_STEP)
@@ -102,9 +107,25 @@ public class OfflineMapController internal constructor() {
 
     /** Centres the map on the user and keeps it there until the user moves the map. */
     public fun recentre() {
+        pendingCentre = null
         isFollowing = true
         zoomInOnNextCentre = true
         centreIfFollowing()
+    }
+
+    /**
+     * Centres the map on [position], zoomed in to at least street level, and stops following
+     * the user. The recentre button follows again.
+     */
+    public fun centreOn(position: LatLng) {
+        isFollowing = false
+        val target = target
+        if (target == null) {
+            pendingCentre = position
+        } else {
+            pendingCentre = null
+            target.centreOn(position, FOLLOW_ZOOM)
+        }
     }
 
     /** The phone's position for the puck, or null to hide it. Follow mode tracks it. */
@@ -142,7 +163,13 @@ public class OfflineMapController internal constructor() {
         target.showTrackLine(trackLine)
         target.showWaypoints(waypoints)
         target.showPuck(position)
-        centreIfFollowing()
+        val pending = pendingCentre
+        if (pending != null) {
+            pendingCentre = null
+            target.centreOn(pending, FOLLOW_ZOOM)
+        } else {
+            centreIfFollowing()
+        }
     }
 
     /** Lets go of [target], unless a newer map has already attached. */

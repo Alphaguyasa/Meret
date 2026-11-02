@@ -165,6 +165,44 @@ class OfflineMapControllerTest {
     }
 
     @Test
+    fun `centring on a place zooms in, stops following, and later fixes leave it there`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+
+        controller.centreOn(PLACE)
+        controller.showPosition(NEXT)
+
+        assertThat(controller.isFollowing).isFalse()
+        assertThat(map.cameraCalls)
+            .containsExactly("centre 9.03,38.74 zoom 16.0", "centre 9.1,38.8 zoom 16.0")
+            .inOrder()
+        assertThat(map.puck).isEqualTo(NEXT)
+    }
+
+    @Test
+    fun `a place asked for before the map is ready is centred when it attaches, not the user`() {
+        controller.showPosition(HERE)
+
+        controller.centreOn(PLACE)
+        controller.attach(map)
+
+        assertThat(map.cameraCalls).containsExactly("centre 9.1,38.8 zoom 16.0")
+        assertThat(map.puck).isEqualTo(HERE)
+    }
+
+    @Test
+    fun `recentre after centring on a place follows the user again`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+        controller.centreOn(PLACE)
+
+        controller.recentre()
+
+        assertThat(controller.isFollowing).isTrue()
+        assertThat(map.cameraCalls.last()).isEqualTo("centre 9.03,38.74 zoom 16.0")
+    }
+
+    @Test
     fun `losing the position removes the puck and leaves the camera alone`() {
         controller.attach(map)
         controller.showPosition(HERE)
@@ -295,6 +333,7 @@ class OfflineMapControllerTest {
         val HERE = DevicePosition(LatLng(9.03, 38.74), accuracyMetres = 5.0, isLive = true)
         val NEXT = DevicePosition(LatLng(9.031, 38.74), accuracyMetres = 4.0, isLive = true)
         val LINE = TrackLine(listOf(listOf(LatLng(9.03, 38.74), LatLng(9.031, 38.74))))
+        val PLACE = LatLng(9.1, 38.8)
         val AREA = BoundingBox(9.0, 38.7, 9.1, 38.8)
         val MARKER = WaypointMarker("w-1", LatLng(9.03, 38.74), category = null)
     }
