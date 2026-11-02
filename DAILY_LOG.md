@@ -4,6 +4,33 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-11-02 — Run 22 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 29b (Phase 8b-2): the waypoint list.** The Waypoints tab now lists saved waypoints newest first. Each row shows the title (or the category, or the time saved), then the category and time, then «Not synced yet» or another sync state. A category this build does not know shows as its key instead of disappearing. Tapping a row opens the map centred on that waypoint at street level, and the map stops following the phone so walking does not pull it away; the crosshair button follows again ([#72](https://github.com/Alphaguyasa/Meret/pull/72)). **Item 30 (Phase 8c-1): the form schema.** The app can now read a project's form template: seven field types (text, number, select, multiselect, date, photo, GPS point), answer checks (required, number range, options, text length, real calendar dates), and `visible_if` conditions, where a hidden field is never required and hiding carries on to the fields that depend on it. Field types from newer templates are kept read-only, never dropped. The only answers ever discarded are those of fields the template hid. The format is written down in `docs/FORM_SCHEMA.md`, and a twelve-question farm-visit form in English and Amharic ships with the app so forms work before sync ([#73](https://github.com/Alphaguyasa/Meret/pull/73)). |
+| Merged | #72 yes, `10ba868`, green on the first attempt (about 3 min). #73 yes, `1fbf492`, green on the first attempt (about 5 min, including `koverVerify`). |
+| Failed or blocked | Nothing failed. Gradle still cannot run in the container (Google Maven is blocked). ktlint and detekt ran locally on every changed file. For #73, kotlinc 2.2.10 compiled `:core:model` and ran all 70 of its tests locally (27 new) before CI did. |
+| Roadmap | 9 open: 31–35, 26 (A13), 25 (A12), 14 (A6), 18. No replan needed. Item 31 now points to the schema API. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | A9: 2 new Amharic phrases (waypoint list) and the **bundled farm-visit form's Amharic labels**, the most useful native check now. 1 new "Needs a device" row (waypoint list, tap to centre). A2, A3, A5, A6, A7, A10–A15 unchanged. **Dependabot:** #30 (2026-10-21) and #68 (2026-11-01), both Gradle groups, still open and unmerged, waiting on A10. |
+| Next | 31 (form renderer in Compose), then 32 (draft autosave across process death; needs a migration). |
+
+Notes for the next run:
+- Form API (`et.alpha.meret.core.model.form`): `FormSchemaParser.parse(json)` → `Valid`/`Invalid`;
+  `FormRules.visibleKeys/validate/answersToKeep`; `FormAnswersJson.encode/decode` (`Decoded.Unreadable`
+  means keep the stored text). `BundledFormTemplates.farmVisit(projectId)` reads a resource, so call
+  it off the main thread.
+- `VisibleIf` conditions use `fieldKey`, not `field`: `field` inside a getter is Kotlin's
+  backing-field keyword.
+- `MapRoute(centreOn, onCentred)` and `OfflineMapController.centreOn(LatLng)` exist. Item 34
+  («Show on map» from track detail) can reuse the app-held request, extended with bounds.
+- `WaypointRepository.observeWaypoints()` exists; fakes need it.
+- PRs are created as drafts. Mark them ready (`update_pull_request draft=false`) before merging,
+  or the merge returns 405.
+- Local JVM tests: kotlinc zip from the GitHub release, plus kotlinx-serialization, junit,
+  hamcrest, truth and guava from Maven Central. Maven Central sometimes returns 429; retry.
+
 ## 2026-11-01 — Run 21 (scheduled, cloud)
 
 | Field | Content |

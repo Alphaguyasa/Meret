@@ -139,4 +139,4 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 28. Phase 8a: save a waypoint from the map (sheet with live position, title, category, notes; Room first, live fix only, `track_id` while recording) | #69 | `ce57e91` |
 | 29a. Phase 8b-1: saved waypoints on the map, clustered (MapLibre cluster source, count labels, marker read capped at 5,000) | #70 | `b48a5c9` |
 | 29b. Phase 8b-2: waypoint list (newest first, title or category or time, sync state); a tap centres the map with follow off (`OfflineMapController.centreOn`) | #72 | `10ba868` |
-| 30. Phase 8c-1: form schema in `:core:model` (parse, 7 field types plus unsupported, validate, `visible_if` with cascading hiding, `form_data` JSON, bundled 12-field farm visit; `docs/FORM_SCHEMA.md`) | #73 | `SHA30` |
+| 30. Phase 8c-1: form schema in `:core:model` (parse, 7 field types plus unsupported, validate, `visible_if` with cascading hiding, `form_data` JSON, bundled 12-field farm visit; `docs/FORM_SCHEMA.md`) | #73 | `1fbf492` |
