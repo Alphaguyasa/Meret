@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "fields": [
+    { "key": "name", "type": "text", "label": "Name", "required": true, "max_length": 5, "multiline": true, "hint": { "en": "Full name", "am": "ሙሉ ስም" } },
+    { "key": "count", "type": "number", "label": "Count", "integer": true, "min": 1, "max": 10, "unit": "people" },
+    { "key": "crop", "type": "select", "label": { "en": "Crop", "am": "ሰብል" }, "options": [ { "value": "teff", "label": { "en": "Teff", "am": "ጤፍ" } }, { "value": "maize" } ] },
+    { "key": "inputs", "type": "multiselect", "label": "Inputs", "max_selected": 2, "options": [ { "value": "seed", "label": "Seed" }, { "value": "compost", "label": "Compost" }, { "value": "none", "label": "None" } ] },
+    { "key": "planted", "type": "date", "label": "Planted" },
+    { "key": "photos", "type": "photo", "label": "Photos", "max_count": 2 },
+    { "key": "corner", "type": "gps_point", "label": "Corner" },
+    { "key": "signature", "type": "signature", "label": "Signature", "some_future_option": true }
+  ]
+}
