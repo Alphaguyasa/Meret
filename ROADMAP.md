@@ -20,15 +20,11 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 31. [P1 · M] Phase 8c-2 — Form renderer in Compose
-Stateless composables for each field type from 30 (`:core:model` `form` package, format in
-`docs/FORM_SCHEMA.md`), one `FormUiState`, en/am chrome strings (field labels come from the
-template, `LocalizedText.resolve`); one message per `FieldError`. Until sync, the bundled
-`BundledFormTemplates.farmVisit` is the form, titled from a string resource, not its `name`.
-Answers are stored with `FormAnswersJson` after `FormRules.answersToKeep`. The waypoint sheet from 28 shows the project's form
-when one exists. Large touch targets; works with TalkBack (labels, errors read aloud).
-
-### 32. [P1 · M] Phase 8d — Draft autosave that survives process death
+### 32b. [P1 · M] Phase 8d — Draft autosave that survives process death
+The database's first migration (version 1 → 2). Since #76, CI prints Room's new `2.json` in
+the "Check Room schemas" step; the first push will show it as a warning, and the next commit
+adds that exact file (see CLAUDE.md). Answers today live in `SavedStateHandle`
+(`WaypointCaptureViewModel`, keys `waypoint_form_*`); this item moves them to Room.
 Every field change is written to Room (a draft waypoint row, or a `draft` status; a column
 change needs a migration and a migration test) within ~300 ms, off the main thread. Reopening
 the app after a kill restores the sheet with every answer. Acceptance: an instrumented-style
@@ -38,7 +34,9 @@ This is BUILD_PLAN Phase 8's "Done when" minus photos.
 ### 33. [P1 · M] Phase 8e — Photos: CameraX, 1600 px q80, GPS EXIF kept
 CameraX (Apache 2.0, free) capture from the photo field; scale to 1600 px long side at JPEG
 quality 80 on `Dispatchers.Default`, keep the GPS EXIF block, store in app-private storage
-(already excluded from backup), record a `waypoint_photo` row with size and SHA-256. Only the
+(already excluded from backup), record a `waypoint_photo` row with size and SHA-256. The photo field shows only a note until then
+(`PhotoPlaceholder` in `WaypointForm.kt`); a template with a *required* photo field cannot
+be saved before this item. Only the
 `CAMERA` permission, asked at first use, with en/am rationale. Measure the APK size delta
 in the PR (release-size workflow). Then Phase 8's "Done when" (three photos, twelve fields,
 forced process death) goes to the device list.
@@ -140,3 +138,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 29a. Phase 8b-1: saved waypoints on the map, clustered (MapLibre cluster source, count labels, marker read capped at 5,000) | #70 | `b48a5c9` |
 | 29b. Phase 8b-2: waypoint list (newest first, title or category or time, sync state); a tap centres the map with follow off (`OfflineMapController.centreOn`) | #72 | `10ba868` |
 | 30. Phase 8c-1: form schema in `:core:model` (parse, 7 field types plus unsupported, validate, `visible_if` with cascading hiding, `form_data` JSON, bundled 12-field farm visit; `docs/FORM_SCHEMA.md`) | #73 | `1fbf492` |
+| 31. Phase 8c-2: form renderer on the waypoint sheet (one control per field type, visible fields only, en/am chrome and one message per `FieldError`, errors from the first refused Save, `AppError.Invalid`, bundled farm visit via `WaypointFormSource`, answers stored as `answersToKeep`) | #75 | `443bd92` |
+| 32a. CI prints new Room schema JSON and fails on a changed committed one (unblocks the first migration, 32b) | #76 | `9c46373` |

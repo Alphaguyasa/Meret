@@ -99,6 +99,13 @@ example_farm_visit.json`): twelve questions with Amharic labels, for example «�
 maize, wheat, sorghum, coffee), «ጥቅም ላይ የዋሉ ግብዓቶች» (Inputs used), «ምርጥ ዘር» (Improved
 seed), «ብስባሽ» (Compost). This form is what workers see until projects send their own, so a
 native check of it is the most useful one.
+**Run 23 added 23 more** in `feature/waypoint/src/main/res/values-am/strings.xml`, for the
+form on the waypoint sheet: «የእርሻ ጉብኝት» (Farm visit, the form's title), «%1$s (ግዴታ)»
+(label + «required»), «ቀን ይምረጡ» (Pick a date), «አጽዳ» (Clear), «አሁን ያለሁበትን ቦታ ተጠቀም» (Use my
+current position), and one message per answer problem, for example «እባክዎ ይህን ጥያቄ ይመልሱ።»
+(Please answer this question), «ቁጥር ያስገቡ።» (Enter a number), «ሙሉ ቁጥር ያስገቡ።» (Enter a whole
+number), «ዝቅተኛው የሚፈቀደው %1$s ነው።» (The lowest allowed is …). Please check «ግዴታ» for
+"required" in particular: it shows on every required question.
 **Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
 እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
 ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
@@ -194,6 +201,7 @@ hardware. Steps are in the linked docs.
 | 8 | Save a waypoint (8a, #69): on the map, tap «+» (Add waypoint): a sheet rises with «Waiting for a GPS fix» and Save greyed out; outdoors, within seconds it shows the coordinates and ±accuracy and Save turns on. Type a title, pick a category, type notes, Save: «Waypoint saved», the sheet closes. Do it again while recording: the sheet says «Saved with the track being recorded». Swipe the sheet away mid-typing and reopen: the text is still there. The keyboard never covers the field being typed. Amharic text too | Any phone, outdoors |
 | 8 | Waypoints on the map (8b-1, #70): after saving a few waypoints, each shows as an ochre dot with a white halo, over the track lines and under the blue position dot; save five close together and zoom out: they merge into one larger dot with «5»; zoom in to street level: they split again. In aeroplane mode, the count digits draw (glyphs from assets, no boxes). A waypoint saved appears at once, with no restart | Any phone with a pack |
 | 8 | Waypoint list (8b-2, #72): save three waypoints (one with a title, one with only a category, one with neither). The Waypoints tab lists them newest first: the title, then «category · time»; the category, then the time; the time alone. Each says «Not synced yet». Tap one: the map tab opens centred on it at street level and the crosshair button is not filled (not following); walking does not pull the map away; the crosshair follows again. With TalkBack, a row reads its text and «Show on map». Amharic text too | Any phone with a pack |
+| 8 | Form on the waypoint sheet (8c-2, #75): open «+»; under the notes, «Farm visit» with «Is the farmer present? (required)». Choose «Yes»: «Farmer's name» and «People in the household» appear; «No»: they go. Choose «Other» as the main crop: «Which crop?» appears. Save with nothing answered: «Not saved: some answers need attention.» and each required question shows «Please answer this question.» in red. Type «1,500» or «0» people: «Enter a number» / «The lowest allowed is 1.». Pick a planting date: it shows in the phone's language. Tick «Improved seed» and «Compost». Fill it in and Save: «Waypoint saved». Rotate the phone mid-form: every answer stays. With TalkBack, each question reads its label and, after a refused Save, its problem. Amharic text too | Any phone, outdoors |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 
 ---
