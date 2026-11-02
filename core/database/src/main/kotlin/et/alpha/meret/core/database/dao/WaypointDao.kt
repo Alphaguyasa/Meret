@@ -10,7 +10,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 public interface WaypointDao {
-    @Query("SELECT * FROM waypoint WHERE project_id = :projectId ORDER BY recorded_at DESC")
+    /**
+     * Every waypoint in [projectId], newest first. Ties on the wall clock fall back to the id,
+     * which is time-ordered too.
+     */
+    @Query(
+        "SELECT * FROM waypoint WHERE project_id = :projectId ORDER BY recorded_at DESC, id DESC",
+    )
     public fun observeWaypoints(projectId: String): Flow<List<WaypointEntity>>
 
     @Query("SELECT * FROM waypoint WHERE track_id = :trackId ORDER BY recorded_at ASC")

@@ -9,7 +9,9 @@ import et.alpha.meret.core.common.uuid.UuidV7Generator
 import et.alpha.meret.core.data.tracking.RoomNewTrackStore
 import et.alpha.meret.core.database.dao.WaypointDao
 import et.alpha.meret.core.database.entity.WaypointEntity
+import et.alpha.meret.core.database.mapper.toDomain
 import et.alpha.meret.core.model.SyncState
+import et.alpha.meret.core.model.Waypoint
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.WaypointMarker
 import et.alpha.meret.domain.waypoint.NewWaypoint
@@ -34,6 +36,9 @@ public interface WaypointRepository : WaypointStore {
      * work, and a bound on what a low-RAM phone holds for the map.
      */
     public fun observeMarkers(): Flow<List<WaypointMarker>>
+
+    /** Every saved waypoint, newest first: the Waypoints tab. */
+    public fun observeWaypoints(): Flow<List<Waypoint>>
 
     public companion object {
         public const val MAX_MARKERS: Int = 5_000
@@ -61,6 +66,11 @@ public class RoomWaypointRepository
                     )
                 }
             }.flowOn(dispatchers.default)
+
+        override fun observeWaypoints(): Flow<List<Waypoint>> = waypointDao
+            .observeWaypoints(RoomNewTrackStore.LOCAL_PROJECT_ID)
+            .map { rows -> rows.map { it.toDomain() } }
+            .flowOn(dispatchers.default)
 
         override suspend fun save(waypoint: NewWaypoint): AppResult<String> =
             withContext(dispatchers.io) {

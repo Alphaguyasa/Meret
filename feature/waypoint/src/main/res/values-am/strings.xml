@@ -19,4 +19,10 @@
     <string name="waypoint_saved">ነጥቡ ተቀምጧል</string>
     <string name="waypoint_not_saved_no_fix">አልተቀመጠም፦ የጂፒኤስ ምልክት ገና የለም።</string>
     <string name="waypoint_not_saved_storage">አልተቀመጠም፦ ስልኩ መጻፍ አልቻለም። ቦታ አስለቅቀው እንደገና ይሞክሩ።</string>
+    <string name="waypoints_show_on_map">በካርታው ላይ አሳይ</string>
+    <string name="waypoints_row_details">%1$s · %2$s</string>
+    <string name="waypoints_sync_pending">ገና አልተላከም</string>
+    <string name="waypoints_sync_syncing">በመላክ ላይ</string>
+    <string name="waypoints_sync_synced">ተልኳል</string>
+    <string name="waypoints_sync_conflict">የማመሳሰል ግጭት</string>
 </resources>

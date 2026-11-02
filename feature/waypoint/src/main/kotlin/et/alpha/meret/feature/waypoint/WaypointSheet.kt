@@ -168,7 +168,7 @@ private fun FixLine(fix: CaptureFix) {
 private fun coordinate(degrees: Double): String = String.format(Locale.ROOT, "%.5f", degrees)
 
 @get:StringRes
-private val WaypointCategory.label: Int
+internal val WaypointCategory.label: Int
     get() =
         when (this) {
             WaypointCategory.FARM_PLOT -> R.string.waypoint_category_farm_plot

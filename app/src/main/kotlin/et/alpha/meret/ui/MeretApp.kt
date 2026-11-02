@@ -36,6 +36,7 @@ import androidx.navigation.navArgument
 import et.alpha.meret.core.designsystem.component.OfflineIndicator
 import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
+import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.feature.map.MapRoute
 import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
@@ -44,7 +45,7 @@ import et.alpha.meret.feature.tracking.TrackDetailRoute
 import et.alpha.meret.feature.tracking.TrackDetailViewModel
 import et.alpha.meret.feature.tracking.TrackListRoute
 import et.alpha.meret.feature.waypoint.WaypointCaptureRoute
-import et.alpha.meret.feature.waypoint.WaypointListScreen
+import et.alpha.meret.feature.waypoint.WaypointListRoute
 import et.alpha.meret.navigation.DIAGNOSTICS_ROUTE
 import et.alpha.meret.navigation.MAP_ROUTE
 import et.alpha.meret.navigation.TILE_PACKS_ROUTE
@@ -104,6 +105,11 @@ private fun MeretShell(
     // Real connectivity observation arrives with :core:network. Offline is the honest
     // default until then — and the expected state in the field regardless.
     val isOffline = remember { true }
+
+    // A waypoint picked in the Waypoints tab, until the map has centred on it. Held here
+    // because the two features may not see each other. Not saved: a process death between
+    // the tap and the map opening only loses the centring, never data.
+    var centreRequest by remember { mutableStateOf<LatLng?>(null) }
 
     Column(modifier = modifier.fillMaxSize()) {
         OfflineIndicator(visible = isOffline)
@@ -167,6 +173,8 @@ private fun MeretShell(
                             waypointSheet = { onDismiss ->
                                 WaypointCaptureRoute(onDismiss = onDismiss)
                             },
+                            centreOn = centreRequest,
+                            onCentred = { centreRequest = null },
                         )
                     }
                     composable(TRACKS_ROUTE) {
@@ -190,7 +198,11 @@ private fun MeretShell(
                         )
                     }
                     composable(WAYPOINTS_ROUTE) {
-                        WaypointListScreen(
+                        WaypointListRoute(
+                            onShowOnMap = { position ->
+                                centreRequest = position
+                                navController.navigateToTopLevel(TopLevelDestination.Map)
+                            },
                             modifier = Modifier.padding(innerPadding),
                         )
                     }

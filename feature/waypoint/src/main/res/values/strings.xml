@@ -19,4 +19,10 @@
     <string name="waypoint_saved">Waypoint saved</string>
     <string name="waypoint_not_saved_no_fix">Not saved: no GPS fix yet.</string>
     <string name="waypoint_not_saved_storage">Not saved: the phone could not write it. Free some storage and try again.</string>
+    <string name="waypoints_show_on_map">Show on map</string>
+    <string name="waypoints_row_details">%1$s · %2$s</string>
+    <string name="waypoints_sync_pending">Not synced yet</string>
+    <string name="waypoints_sync_syncing">Syncing</string>
+    <string name="waypoints_sync_synced">Synced</string>
+    <string name="waypoints_sync_conflict">Sync conflict</string>
 </resources>
