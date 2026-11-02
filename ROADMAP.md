@@ -20,27 +20,12 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 29b. [P1 · S] Phase 8b-2 — Waypoints list; a tap centres the map
-The Waypoints tab (`feature/waypoint/WaypointListScreen.kt` is still a stub) lists them newest
-first with title (or category, or time), category, time and sync state, from
-`WaypointRepository` (add an `observeWaypoints()` list read; the map's marker read from 29a
-carries no title). A tap switches to the map tab and centres on the waypoint: the app passes
-the position through navigation (`:feature:waypoint` cannot see `:feature:map`), and
-`OfflineMapController.centreOn`-style API turns follow mode off. en/am. Tests: ViewModel, list
-order, empty state.
-
-### 30. [P1 · M] Phase 8c-1 — Form schema: parse, validate, `visible_if`
-Pure Kotlin in `:core:model` / `:domain`, no Android: parse `form_template.schema_json` into
-field types (text, number, select, multiselect, date, photo, GPS point), validate answers
-(required, number range, options), and evaluate `visible_if` (equals, not-equals, in, and/or)
-so hidden fields are neither required nor kept. Unknown field types are kept as
-"unsupported" and shown read-only, never dropped. Fixture templates in test resources;
-85 % coverage. Ship one bundled example template so forms are usable before sync (Phase 9)
-delivers real ones.
-
 ### 31. [P1 · M] Phase 8c-2 — Form renderer in Compose
-Stateless composables for each field type from 30, one `FormUiState`, en/am chrome strings
-(field labels come from the template). The waypoint sheet from 28 shows the project's form
+Stateless composables for each field type from 30 (`:core:model` `form` package, format in
+`docs/FORM_SCHEMA.md`), one `FormUiState`, en/am chrome strings (field labels come from the
+template, `LocalizedText.resolve`); one message per `FieldError`. Until sync, the bundled
+`BundledFormTemplates.farmVisit` is the form, titled from a string resource, not its `name`.
+Answers are stored with `FormAnswersJson` after `FormRules.answersToKeep`. The waypoint sheet from 28 shows the project's form
 when one exists. Large touch targets; works with TalkBack (labels, errors read aloud).
 
 ### 32. [P1 · M] Phase 8d — Draft autosave that survives process death
@@ -153,3 +138,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 15. Template leftovers: placeholder launcher icon (A14) instead of the robot, unused density webps removed, `gradle.properties` header | #66 | `8f222f3` |
 | 28. Phase 8a: save a waypoint from the map (sheet with live position, title, category, notes; Room first, live fix only, `track_id` while recording) | #69 | `ce57e91` |
 | 29a. Phase 8b-1: saved waypoints on the map, clustered (MapLibre cluster source, count labels, marker read capped at 5,000) | #70 | `b48a5c9` |
+| 29b. Phase 8b-2: waypoint list (newest first, title or category or time, sync state); a tap centres the map with follow off (`OfflineMapController.centreOn`) | #72 | `10ba868` |
+| 30. Phase 8c-1: form schema in `:core:model` (parse, 7 field types plus unsupported, validate, `visible_if` with cascading hiding, `form_data` JSON, bundled 12-field farm visit; `docs/FORM_SCHEMA.md`) | #73 | `1fbf492` |
