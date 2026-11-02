@@ -4,6 +4,32 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-11-02 — Run 23 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 31 (Phase 8c-2): the form on the waypoint sheet.** Under the notes the sheet shows «Farm visit», one control per question: text and number boxes (the unit after the number), radio rows, checkbox rows, a date picker, «Use my current position» for a GPS question, and a note for photos (item 33) and for question types this build does not know. A question appears or goes as the answers change it. Required questions say «(required)». The first Save that is refused (nothing written) marks every problem in red, one message per kind of problem, and TalkBack reads it with the question. Save waits until the form has loaded, and the answers survive rotation and a background process death. A saved waypoint stores its answers with the form's id and version; answers to questions the form hid are dropped. A comma in a number box is refused rather than read as a decimal point, because in Ethiopia «1,500» means fifteen hundred ([#75](https://github.com/Alphaguyasa/Meret/pull/75)). **Item 32a (new): CI prints new Room schemas.** Item 32 needs the database's first migration, and its schema file can only be written by Room, which cannot run in the container. CI now prints any new schema file for the PR to commit, and fails if an already committed schema changes ([#76](https://github.com/Alphaguyasa/Meret/pull/76)). |
+| Merged | #75 yes, `443bd92`, green on the first attempt (about 5 min). #76 yes, `9c46373`, green on the first attempt (about 4 min); `1.json` regenerated unchanged. |
+| Failed or blocked | Nothing failed. Item 32 is split: 32a (#76) is done, and 32b (the migration and draft autosave) can now commit Room's own `2.json`. Gradle still cannot run in the container. ktlint and detekt ran locally on every changed file. kotlinc 2.2.10 compiled `:core:model`, `:core:common` and `:domain` and ran `SaveWaypointUseCaseTest` and `AppErrorTest`: 21/21 pass. |
+| Roadmap | 8 open: 32b, 33, 34, 35, 26 (A13), 25 (A12), 14 (A6), 18. No replan needed. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | A9: 23 new Amharic strings (the form chrome and error messages; please check «ግዴታ» for "required"). 1 new "Needs a device" row (fill the farm visit form). A2, A3, A5, A6, A7, A10–A15 unchanged. **Dependabot:** #30 (2026-10-21) and #68 (2026-11-01), both Gradle groups, still open and unmerged, waiting on A10. |
+| Next | 32b (draft autosave to Room; the first migration, with Room's `2.json` read from CI's log), then 33 (photos). |
+
+Notes for the next run:
+- **32b's first push will show a CI warning by design**: "Check Room schemas" prints
+  `core/database/schemas/et.alpha.meret.core.database.MeretDatabase/2.json`. Read it with
+  `get_job_logs` (it is in a `::group::` block, and in the run summary), commit it verbatim, push
+  once more. The check passes in both runs; only a *changed* `1.json` fails it.
+- Form API on the sheet: `WaypointCaptureViewModel.onAnswerChange(key, FormAnswer?)` and
+  `onNumberTextChange(key, text)`; `FormUiState` (`Loading`/`None`/`Ready`), `FormFieldUiState`.
+  `NotSaved` now carries a `NotSavedReason` (`NoFix`, `FormIncomplete`, `Storage`).
+- `WaypointFormSource` (`:domain`) is `BundledWaypointFormSource` (`:core:data`), cached.
+  `AppError.Invalid(fields)` exists; no `when` over `AppError` is exhaustive today.
+- `NewWaypoint` has `formTemplateId`, `formVersion`, `formData` (defaults null).
+- Local JVM test recipe: kotlinc zip plus the jars, and add `kotlinc/lib/kotlin-stdlib.jar` to the
+  `java -cp` when running JUnit, or every test fails with `NoClassDefFoundError: Intrinsics`.
+
 ## 2026-11-02 — Run 22 (scheduled, cloud)
 
 | Field | Content |
