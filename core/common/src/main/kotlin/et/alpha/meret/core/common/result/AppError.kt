@@ -84,6 +84,15 @@ public sealed interface AppError {
     }
 
     /**
+     * The user's input cannot be saved as it is, and nothing was written. [fields] names what
+     * is wrong (form field keys, never their values), so the UI can point at it.
+     */
+    public data class Invalid(
+        public val fields: Set<String>,
+        override val cause: Throwable? = null,
+    ) : AppError
+
+    /**
      * The server holds a newer version of an entity than the one we edited.
      *
      * Local data is never discarded on this path: a `sync_conflict` row is written and

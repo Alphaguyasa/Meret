@@ -49,10 +49,10 @@ fun WaypointCaptureRoute(
                         }
 
                         is WaypointCaptureEvent.NotSaved -> {
-                            if (event.noFix) {
-                                R.string.waypoint_not_saved_no_fix
-                            } else {
-                                R.string.waypoint_not_saved_storage
+                            when (event.reason) {
+                                NotSavedReason.NoFix -> R.string.waypoint_not_saved_no_fix
+                                NotSavedReason.FormIncomplete -> R.string.waypoint_not_saved_form
+                                NotSavedReason.Storage -> R.string.waypoint_not_saved_storage
                             }
                         }
                     }
@@ -72,6 +72,8 @@ fun WaypointCaptureRoute(
             onTitleChange = viewModel::onTitleChange,
             onCategoryTap = viewModel::onCategoryTap,
             onNotesChange = viewModel::onNotesChange,
+            onAnswerChange = viewModel::onAnswerChange,
+            onNumberTextChange = viewModel::onNumberTextChange,
             onSave = viewModel::onSave,
             onCancel = close,
         )

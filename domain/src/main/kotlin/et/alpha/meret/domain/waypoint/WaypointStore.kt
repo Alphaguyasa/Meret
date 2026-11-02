@@ -13,6 +13,11 @@ public data class NewWaypoint(
     public val category: WaypointCategory?,
     public val title: String?,
     public val notes: String?,
+    /** The form the answers were given under, or null for a waypoint saved without one. */
+    public val formTemplateId: String? = null,
+    public val formVersion: Int? = null,
+    /** The answers as `FormAnswersJson` text, hidden fields' answers already dropped. */
+    public val formData: String? = null,
 )
 
 /** Writes waypoints. Room, through `:core:data`. */

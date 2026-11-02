@@ -116,3 +116,25 @@ The parser refuses a template, with a reason naming the field and the rule, when
 
 The reason contains template text only, never answers, so it is safe for the diagnostics
 report.
+
+## How the app shows a form
+
+The waypoint sheet shows the form under the notes, one control per visible field, in
+template order (`WaypointForm.kt` in `:feature:waypoint`). Until sync (Phase 9) the form is
+the bundled farm visit, titled from a string resource rather than its `name`.
+
+| Type | Control |
+|---|---|
+| `text` | Text box; several lines when `multiline` |
+| `number` | Number keyboard, `unit` after the box. The box text is kept as typed; text that is not a number (including `1,500`: a comma is never read as a decimal point) is reported as "Enter a number", never saved as a guess |
+| `select` | One radio row per option; tapping the chosen one again clears it |
+| `multiselect` | One checkbox row per option; at `max_selected` the others are disabled |
+| `date` | A button that opens the date picker; the date is shown in the phone's language |
+| `photo` | A note that photos come with a later update (ROADMAP 33); photos already in the answer are kept |
+| `gps_point` | «Use my current position», from the live fix only |
+| unknown type | Its label and a note that a newer app is needed; any answer is kept |
+
+Labels, hints and options use the phone's language through `LocalizedText.resolve`. A
+required field's label ends in «(required)». Problems are shown from the first refused Save
+on, one message per `FieldError`, and are set as the field's accessibility error so TalkBack
+reads them. Save is refused (nothing written) while any visible field has a problem.

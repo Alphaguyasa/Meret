@@ -3,6 +3,12 @@ package et.alpha.meret.domain.waypoint
 import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
+import et.alpha.meret.core.model.form.FormAnswer
+import et.alpha.meret.core.model.form.FormField
+import et.alpha.meret.core.model.form.FormSchema
+import et.alpha.meret.core.model.form.LocalizedText
+import et.alpha.meret.core.model.form.SelectOption
+import et.alpha.meret.core.model.form.VisibleIf
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
 import kotlinx.coroutines.test.runTest
@@ -92,6 +98,71 @@ class SaveWaypointUseCaseTest {
     }
 
     @Test
+    fun `without a form no form columns are written`() = runTest {
+        saveWaypoint(fix = here, recordingTrackId = null, input = WaypointInput())
+
+        val saved = store.saved.single()
+        assertThat(saved.formTemplateId).isNull()
+        assertThat(saved.formVersion).isNull()
+        assertThat(saved.formData).isNull()
+    }
+
+    @Test
+    fun `a form with a missing required answer is refused and nothing is written`() = runTest {
+        val input =
+            WaypointInput(form = form, answers = mapOf("present" to FormAnswer.Choice("yes")))
+
+        val result = saveWaypoint(fix = here, recordingTrackId = null, input = input)
+
+        assertThat(result).isEqualTo(AppResult.Failure(AppError.Invalid(setOf("name"))))
+        assertThat(store.saved).isEmpty()
+    }
+
+    @Test
+    fun `answers are saved under the template and version, hidden ones dropped`() = runTest {
+        val answers =
+            mapOf(
+                "present" to FormAnswer.Choice("no"),
+                // Typed before "present" was changed to "no", which hid the field.
+                "name" to FormAnswer.Text("Abebe"),
+                "legacy" to FormAnswer.Raw("42"),
+            )
+
+        val result =
+            saveWaypoint(
+                fix = here,
+                recordingTrackId = null,
+                input = WaypointInput(form = form, answers = answers),
+            )
+
+        assertThat(result).isEqualTo(AppResult.Success("waypoint-1"))
+        val saved = store.saved.single()
+        assertThat(saved.formTemplateId).isEqualTo("template-1")
+        assertThat(saved.formVersion).isEqualTo(3)
+        assertThat(saved.formData).isEqualTo("""{"present":"no","legacy":42}""")
+    }
+
+    @Test
+    fun `a form left blank but valid is saved as an empty object`() = runTest {
+        val optional =
+            form.copy(
+                schema =
+                    FormSchema(
+                        1,
+                        listOf(
+                            form.schema.fields
+                                .first()
+                                .copyOptional(),
+                        ),
+                    ),
+            )
+
+        saveWaypoint(fix = here, recordingTrackId = null, input = WaypointInput(form = optional))
+
+        assertThat(store.saved.single().formData).isEqualTo("{}")
+    }
+
+    @Test
     fun `category keys round-trip and unknown keys are no category`() {
         WaypointCategory.entries.forEach { category ->
             assertThat(WaypointCategory.fromKey(category.key)).isEqualTo(category)
@@ -101,6 +172,39 @@ class SaveWaypointUseCaseTest {
         assertThat(WaypointCategory.entries.map { it.key }.toSet())
             .hasSize(WaypointCategory.entries.size)
     }
+
+    private val form =
+        WaypointForm(
+            templateId = "template-1",
+            version = 3,
+            name = "Visit",
+            schema =
+                FormSchema(
+                    format = 1,
+                    fields =
+                        listOf(
+                            FormField.Select(
+                                key = "present",
+                                label = LocalizedText.of("Present?"),
+                                required = true,
+                                options =
+                                    listOf(
+                                        SelectOption("yes", LocalizedText.of("Yes")),
+                                        SelectOption("no", LocalizedText.of("No")),
+                                    ),
+                            ),
+                            FormField.Text(
+                                key = "name",
+                                label = LocalizedText.of("Name"),
+                                required = true,
+                                visibleIf = VisibleIf.Equals("present", "yes"),
+                            ),
+                        ),
+                ),
+        )
+
+    private fun FormField.copyOptional(): FormField =
+        (this as FormField.Select).copy(required = false)
 
     private class FakeWaypointStore : WaypointStore {
         val saved = mutableListOf<NewWaypoint>()

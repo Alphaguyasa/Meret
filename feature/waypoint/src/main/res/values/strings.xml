@@ -25,4 +25,27 @@
     <string name="waypoints_sync_syncing">Syncing</string>
     <string name="waypoints_sync_synced">Synced</string>
     <string name="waypoints_sync_conflict">Sync conflict</string>
+    <string name="form_title_farm_visit">Farm visit</string>
+    <string name="form_label_required">%1$s (required)</string>
+    <string name="form_field_unsupported">This question needs a newer version of the app. Any answer already given is kept.</string>
+    <string name="form_date_pick">Pick a date</string>
+    <string name="form_date_ok">OK</string>
+    <string name="form_clear">Clear</string>
+    <string name="form_point_value">%1$s, %2$s</string>
+    <string name="form_point_use_current">Use my current position</string>
+    <string name="form_photo_not_yet">Photos can be added in a coming update.</string>
+    <string name="form_photo_kept">Photos kept: %1$d</string>
+    <string name="form_error_required">Please answer this question.</string>
+    <string name="form_error_not_a_number">Enter a number.</string>
+    <string name="form_error_wrong_type">This answer does not fit the question. Enter it again.</string>
+    <string name="form_error_too_long">Too long. Limit: %1$d characters.</string>
+    <string name="form_error_below_min">The lowest allowed is %1$s.</string>
+    <string name="form_error_above_max">The highest allowed is %1$s.</string>
+    <string name="form_error_not_whole">Enter a whole number.</string>
+    <string name="form_error_unknown_option">This choice is no longer offered. Choose again.</string>
+    <string name="form_error_too_many_choices">Choose no more than %1$d.</string>
+    <string name="form_error_invalid_date">This is not a real date. Pick it again.</string>
+    <string name="form_error_too_many_photos">No more than %1$d photos.</string>
+    <string name="form_error_invalid_point">This position is not valid. Take it again.</string>
+    <string name="waypoint_not_saved_form">Not saved: some answers need attention.</string>
 </resources>
