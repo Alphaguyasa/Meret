@@ -157,6 +157,11 @@ row: measured 800 µs/row vs 65 µs/row on the reference device. Return `Unit`; 
 a count, take a `SELECT total_changes()` delta inside the transaction
 (`TrackPointDao.appendBatch` is the worked example).
 
+**Room schema JSON cannot be generated in the cloud container** (no Gradle: Google Maven is
+blocked). CI's "Check Room schemas" step prints any new `core/database/schemas/.../<n>.json`
+to the job log and the run summary as a warning; copy it into the PR verbatim (read it with
+`get_job_logs`), never hand-write it. A changed committed schema fails CI.
+
 **The Kalman filter is a random walk, not constant-velocity.** Deliberately. See the KDoc
 on `KalmanLocationFilter` before touching it.
 

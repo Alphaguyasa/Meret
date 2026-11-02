@@ -67,6 +67,37 @@ jobs:
           koverVerify koverLog
           assembleDebug assembleDebugAndroidTest
 
+      # Room writes core/database/schemas/<db>/<version>.json at compile time. A new version's
+      # file must be committed with its migration, and the container that writes the code
+      # cannot run Room, so the file is printed here, to the log and the summary, to be
+      # copied into the PR. A changed file for an existing version is a hard failure: that
+      # schema has shipped, and changing it would hide a missing migration.
+      - name: Check Room schemas
+        if: always()
+        run: |
+          dir=core/database/schemas
+          changed=$(git diff --name-only -- "$dir")
+          new=$(git ls-files --others --exclude-standard -- "$dir")
+          for f in $new; do
+            echo "::warning file=$f::New Room schema, not committed. Commit it with its migration (contents below)."
+            echo "::group::$f"
+            cat "$f"
+            echo "::endgroup::"
+            {
+              echo "### Uncommitted Room schema: \`$f\`"
+              echo '```json'
+              cat "$f"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          done
+          if [ -n "$changed" ]; then
+            for f in $changed; do
+              echo "::error file=$f::A committed Room schema changed. Bump the version and add a migration instead."
+            done
+            git diff -- "$dir"
+            exit 1
+          fi
+
       # APK size is a performance budget for this app's users. Recording it on every run
       # gives a before/after number for any change that adds a dependency.
       - name: Report APK size
