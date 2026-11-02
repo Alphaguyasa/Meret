@@ -1,0 +1,112 @@
+{
+  "format": 1,
+  "fields": [
+    {
+      "key": "farmer_present",
+      "type": "select",
+      "label": { "en": "Is the farmer present?", "am": "አርሶ አደሩ አለ?" },
+      "required": true,
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "am": "አዎ" } },
+        { "value": "no", "label": { "en": "No", "am": "የለም" } }
+      ]
+    },
+    {
+      "key": "farmer_name",
+      "type": "text",
+      "label": { "en": "Farmer's name", "am": "የአርሶ አደሩ ስም" },
+      "required": true,
+      "max_length": 80,
+      "visible_if": { "field": "farmer_present", "equals": "yes" }
+    },
+    {
+      "key": "household_size",
+      "type": "number",
+      "label": { "en": "People in the household", "am": "በቤተሰቡ ውስጥ ያሉ ሰዎች" },
+      "integer": true,
+      "min": 1,
+      "max": 30,
+      "visible_if": { "field": "farmer_present", "equals": "yes" }
+    },
+    {
+      "key": "main_crop",
+      "type": "select",
+      "label": { "en": "Main crop", "am": "ዋናው ሰብል" },
+      "required": true,
+      "options": [
+        { "value": "teff", "label": { "en": "Teff", "am": "ጤፍ" } },
+        { "value": "maize", "label": { "en": "Maize", "am": "በቆሎ" } },
+        { "value": "wheat", "label": { "en": "Wheat", "am": "ስንዴ" } },
+        { "value": "sorghum", "label": { "en": "Sorghum", "am": "ማሽላ" } },
+        { "value": "coffee", "label": { "en": "Coffee", "am": "ቡና" } },
+        { "value": "other", "label": { "en": "Other", "am": "ሌላ" } }
+      ]
+    },
+    {
+      "key": "main_crop_other",
+      "type": "text",
+      "label": { "en": "Which crop?", "am": "የትኛው ሰብል?" },
+      "required": true,
+      "max_length": 40,
+      "visible_if": { "field": "main_crop", "equals": "other" }
+    },
+    {
+      "key": "plot_area",
+      "type": "number",
+      "label": { "en": "Plot area", "am": "የማሳው ስፋት" },
+      "hint": { "en": "As the farmer reports it", "am": "አርሶ አደሩ እንደሚለው" },
+      "min": 0,
+      "max": 100,
+      "unit": "ha"
+    },
+    {
+      "key": "planting_date",
+      "type": "date",
+      "label": { "en": "Planting date", "am": "የተዘራበት ቀን" }
+    },
+    {
+      "key": "inputs",
+      "type": "multiselect",
+      "label": { "en": "Inputs used", "am": "ጥቅም ላይ የዋሉ ግብዓቶች" },
+      "options": [
+        { "value": "improved_seed", "label": { "en": "Improved seed", "am": "ምርጥ ዘር" } },
+        { "value": "fertiliser", "label": { "en": "Fertiliser", "am": "ማዳበሪያ" } },
+        { "value": "compost", "label": { "en": "Compost", "am": "ብስባሽ" } },
+        { "value": "pesticide", "label": { "en": "Pesticide", "am": "ፀረ ተባይ" } },
+        { "value": "none", "label": { "en": "None", "am": "ምንም" } }
+      ]
+    },
+    {
+      "key": "irrigated",
+      "type": "select",
+      "label": { "en": "Is the plot irrigated?", "am": "ማሳው በመስኖ ይለማል?" },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "am": "አዎ" } },
+        { "value": "no", "label": { "en": "No", "am": "የለም" } }
+      ]
+    },
+    {
+      "key": "crop_condition",
+      "type": "select",
+      "label": { "en": "Crop condition", "am": "የሰብሉ ሁኔታ" },
+      "options": [
+        { "value": "good", "label": { "en": "Good", "am": "ጥሩ" } },
+        { "value": "fair", "label": { "en": "Fair", "am": "መካከለኛ" } },
+        { "value": "poor", "label": { "en": "Poor", "am": "ደካማ" } }
+      ]
+    },
+    {
+      "key": "photos",
+      "type": "photo",
+      "label": { "en": "Photos of the plot", "am": "የማሳው ፎቶዎች" },
+      "max_count": 3
+    },
+    {
+      "key": "notes",
+      "type": "text",
+      "label": { "en": "Notes", "am": "ማስታወሻ" },
+      "multiline": true,
+      "max_length": 500
+    }
+  ]
+}

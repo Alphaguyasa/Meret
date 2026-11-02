@@ -1,0 +1,10 @@
+{
+  "fields": [
+    { "key": "present", "type": "select", "label": "Present?", "required": true, "options": [ { "value": "yes" }, { "value": "no" } ] },
+    { "key": "name", "type": "text", "label": "Name", "required": true, "visible_if": { "field": "present", "equals": "yes" } },
+    { "key": "size", "type": "number", "label": "Size", "visible_if": { "field": "present", "not_equals": "no" } },
+    { "key": "big", "type": "text", "label": "Why so big?", "required": true, "visible_if": { "and": [ { "field": "size", "in": [10, 20] }, { "field": "name", "not_equals": "" } ] } },
+    { "key": "crops", "type": "multiselect", "label": "Crops", "options": [ { "value": "teff" }, { "value": "coffee" } ] },
+    { "key": "coffee_age", "type": "number", "label": "Coffee age", "required": true, "visible_if": { "or": [ { "field": "crops", "equals": "coffee" }, { "field": "big", "equals": "trees" } ] } }
+  ]
+}
