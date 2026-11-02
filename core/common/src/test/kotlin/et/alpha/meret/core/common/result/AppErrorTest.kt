@@ -102,6 +102,15 @@ class AppErrorTest {
     }
 
     @Test
+    fun `an invalid-input error names the fields, never their values`() {
+        val error = AppError.Invalid(setOf("farmer_name", "main_crop"))
+
+        assertThat(error.fields).containsExactly("farmer_name", "main_crop")
+        assertThat(error.cause).isNull()
+        assertThat(error).isEqualTo(AppError.Invalid(setOf("main_crop", "farmer_name")))
+    }
+
+    @Test
     fun `an unexpected error always carries its throwable`() {
         val boom = IllegalStateException("impossible")
 

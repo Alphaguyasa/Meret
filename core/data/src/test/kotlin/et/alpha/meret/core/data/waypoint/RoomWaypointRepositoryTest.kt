@@ -11,6 +11,7 @@ import et.alpha.meret.core.common.uuid.uuidV7TimestampMillis
 import et.alpha.meret.core.data.tracking.RoomNewTrackStore
 import et.alpha.meret.core.database.MeretDatabase
 import et.alpha.meret.core.model.SyncState
+import et.alpha.meret.core.model.form.BundledFormTemplates
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.WaypointMarker
 import et.alpha.meret.domain.waypoint.NewWaypoint
@@ -117,6 +118,37 @@ class RoomWaypointRepositoryTest {
         assertThat(row.notes).isNull()
         assertThat(row.altitudeMeters).isNull()
     }
+
+    @Test
+    fun `form answers are stored with the template and version they were given under`() =
+        runBlocking<Unit> {
+            val withForm =
+                waypoint.copy(
+                    formTemplateId = "bundled:farm_visit",
+                    formVersion = 1,
+                    formData = """{"farmer_present":"no","main_crop":"teff"}""",
+                )
+
+            val id = (repository.save(withForm) as AppResult.Success).value
+
+            val row = checkNotNull(database.waypointDao().getWaypoint(id))
+            assertThat(row.formTemplateId).isEqualTo("bundled:farm_visit")
+            assertThat(row.formVersion).isEqualTo(1)
+            assertThat(row.formData).isEqualTo("""{"farmer_present":"no","main_crop":"teff"}""")
+        }
+
+    @Test
+    fun `the bundled farm visit is the form, parsed, until sync brings projects' own`() =
+        runBlocking<Unit> {
+            val source = BundledWaypointFormSource(TestDispatchers(Dispatchers.IO))
+
+            val form = checkNotNull(source.currentForm())
+
+            assertThat(form.templateId).isEqualTo(BundledFormTemplates.FARM_VISIT_ID)
+            assertThat(form.version).isEqualTo(BundledFormTemplates.FARM_VISIT_VERSION)
+            assertThat(form.schema.fields).hasSize(12)
+            assertThat(source.currentForm()).isSameInstanceAs(form)
+        }
 
     @Test
     fun `a saved waypoint appears among the map's markers, newest first`() = runBlocking<Unit> {

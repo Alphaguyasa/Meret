@@ -89,6 +89,9 @@ public class RoomWaypointRepository
                             category = waypoint.category?.key,
                             title = waypoint.title,
                             notes = waypoint.notes,
+                            formTemplateId = waypoint.formTemplateId,
+                            formVersion = waypoint.formVersion,
+                            formData = waypoint.formData,
                             syncState = SyncState.PENDING,
                             updatedAt = now,
                         )

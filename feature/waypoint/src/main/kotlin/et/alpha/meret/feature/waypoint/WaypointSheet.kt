@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
 import et.alpha.meret.core.designsystem.theme.Spacing
+import et.alpha.meret.core.model.form.FormAnswer
 import et.alpha.meret.domain.waypoint.WaypointCategory
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -48,6 +49,8 @@ fun WaypointSheet(
     onTitleChange: (String) -> Unit,
     onCategoryTap: (WaypointCategory) -> Unit,
     onNotesChange: (String) -> Unit,
+    onAnswerChange: (String, FormAnswer?) -> Unit,
+    onNumberTextChange: (String, String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
@@ -113,6 +116,13 @@ fun WaypointSheet(
             keyboardOptions =
                 KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        WaypointFormSection(
+            form = state.form,
+            fix = state.fix,
+            onAnswerChange = onAnswerChange,
+            onNumberTextChange = onNumberTextChange,
         )
 
         Row(
@@ -196,6 +206,8 @@ private fun LocatedPreview() {
                 onTitleChange = {},
                 onCategoryTap = {},
                 onNotesChange = {},
+                onAnswerChange = { _, _ -> },
+                onNumberTextChange = { _, _ -> },
                 onSave = {},
                 onCancel = {},
             )
@@ -213,6 +225,8 @@ private fun WaitingPreview() {
                 onTitleChange = {},
                 onCategoryTap = {},
                 onNotesChange = {},
+                onAnswerChange = { _, _ -> },
+                onNumberTextChange = { _, _ -> },
                 onSave = {},
                 onCancel = {},
             )

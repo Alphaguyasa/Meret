@@ -25,4 +25,27 @@
     <string name="waypoints_sync_syncing">በመላክ ላይ</string>
     <string name="waypoints_sync_synced">ተልኳል</string>
     <string name="waypoints_sync_conflict">የማመሳሰል ግጭት</string>
+    <string name="form_title_farm_visit">የእርሻ ጉብኝት</string>
+    <string name="form_label_required">%1$s (ግዴታ)</string>
+    <string name="form_field_unsupported">ይህ ጥያቄ አዲስ የመተግበሪያ ስሪት ይፈልጋል። ቀድሞ የተሰጠ መልስ ይጠበቃል።</string>
+    <string name="form_date_pick">ቀን ይምረጡ</string>
+    <string name="form_date_ok">እሺ</string>
+    <string name="form_clear">አጽዳ</string>
+    <string name="form_point_value">%1$s, %2$s</string>
+    <string name="form_point_use_current">አሁን ያለሁበትን ቦታ ተጠቀም</string>
+    <string name="form_photo_not_yet">ፎቶዎች በሚመጣው ዝማኔ መጨመር ይቻላል።</string>
+    <string name="form_photo_kept">የተጠበቁ ፎቶዎች፦ %1$d</string>
+    <string name="form_error_required">እባክዎ ይህን ጥያቄ ይመልሱ።</string>
+    <string name="form_error_not_a_number">ቁጥር ያስገቡ።</string>
+    <string name="form_error_wrong_type">ይህ መልስ ከጥያቄው ጋር አይስማማም። እንደገና ያስገቡ።</string>
+    <string name="form_error_too_long">በጣም ረጅም ነው። ገደቡ፦ %1$d ፊደላት።</string>
+    <string name="form_error_below_min">ዝቅተኛው የሚፈቀደው %1$s ነው።</string>
+    <string name="form_error_above_max">ከፍተኛው የሚፈቀደው %1$s ነው።</string>
+    <string name="form_error_not_whole">ሙሉ ቁጥር ያስገቡ።</string>
+    <string name="form_error_unknown_option">ይህ ምርጫ ከእንግዲህ የለም። እንደገና ይምረጡ።</string>
+    <string name="form_error_too_many_choices">ከ%1$d አይበልጥ ይምረጡ።</string>
+    <string name="form_error_invalid_date">ይህ ትክክለኛ ቀን አይደለም። እንደገና ይምረጡ።</string>
+    <string name="form_error_too_many_photos">ከ%1$d ፎቶዎች አይበልጥ።</string>
+    <string name="form_error_invalid_point">ይህ ቦታ ትክክል አይደለም። እንደገና ይውሰዱ።</string>
+    <string name="waypoint_not_saved_form">አልተቀመጠም፦ አንዳንድ መልሶች መስተካከል አለባቸው።</string>
 </resources>
