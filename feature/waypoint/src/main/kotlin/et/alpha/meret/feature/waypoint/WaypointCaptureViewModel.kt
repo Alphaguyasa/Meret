@@ -1,6 +1,5 @@
 package et.alpha.meret.feature.waypoint
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +16,8 @@ import et.alpha.meret.core.model.form.FormRules
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.domain.waypoint.SaveWaypointUseCase
 import et.alpha.meret.domain.waypoint.WaypointCategory
+import et.alpha.meret.domain.waypoint.WaypointDraft
+import et.alpha.meret.domain.waypoint.WaypointDraftStore
 import et.alpha.meret.domain.waypoint.WaypointForm
 import et.alpha.meret.domain.waypoint.WaypointFormSource
 import et.alpha.meret.domain.waypoint.WaypointInput
@@ -27,10 +28,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import kotlin.math.abs
 
@@ -45,9 +50,11 @@ import kotlin.math.abs
  * answers must pass the form's checks before Save writes anything; the problems are shown
  * from the first refused Save on, and then follow every change.
  *
- * The text, category and answers are kept in [SavedStateHandle], so a rotation or a process
- * death while the app is in the background keeps them. A dismissed sheet keeps them too, for
- * a swipe made by mistake; a saved one starts empty. Draft autosave to Room is item 32.
+ * The text, category and answers are a draft in Room ([WaypointDraftStore]), written on every
+ * change, so a killed app (swiped away, out of memory, a flat battery) reopens the sheet with
+ * all of them. A write in progress coalesces the changes made meanwhile into the next one, so
+ * fast typing is a handful of small writes, never a queue. A dismissed sheet keeps its draft,
+ * for a swipe made by mistake; a saved one starts empty and the draft is deleted.
  */
 @HiltViewModel
 class WaypointCaptureViewModel
@@ -56,7 +63,7 @@ class WaypointCaptureViewModel
         devicePosition: DevicePositionRepository,
         private val tracking: TrackingController,
         private val saveWaypoint: SaveWaypointUseCase,
-        private val savedState: SavedStateHandle,
+        private val drafts: WaypointDraftStore,
         formSource: WaypointFormSource,
     ) : ViewModel() {
         private val fix: StateFlow<DevicePosition?> =
@@ -68,21 +75,20 @@ class WaypointCaptureViewModel
                     initialValue = null,
                 )
 
-        private val input =
-            MutableStateFlow(
-                WaypointInput(
-                    title = savedState.get<String>(KEY_TITLE).orEmpty(),
-                    category = WaypointCategory.fromKey(savedState.get<String>(KEY_CATEGORY)),
-                    notes = savedState.get<String>(KEY_NOTES).orEmpty(),
-                ),
-            )
+        private val input = MutableStateFlow(WaypointInput())
 
         private val draft = MutableStateFlow(FormDraft())
 
+        /** One draft write at a time, so an older state never lands after a newer one. */
+        private val draftWrites = Mutex()
+
         init {
             viewModelScope.launch {
-                val form = formSource.currentForm()
-                draft.value = if (form == null) FormDraft(loaded = true) else restoreDraft(form)
+                val saved = drafts.load()
+                restore(saved, formSource.currentForm())
+                // From here on, every change is written. Not before: the empty sheet of a
+                // new ViewModel must not overwrite the draft it is about to restore.
+                merge(input, draft).conflate().collect { persistDraft() }
             }
         }
 
@@ -110,19 +116,16 @@ class WaypointCaptureViewModel
         private var saveJob: Job? = null
 
         fun onTitleChange(title: String) {
-            savedState[KEY_TITLE] = title
             input.update { it.copy(title = title) }
         }
 
         fun onNotesChange(notes: String) {
-            savedState[KEY_NOTES] = notes
             input.update { it.copy(notes = notes) }
         }
 
         /** Picks [category], or clears it when it is the one already picked. */
         fun onCategoryTap(category: WaypointCategory) {
             val picked = category.takeUnless { it == input.value.category }
-            savedState[KEY_CATEGORY] = picked?.key
             input.update { it.copy(category = picked) }
         }
 
@@ -141,7 +144,6 @@ class WaypointCaptureViewModel
                     null -> current.answers - key
                     else -> current.answers + (key to answer)
                 }
-            savedState[KEY_FORM_ANSWERS] = FormAnswersJson.encode(answers)
             draft.value = current.copy(answers = answers)
         }
 
@@ -152,7 +154,6 @@ class WaypointCaptureViewModel
         ) {
             val current = draft.value
             if (current.form?.schema?.field(key) !is FormField.Number) return
-            savedState[NUMBER_PREFIX + key] = text
             draft.value = current.copy(numberTexts = current.numberTexts + (key to text))
         }
 
@@ -175,6 +176,7 @@ class WaypointCaptureViewModel
                         when (val result = saveWaypoint(fix.value, trackId, toSave)) {
                             is AppResult.Success -> {
                                 clearInput()
+                                persistDraft()
                                 WaypointCaptureEvent.Saved
                             }
 
@@ -183,7 +185,6 @@ class WaypointCaptureViewModel
                             }
                         }
                     if (event == WaypointCaptureEvent.NotSaved(NotSavedReason.FormIncomplete)) {
-                        savedState[KEY_SHOW_ERRORS] = true
                         draft.update { it.copy(showErrors = true) }
                     }
                     mutableEvents.send(event)
@@ -191,49 +192,90 @@ class WaypointCaptureViewModel
         }
 
         private fun clearInput() {
-            savedState[KEY_TITLE] = ""
-            savedState[KEY_NOTES] = ""
-            savedState.remove<String>(KEY_CATEGORY)
-            savedState.remove<String>(KEY_FORM_ANSWERS)
-            savedState.remove<Boolean>(KEY_SHOW_ERRORS)
-            savedState.keys().filter { it.startsWith(NUMBER_PREFIX) }.forEach {
-                savedState.remove<String>(it)
-            }
             input.value = WaypointInput()
             draft.update { FormDraft(form = it.form, loaded = it.loaded) }
         }
 
-        /** The form with what was entered before a rotation or a process death. */
-        private fun restoreDraft(form: WaypointForm): FormDraft {
-            val decoded =
-                FormAnswersJson.decode(
-                    savedState.get<String>(KEY_FORM_ANSWERS),
-                    form.schema,
-                )
+        /**
+         * The sheet as the last ViewModel left it in Room. Anything typed in the moment before
+         * the draft was read is kept over the draft. Answers given under another template are
+         * not restored: the same key may ask something else there.
+         */
+        private fun restore(
+            saved: WaypointDraft?,
+            form: WaypointForm?,
+        ) {
+            if (saved != null) {
+                input.update { typed ->
+                    typed.copy(
+                        title = typed.title.ifEmpty { saved.title },
+                        category = typed.category ?: WaypointCategory.fromKey(saved.categoryKey),
+                        notes = typed.notes.ifEmpty { saved.notes },
+                    )
+                }
+            }
+            draft.value =
+                when {
+                    form == null -> {
+                        FormDraft(loaded = true)
+                    }
+
+                    saved != null && saved.formTemplateId == form.templateId -> {
+                        restoreAnswers(form, saved)
+                    }
+
+                    else -> {
+                        FormDraft(form, loaded = true)
+                    }
+                }
+        }
+
+        private fun restoreAnswers(
+            form: WaypointForm,
+            saved: WaypointDraft,
+        ): FormDraft {
+            val decoded = FormAnswersJson.decode(saved.answersJson, form.schema)
             val answers = (decoded as? FormAnswersJson.Decoded.Answers)?.answers.orEmpty()
-            val numberTexts =
+            val numberKeys =
                 form.schema.fields
                     .filterIsInstance<FormField.Number>()
-                    .mapNotNull { field ->
-                        savedState.get<String>(NUMBER_PREFIX + field.key)?.let { field.key to it }
-                    }.toMap()
+                    .map { it.key }
+                    .toSet()
             return FormDraft(
                 form = form,
                 loaded = true,
                 answers = answers,
-                numberTexts = numberTexts,
-                showErrors = savedState.get<Boolean>(KEY_SHOW_ERRORS) == true,
+                numberTexts = saved.numberTexts.filterKeys { it in numberKeys },
+                showErrors = saved.showErrors,
+            )
+        }
+
+        /** Writes the sheet as it is now: the latest state, whichever change asked for it. */
+        private suspend fun persistDraft() {
+            draftWrites.withLock {
+                val now = currentDraft()
+                // A failed draft write keeps the sheet as it is; the next change tries again.
+                if (now.isEmpty) drafts.clear() else drafts.save(now)
+            }
+        }
+
+        private fun currentDraft(): WaypointDraft {
+            val typed = input.value
+            val form = draft.value
+            return WaypointDraft(
+                title = typed.title,
+                categoryKey = typed.category?.key,
+                notes = typed.notes,
+                formTemplateId = form.form?.templateId,
+                formVersion = form.form?.version,
+                answersJson = form.answers.takeIf { it.isNotEmpty() }?.let(FormAnswersJson::encode),
+                numberTexts = form.numberTexts.filterValues { it.isNotEmpty() },
+                showErrors = form.showErrors,
             )
         }
 
         private companion object {
             const val STOP_TIMEOUT_MS = 5_000L
-            const val KEY_TITLE = "waypoint_title"
-            const val KEY_NOTES = "waypoint_notes"
-            const val KEY_CATEGORY = "waypoint_category"
-            const val KEY_FORM_ANSWERS = "waypoint_form_answers"
-            const val KEY_SHOW_ERRORS = "waypoint_form_show_errors"
-            const val NUMBER_PREFIX = "waypoint_form_number:"
         }
     }
 

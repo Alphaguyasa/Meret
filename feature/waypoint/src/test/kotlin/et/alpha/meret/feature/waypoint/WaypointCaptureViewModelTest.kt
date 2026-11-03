@@ -1,13 +1,10 @@
 package et.alpha.meret.feature.waypoint
 
-import androidx.lifecycle.SavedStateHandle
 import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.data.location.DevicePositionRepository
-import et.alpha.meret.core.data.tracking.TrackingController
 import et.alpha.meret.core.data.tracking.TrackingState
-import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.form.FieldError
 import et.alpha.meret.core.model.form.FormAnswer
 import et.alpha.meret.core.model.form.FormField
@@ -17,11 +14,11 @@ import et.alpha.meret.core.model.form.SelectOption
 import et.alpha.meret.core.model.form.VisibleIf
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.core.model.geo.LatLng
-import et.alpha.meret.core.model.geo.TrackLine
-import et.alpha.meret.domain.diagnostics.TrackingHealth
 import et.alpha.meret.domain.waypoint.NewWaypoint
 import et.alpha.meret.domain.waypoint.SaveWaypointUseCase
 import et.alpha.meret.domain.waypoint.WaypointCategory
+import et.alpha.meret.domain.waypoint.WaypointDraft
+import et.alpha.meret.domain.waypoint.WaypointDraftStore
 import et.alpha.meret.domain.waypoint.WaypointForm
 import et.alpha.meret.domain.waypoint.WaypointFormSource
 import et.alpha.meret.domain.waypoint.WaypointStore
@@ -47,7 +44,7 @@ class WaypointCaptureViewModelTest {
     private val position = MutableStateFlow<DevicePosition?>(null)
     private val tracking = FakeTrackingController()
     private val store = FakeWaypointStore()
-    private val savedState = SavedStateHandle()
+    private val drafts = FakeDraftStore()
     private var formSource: WaypointFormSource = NoForm
 
     private val here =
@@ -173,7 +170,7 @@ class WaypointCaptureViewModelTest {
     }
 
     @Test
-    fun `what was typed survives a new ViewModel on the same saved state`() = runTest(dispatcher) {
+    fun `what was typed survives a new ViewModel through the stored draft`() = runTest(dispatcher) {
         val (first, _) = subscribe()
         first.onTitleChange("Borehole")
         first.onNotesChange("Pump broken")
@@ -184,6 +181,98 @@ class WaypointCaptureViewModelTest {
         assertThat(state().title).isEqualTo("Borehole")
         assertThat(state().notes).isEqualTo("Pump broken")
         assertThat(state().category).isEqualTo(WaypointCategory.WATER_POINT)
+    }
+
+    @Test
+    fun `every change is in the stored draft at once, and a saved waypoint deletes it`() =
+        runTest(dispatcher) {
+            formSource = FixedForm(visitForm)
+            val (viewModel, _) = subscribe()
+            position.value = here
+
+            viewModel.onTitleChange("Borehole")
+            assertThat(drafts.draft?.title).isEqualTo("Borehole")
+            viewModel.onCategoryTap(WaypointCategory.WATER_POINT)
+            viewModel.onNotesChange("Pump broken")
+            viewModel.onAnswerChange("present", FormAnswer.Choice("no"))
+            viewModel.onNumberTextChange("people", "3")
+
+            assertThat(drafts.draft)
+                .isEqualTo(
+                    WaypointDraft(
+                        title = "Borehole",
+                        categoryKey = "water_point",
+                        notes = "Pump broken",
+                        formTemplateId = "template-1",
+                        formVersion = 2,
+                        answersJson = """{"present":"no"}""",
+                        numberTexts = mapOf("people" to "3"),
+                    ),
+                )
+
+            viewModel.onSave()
+
+            assertThat(store.saved).hasSize(1)
+            assertThat(drafts.draft).isNull()
+        }
+
+    @Test
+    fun `a sheet emptied by hand leaves no draft`() = runTest(dispatcher) {
+        val (viewModel, _) = subscribe()
+        viewModel.onTitleChange("B")
+        assertThat(drafts.draft).isNotNull()
+
+        viewModel.onTitleChange("")
+
+        assertThat(drafts.draft).isNull()
+    }
+
+    @Test
+    fun `a new ViewModel does not overwrite the draft before it has read it`() =
+        runTest(dispatcher) {
+            drafts.draft = WaypointDraft(title = "Borehole", notes = "Pump broken")
+            val pending = CompletableDeferred<WaypointForm?>()
+            formSource =
+                object : WaypointFormSource {
+                    override suspend fun currentForm(): WaypointForm? = pending.await()
+                }
+            val (_, state) = subscribe()
+
+            assertThat(drafts.writes).isEqualTo(0)
+            pending.complete(null)
+
+            assertThat(state().title).isEqualTo("Borehole")
+            assertThat(drafts.draft?.notes).isEqualTo("Pump broken")
+        }
+
+    @Test
+    fun `answers given under another template are not restored, the text is`() =
+        runTest(dispatcher) {
+            drafts.draft =
+                WaypointDraft(
+                    title = "Borehole",
+                    formTemplateId = "template-old",
+                    formVersion = 1,
+                    answersJson = """{"present":"yes"}""",
+                    numberTexts = mapOf("people" to "4"),
+                )
+            formSource = FixedForm(visitForm)
+
+            val (_, state) = subscribe()
+
+            assertThat(state().title).isEqualTo("Borehole")
+            assertThat(state().field("present").answer).isNull()
+            assertThat(state().field("people").numberText).isEmpty()
+        }
+
+    @Test
+    fun `a failed draft write keeps the sheet as typed`() = runTest(dispatcher) {
+        drafts.failure = AppResult.Failure(AppError.Storage(AppError.Storage.Kind.OutOfSpace))
+        val (viewModel, state) = subscribe()
+
+        viewModel.onTitleChange("Borehole")
+
+        assertThat(state().title).isEqualTo("Borehole")
     }
 
     @Test
@@ -296,7 +385,7 @@ class WaypointCaptureViewModelTest {
     }
 
     @Test
-    fun `answers and shown problems survive a new ViewModel on the same saved state`() =
+    fun `answers and shown problems survive a new ViewModel through the stored draft`() =
         runTest(dispatcher) {
             formSource = FixedForm(visitForm)
             val (first, _) = subscribe()
@@ -351,7 +440,7 @@ class WaypointCaptureViewModelTest {
                     },
                 tracking = tracking,
                 saveWaypoint = SaveWaypointUseCase(store),
-                savedState = savedState,
+                drafts = drafts,
                 formSource = formSource,
             )
         backgroundScope.launch { viewModel.uiState.collect {} }
@@ -412,6 +501,29 @@ class WaypointCaptureViewModelTest {
                 ),
         )
 
+    /** One draft, as Room keeps it. */
+    private class FakeDraftStore : WaypointDraftStore {
+        var draft: WaypointDraft? = null
+        var writes = 0
+        var failure: AppResult.Failure? = null
+
+        override suspend fun load(): WaypointDraft? = draft
+
+        override suspend fun save(draft: WaypointDraft): AppResult<Unit> {
+            writes++
+            failure?.let { return it }
+            this.draft = draft
+            return AppResult.Success(Unit)
+        }
+
+        override suspend fun clear(): AppResult<Unit> {
+            writes++
+            failure?.let { return it }
+            draft = null
+            return AppResult.Success(Unit)
+        }
+    }
+
     private class FakeWaypointStore : WaypointStore {
         val saved = mutableListOf<NewWaypoint>()
         var failure: AppResult.Failure? = null
@@ -421,27 +533,5 @@ class WaypointCaptureViewModelTest {
             saved += waypoint
             return AppResult.Success("waypoint-${saved.size}")
         }
-    }
-
-    private class FakeTrackingController : TrackingController {
-        override val state = MutableStateFlow<TrackingState>(TrackingState.Idle)
-        override val activeTrack = MutableStateFlow<Track?>(null)
-        override val activeLine = MutableStateFlow<TrackLine?>(null)
-        override val activeSegmentCount = MutableStateFlow<Int?>(null)
-        override val health = MutableStateFlow(TrackingHealth())
-
-        override suspend fun start(trackId: String): AppResult<Unit> = error("the service's call")
-
-        override suspend fun reopen(trackId: String): AppResult<Unit> = error("the service's call")
-
-        override suspend fun restore(): AppResult<TrackingState> = error("the service's call")
-
-        override suspend fun interruptedTrackId(): String? = error("the service's call")
-
-        override suspend fun pause(): Unit = error("the service's call")
-
-        override suspend fun resume(): AppResult<Unit> = error("the service's call")
-
-        override suspend fun stop(): Unit = error("the service's call")
     }
 }

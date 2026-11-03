@@ -83,6 +83,22 @@ add a `sync_state` per point. Points sync as part of a track chunk.
 | sync_state | TEXT | |
 | updated_at | INTEGER | |
 
+### `waypoint_draft` (since database version 2)
+The waypoint sheet's unsaved input, so a killed app reopens it with every answer. Device only:
+never synced, and deleted when the waypoint is saved. Its own table rather than a `draft`
+status on `waypoint`, so no map, list or sync query can pick up a waypoint nobody saved.
+
+| column | type | notes |
+|---|---|---|
+| project_id | TEXT PK | one draft per project |
+| title / notes | TEXT | as typed, empty if nothing |
+| category | TEXT? | |
+| form_template_id / form_version | TEXT? / INTEGER? | the form the answers were given under |
+| form_data | TEXT? | answers as on `waypoint`, number fields excepted |
+| number_texts | TEXT? | JSON object: number boxes' text as typed |
+| show_errors | INTEGER | a Save was refused and problems are showing |
+| updated_at | INTEGER | |
+
 ### `waypoint_photo`
 | column | type | notes |
 |---|---|---|
