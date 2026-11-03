@@ -20,25 +20,17 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 32b. [P1 · M] Phase 8d — Draft autosave that survives process death
-The database's first migration (version 1 → 2). Since #76, CI prints Room's new `2.json` in
-the "Check Room schemas" step; the first push will show it as a warning, and the next commit
-adds that exact file (see CLAUDE.md). Answers today live in `SavedStateHandle`
-(`WaypointCaptureViewModel`, keys `waypoint_form_*`); this item moves them to Room.
-Every field change is written to Room (a draft waypoint row, or a `draft` status; a column
-change needs a migration and a migration test) within ~300 ms, off the main thread. Reopening
-the app after a kill restores the sheet with every answer. Acceptance: an instrumented-style
-Robolectric test that writes, recreates the ViewModel from Room only, and finds every value.
-This is BUILD_PLAN Phase 8's "Done when" minus photos.
-
-### 33. [P1 · M] Phase 8e — Photos: CameraX, 1600 px q80, GPS EXIF kept
-CameraX (Apache 2.0, free) capture from the photo field; scale to 1600 px long side at JPEG
-quality 80 on `Dispatchers.Default`, keep the GPS EXIF block, store in app-private storage
-(already excluded from backup), record a `waypoint_photo` row with size and SHA-256. The photo field shows only a note until then
-(`PhotoPlaceholder` in `WaypointForm.kt`); a template with a *required* photo field cannot
-be saved before this item. Only the
-`CAMERA` permission, asked at first use, with en/am rationale. Measure the APK size delta
-in the PR (release-size workflow). Then Phase 8's "Done when" (three photos, twelve fields,
+### 33b. [P1 · M] Phase 8e-2 — Photos on the sheet: CameraX capture, rows at Save
+The pipeline is done (33a, #79): `PhotoStore.store(capturePath)` (`JpegPhotoStore`) shrinks a
+capture to 1600 px q80 in `files/photos/`, keeps GPS/time/orientation EXIF and returns size and
+SHA-256. Left: CameraX (Apache 2.0, free) capture from the photo field (`PhotoPlaceholder` in
+`WaypointForm.kt`), into `cacheDir`, then `PhotoStore` off the main thread. The field's answer
+is the list of stored photo ids, so the draft (32b, `waypoint_draft.form_data`) keeps them across
+process death. `waypoint_photo` has a foreign key to `waypoint`, so its rows are written at
+Save, in one transaction with the waypoint (a `WaypointStore.save` that takes photos). A
+discarded draft's files are deleted. Only the `CAMERA` permission, asked at first use, with
+en/am rationale. Measure the APK size delta (release-size workflow; CameraX is the first
+new dependency since Phase 6). Then Phase 8's "Done when" (three photos, twelve fields,
 forced process death) goes to the device list.
 
 ### 34. [P2 · S] Show a track on the map from its detail screen
@@ -140,3 +132,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 30. Phase 8c-1: form schema in `:core:model` (parse, 7 field types plus unsupported, validate, `visible_if` with cascading hiding, `form_data` JSON, bundled 12-field farm visit; `docs/FORM_SCHEMA.md`) | #73 | `1fbf492` |
 | 31. Phase 8c-2: form renderer on the waypoint sheet (one control per field type, visible fields only, en/am chrome and one message per `FieldError`, errors from the first refused Save, `AppError.Invalid`, bundled farm visit via `WaypointFormSource`, answers stored as `answersToKeep`) | #75 | `443bd92` |
 | 32a. CI prints new Room schema JSON and fails on a changed committed one (unblocks the first migration, 32b) | #76 | `9c46373` |
+| 32b. Phase 8d: waypoint sheet draft autosave to Room (database version 2, `waypoint_draft`, `MIGRATION_1_2`; written on every change, restored from Room alone after a kill; `SavedStateHandle` dropped) | #78 | `0400f02` |
+| 33a. Phase 8e-1: photo pipeline (`PhotoStore`/`JpegPhotoStore`: 1600 px q80, GPS/time/orientation EXIF kept, make/model dropped, SHA-256, `files/photos/`, atomic rename; `PhotoSizing` in `:core:common`; no new dependency) | #79 | `d5698bd` |

@@ -178,7 +178,7 @@ hardware. Steps are in the linked docs.
 
 | Phase | Criterion | How |
 |---|---|---|
-| 3 | 100k-point insert ratio and 20k-point read bar | `./gradlew :core:database:connectedDebugAndroidTest` on the S9+ (passed on 2026-08-07 per BUILD_PLAN; re-run after DB changes) |
+| 3 | 100k-point insert ratio and 20k-point read bar, and (since #78) the 1 → 2 migration against Room's `2.json` (`MigrationTest`) | `./gradlew :core:database:connectedDebugAndroidTest` on the S9+ (passed on 2026-08-07 per BUILD_PLAN; database is now version 2, so re-run) |
 | 5 | Track survives 30 min, screen off, app swiped away, on a Tecno/Infinix/Itel or Xiaomi | Roadmap items 3–10 are done; ready to test |
 | 5 | The OEM autostart deep links open the right screen (Tecno/Infinix/Itel Phone Master, Xiaomi Security). If none opens, the manual steps appear instead | The onboarding screen's «Open phone settings» button (item 8b, done) on a real Tecno/Xiaomi |
 | 5 | Onboarding on Android 8, 10, 11+ and 13+: every step appears in order, «Allow all the time» is reachable, and a skipped step does not come back on relaunch | Fresh install, deny then grant each permission |
@@ -203,6 +203,7 @@ hardware. Steps are in the linked docs.
 | 8 | Waypoint list (8b-2, #72): save three waypoints (one with a title, one with only a category, one with neither). The Waypoints tab lists them newest first: the title, then «category · time»; the category, then the time; the time alone. Each says «Not synced yet». Tap one: the map tab opens centred on it at street level and the crosshair button is not filled (not following); walking does not pull the map away; the crosshair follows again. With TalkBack, a row reads its text and «Show on map». Amharic text too | Any phone with a pack |
 | 8 | Form on the waypoint sheet (8c-2, #75): open «+»; under the notes, «Farm visit» with «Is the farmer present? (required)». Choose «Yes»: «Farmer's name» and «People in the household» appear; «No»: they go. Choose «Other» as the main crop: «Which crop?» appears. Save with nothing answered: «Not saved: some answers need attention.» and each required question shows «Please answer this question.» in red. Type «1,500» or «0» people: «Enter a number» / «The lowest allowed is 1.». Pick a planting date: it shows in the phone's language. Tick «Improved seed» and «Compost». Fill it in and Save: «Waypoint saved». Rotate the phone mid-form: every answer stays. With TalkBack, each question reads its label and, after a refused Save, its problem. Amharic text too | Any phone, outdoors |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
+| 8 | Draft survives a kill (8d, #78): open «+», type a title and notes, pick a category, answer «Yes», type a name and «4» people. Swipe Meret away from recents (do not Save). Reopen and open «+»: every answer is there. Save: «Waypoint saved»; open «+» again: the sheet is empty. Install this build over the previous one with a saved waypoint on the phone: the waypoint is still in the list (the 1 → 2 migration) | Any phone |
 
 ---
 
