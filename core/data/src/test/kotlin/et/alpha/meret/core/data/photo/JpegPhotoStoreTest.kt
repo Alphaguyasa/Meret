@@ -169,7 +169,12 @@ class JpegPhotoStoreTest {
         file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it) }
         bitmap.recycle()
         val exif = ExifInterface(file.path)
-        if (latitude != null) exif.setLatLong(latitude, longitude)
+        if (latitude != null) {
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dms(latitude))
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, if (latitude >= 0) "N" else "S")
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dms(longitude))
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, if (longitude >= 0) "E" else "W")
+        }
         exif.setAttribute(
             ExifInterface.TAG_ORIENTATION,
             ExifInterface.ORIENTATION_ROTATE_90.toString(),
@@ -179,6 +184,15 @@ class JpegPhotoStoreTest {
         exif.setAttribute(ExifInterface.TAG_MODEL, "KI5k")
         exif.saveAttributes()
         return file
+    }
+
+    /** Degrees as EXIF writes them: three rationals, seconds to 1/10000. */
+    private fun dms(degrees: Double): String {
+        val total = Math.abs(degrees)
+        val whole = total.toInt()
+        val minutes = ((total - whole) * 60).toInt()
+        val seconds = Math.round(((total - whole) * 60 - minutes) * 60 * 10_000)
+        return "$whole/1,$minutes/1,$seconds/10000"
     }
 
     private fun stored(result: AppResult<StoredPhoto>): StoredPhoto {
