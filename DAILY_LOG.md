@@ -4,6 +4,37 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-11-03 — Run 24 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 32b (Phase 8d): the waypoint sheet survives a kill.** Everything typed on the sheet (title, category, notes, every form answer, the number boxes as typed, and the problems shown after a refused Save) is now written to the phone's database as it changes. Reopening the app after it was swiped away, killed for memory or ran out of battery brings the sheet back exactly as it was. Saving the waypoint clears it. This is the database's first upgrade (version 1 → 2, one new table, nothing existing touched), with a test that upgrades a version 1 database holding a waypoint and finds it intact ([#78](https://github.com/Alphaguyasa/Meret/pull/78)). **Item 33a (Phase 8e-1, new split): photo storage.** A camera photo is shrunk to 1600 px at JPEG quality 80, kept private to the app, and excluded from every backup. Its GPS position, time and orientation are kept; the phone's make and model are removed. Each photo gets a checksum. A crash leaves either a whole photo or none. A 12 MP photo is never fully loaded into memory, which matters on low-RAM phones. No new library ([#79](https://github.com/Alphaguyasa/Meret/pull/79)). |
+| Merged | #78 yes, `0400f02`: green on both runs (the first printed Room's `2.json`, which the second committed verbatim; its `waypoint_draft` SQL matches the migration exactly). #79 yes, `d5698bd`: the first run failed to compile one test (`setLatLong` exists only in the androidx `ExifInterface`, not the platform one). Fixed on the first attempt; then green, with every test task run and `koverVerify` passing. |
+| Failed or blocked | Nothing is blocked. One CI failure on #79, fixed on the first attempt (above). Item 33 was split: a photo row needs its waypoint to exist first, so the camera, the photo field and the rows written at Save are now **33b**. Gradle still cannot run in the container. ktlint 1.8.0 and detekt 1.23.8 ran locally on every changed file. kotlinc 2.2.10 ran `PhotoSizingTest` locally (10/10 passed). |
+| Roadmap | 7 open: 33b, 34, 35, 26 (A13), 25 (A12), 14 (A6), 18. No replan needed (5 or more open). |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | No new questions and no new Amharic strings. 1 new "Needs a device" row: the draft survives a swipe-away, and installing over the previous build keeps saved waypoints. The Phase 3 connected-test row now includes the 1 → 2 migration test. A2, A3, A5, A6, A7, A9–A15 unchanged. **Dependabot:** #30 (2026-10-21) and #68 (2026-11-01), both Gradle groups, still open and unmerged, waiting on A10. |
+| Next | 33b (CameraX on the photo field, photo ids in the draft, `waypoint_photo` rows at Save, `CAMERA` permission with en/am rationale, APK size delta), then 34 («Show on map» from track detail). |
+
+Notes for the next run:
+- Draft API: `WaypointDraftStore` (`:domain`) is `RoomWaypointDraftStore` (`:core:data`, public
+  constructor). One row per project in `waypoint_draft`. The ViewModel writes it on every change,
+  under a `Mutex`, always writing the latest state (`merge(input, draft).conflate()`). It does not
+  write before the draft has been read.
+- Migrations live in `core/database/.../migration/Migrations.kt`. Every builder (the app and the
+  tests) calls `addMeretMigrations()`. The JVM migration test (`MeretDatabaseMigrationTest`)
+  builds an old database from the committed `<n>.json` itself, so it needs no test assets; copy it
+  for 2 → 3.
+- Reading the schema from CI: `get_job_logs` with `return_content` and `tail_lines` 1500 saves
+  the log to a file. The JSON is between `##[group]core/database/schemas/...` and `}::endgroup::`;
+  strip the 29-character timestamp prefix from each line. Room writes no trailing newline. The
+  full log URL (blob.core.windows.net) is refused by the proxy.
+- Photos: `PhotoStore.store(capturePath)` → `StoredPhoto` (id = file name, path, width, height,
+  bytes, sha256, EXIF lat/lon). Use the platform `android.media.ExifInterface`; it has no
+  `setLatLong`, so set the GPS rationals with `setAttribute`. Robolectric
+  `@GraphicsMode(NATIVE)` works in CI for real JPEG encoding and decoding.
+- `origin/main` in a fresh container can be stale: run `git fetch origin main` before branching.
+
 ## 2026-11-02 — Run 23 (scheduled, cloud)
 
 | Field | Content |
