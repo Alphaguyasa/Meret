@@ -14,6 +14,7 @@ import et.alpha.meret.core.database.dao.TilePackDao
 import et.alpha.meret.core.database.dao.TrackDao
 import et.alpha.meret.core.database.dao.TrackPointDao
 import et.alpha.meret.core.database.dao.WaypointDao
+import et.alpha.meret.core.database.dao.WaypointDraftDao
 import et.alpha.meret.core.database.dao.WaypointPhotoDao
 import et.alpha.meret.core.database.entity.AssignmentEntity
 import et.alpha.meret.core.database.entity.FormTemplateEntity
@@ -24,6 +25,7 @@ import et.alpha.meret.core.database.entity.SyncConflictEntity
 import et.alpha.meret.core.database.entity.TilePackEntity
 import et.alpha.meret.core.database.entity.TrackEntity
 import et.alpha.meret.core.database.entity.TrackPointEntity
+import et.alpha.meret.core.database.entity.WaypointDraftEntity
 import et.alpha.meret.core.database.entity.WaypointEntity
 import et.alpha.meret.core.database.entity.WaypointPhotoEntity
 
@@ -35,9 +37,11 @@ import et.alpha.meret.core.database.entity.WaypointPhotoEntity
  * Adding a table is a migration and a migration test; declaring it now costs a few unused
  * `CREATE TABLE` statements and saves three of those.
  *
- * There is no `fallbackToDestructiveMigration` anywhere. At version 1 there is nothing to
- * fall back from, and once there is, the data on the device is a day of somebody's walking
- * that exists in no other place.
+ * Version 2 added `waypoint_draft` (`MIGRATION_1_2` in `migration/Migrations.kt`). Every
+ * later change is a migration there plus a test in `MeretDatabaseMigrationTest`.
+ *
+ * There is no `fallbackToDestructiveMigration` anywhere: the data on the device is a day of
+ * somebody's walking that exists in no other place.
  */
 @Database(
     entities = [
@@ -52,6 +56,7 @@ import et.alpha.meret.core.database.entity.WaypointPhotoEntity
         TilePackEntity::class,
         OutboxEntity::class,
         SyncConflictEntity::class,
+        WaypointDraftEntity::class,
     ],
     version = MeretDatabase.VERSION,
     exportSchema = true,
@@ -80,8 +85,10 @@ public abstract class MeretDatabase : RoomDatabase() {
 
     public abstract fun syncConflictDao(): SyncConflictDao
 
+    public abstract fun waypointDraftDao(): WaypointDraftDao
+
     public companion object {
-        public const val VERSION: Int = 1
+        public const val VERSION: Int = 2
 
         public const val NAME: String = "meret.db"
     }
