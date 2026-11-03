@@ -18,7 +18,9 @@ import et.alpha.meret.core.database.dao.TilePackDao
 import et.alpha.meret.core.database.dao.TrackDao
 import et.alpha.meret.core.database.dao.TrackPointDao
 import et.alpha.meret.core.database.dao.WaypointDao
+import et.alpha.meret.core.database.dao.WaypointDraftDao
 import et.alpha.meret.core.database.dao.WaypointPhotoDao
+import et.alpha.meret.core.database.migration.addMeretMigrations
 import javax.inject.Singleton
 
 @Module
@@ -32,6 +34,7 @@ public object DatabaseModule {
         .databaseBuilder(context, MeretDatabase::class.java, MeretDatabase.NAME)
         // No allowMainThreadQueries and no destructive fallback, ever. Room's own
         // executors keep every query off the main thread (CLAUDE.md invariant 5).
+        .addMeretMigrations()
         .build()
 
     @Provides
@@ -72,4 +75,8 @@ public object DatabaseModule {
     @Provides
     public fun provideSyncConflictDao(database: MeretDatabase): SyncConflictDao =
         database.syncConflictDao()
+
+    @Provides
+    public fun provideWaypointDraftDao(database: MeretDatabase): WaypointDraftDao =
+        database.waypointDraftDao()
 }
