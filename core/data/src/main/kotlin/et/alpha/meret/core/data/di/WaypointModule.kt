@@ -5,9 +5,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import et.alpha.meret.core.data.photo.JpegPhotoStore
 import et.alpha.meret.core.data.waypoint.BundledWaypointFormSource
 import et.alpha.meret.core.data.waypoint.RoomWaypointRepository
 import et.alpha.meret.core.data.waypoint.WaypointRepository
+import et.alpha.meret.domain.waypoint.PhotoStore
 import et.alpha.meret.domain.waypoint.SaveWaypointUseCase
 import et.alpha.meret.domain.waypoint.WaypointFormSource
 import et.alpha.meret.domain.waypoint.WaypointStore
@@ -27,6 +29,9 @@ public abstract class WaypointModule {
     public abstract fun bindWaypointFormSource(
         source: BundledWaypointFormSource,
     ): WaypointFormSource
+
+    @Binds
+    public abstract fun bindPhotoStore(store: JpegPhotoStore): PhotoStore
 
     public companion object {
         /** `:domain` has no `@Inject`. */
