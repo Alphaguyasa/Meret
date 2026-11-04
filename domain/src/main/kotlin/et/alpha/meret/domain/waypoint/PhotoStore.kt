@@ -27,4 +27,17 @@ public interface PhotoStore {
      * file is complete; on any failure it is left where it is and nothing is stored.
      */
     public suspend fun store(capturePath: String): AppResult<StoredPhoto>
+
+    /**
+     * The stored photo [id] read back from its file, or null when there is no such file or it
+     * is not a whole JPEG. A draft keeps only photo ids (its answers), so this is how Save gets
+     * the size, bytes and checksum for the photo's row, even after the process was killed.
+     */
+    public suspend fun describe(id: String): StoredPhoto?
+
+    /**
+     * Removes the stored photo [id]'s file. Only for a photo no row points at: one taken for a
+     * field the form then hid, or one the worker took off the sheet. No such file is no error.
+     */
+    public suspend fun delete(id: String)
 }

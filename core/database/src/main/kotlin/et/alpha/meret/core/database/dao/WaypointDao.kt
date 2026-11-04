@@ -2,9 +2,11 @@ package et.alpha.meret.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import et.alpha.meret.core.database.entity.WaypointEntity
 import et.alpha.meret.core.database.entity.WaypointMarkerRow
+import et.alpha.meret.core.database.entity.WaypointPhotoEntity
 import et.alpha.meret.core.model.SyncState
 import kotlinx.coroutines.flow.Flow
 
@@ -76,6 +78,22 @@ public interface WaypointDao {
 
     @Upsert
     public suspend fun upsertWaypoints(waypoints: List<WaypointEntity>)
+
+    @Upsert
+    public suspend fun upsertWaypointPhotos(photos: List<WaypointPhotoEntity>)
+
+    /**
+     * [waypoint] and its [photos] in one transaction: a crash between them leaves neither, so
+     * a waypoint is never in Room without the photos its answers name.
+     */
+    @Transaction
+    public suspend fun upsertWaypointWithPhotos(
+        waypoint: WaypointEntity,
+        photos: List<WaypointPhotoEntity>,
+    ) {
+        upsertWaypoint(waypoint)
+        if (photos.isNotEmpty()) upsertWaypointPhotos(photos)
+    }
 
     @Query("UPDATE waypoint SET sync_state = :syncState WHERE id = :waypointId")
     public suspend fun updateSyncState(

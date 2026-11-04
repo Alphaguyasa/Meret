@@ -116,7 +116,7 @@ class WaypointDraftProcessDeathTest {
                 override fun observePosition() = MutableStateFlow<DevicePosition?>(null)
             },
         tracking = FakeTrackingController(),
-        saveWaypoint = SaveWaypointUseCase(NoWaypoints),
+        saveWaypoint = SaveWaypointUseCase(NoWaypoints, NoPhotos),
         drafts =
             RoomWaypointDraftStore(
                 dao = database.waypointDraftDao(),

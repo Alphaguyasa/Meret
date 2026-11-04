@@ -10,11 +10,13 @@ import et.alpha.meret.core.common.uuid.UuidV7Generator
 import et.alpha.meret.core.common.uuid.uuidV7TimestampMillis
 import et.alpha.meret.core.data.tracking.RoomNewTrackStore
 import et.alpha.meret.core.database.MeretDatabase
+import et.alpha.meret.core.model.PhotoUploadState
 import et.alpha.meret.core.model.SyncState
 import et.alpha.meret.core.model.form.BundledFormTemplates
 import et.alpha.meret.core.model.geo.LatLng
 import et.alpha.meret.core.model.geo.WaypointMarker
 import et.alpha.meret.domain.waypoint.NewWaypoint
+import et.alpha.meret.domain.waypoint.StoredPhoto
 import et.alpha.meret.domain.waypoint.WaypointCategory
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -87,6 +89,46 @@ class RoomWaypointRepositoryTest {
             assertThat(row.projectId).isEqualTo(RoomNewTrackStore.LOCAL_PROJECT_ID)
             assertThat(uuidV7TimestampMillis(id)).isEqualTo(FixedTime.nowMillis())
         }
+
+    @Test
+    fun `photos are saved as rows of the new waypoint, waiting to upload`() = runBlocking<Unit> {
+        val photo =
+            StoredPhoto(
+                id = "0190b4c2-7f00-7000-8000-000000000001",
+                path = "/data/photos/0190b4c2-7f00-7000-8000-000000000001.jpg",
+                width = 1600,
+                height = 1200,
+                bytes = 312_000,
+                sha256 = "ab".repeat(32),
+                capturedAt = 1_760_999_000_000L,
+                latitude = 9.03,
+                longitude = 38.74,
+            )
+
+        val saved = repository.save(waypoint.copy(photos = listOf(photo)))
+
+        val id = (saved as AppResult.Success).value
+
+        val rows = database.waypointPhotoDao().observePhotos(id).first()
+        assertThat(rows).hasSize(1)
+        val row = rows.single()
+        assertThat(row.id).isEqualTo(photo.id)
+        assertThat(row.waypointId).isEqualTo(id)
+        assertThat(row.localPath).isEqualTo(photo.path)
+        assertThat(row.width to row.height).isEqualTo(1600 to 1200)
+        assertThat(row.bytes).isEqualTo(312_000)
+        assertThat(row.sha256).isEqualTo(photo.sha256)
+        assertThat(row.capturedAt).isEqualTo(photo.capturedAt)
+        assertThat(row.latitude to row.longitude).isEqualTo(9.03 to 38.74)
+        assertThat(row.uploadState).isEqualTo(PhotoUploadState.PENDING)
+    }
+
+    @Test
+    fun `a waypoint saved without photos has no photo rows`() = runBlocking<Unit> {
+        val id = (repository.save(waypoint) as AppResult.Success).value
+
+        assertThat(database.waypointPhotoDao().observePhotos(id).first()).isEmpty()
+    }
 
     @Test
     fun `a waypoint saved while recording keeps its track, with no track row needed`() =

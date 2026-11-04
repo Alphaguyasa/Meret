@@ -9,6 +9,7 @@ import et.alpha.meret.core.common.uuid.UuidV7Generator
 import et.alpha.meret.core.data.tracking.RoomNewTrackStore
 import et.alpha.meret.core.database.dao.WaypointDao
 import et.alpha.meret.core.database.entity.WaypointEntity
+import et.alpha.meret.core.database.entity.WaypointPhotoEntity
 import et.alpha.meret.core.database.mapper.toDomain
 import et.alpha.meret.core.model.SyncState
 import et.alpha.meret.core.model.Waypoint
@@ -95,7 +96,22 @@ public class RoomWaypointRepository
                             syncState = SyncState.PENDING,
                             updatedAt = now,
                         )
-                    waypointDao.upsertWaypoint(row)
+                    val photos =
+                        waypoint.photos.map {
+                            WaypointPhotoEntity(
+                                id = it.id,
+                                waypointId = row.id,
+                                localPath = it.path,
+                                width = it.width,
+                                height = it.height,
+                                bytes = it.bytes,
+                                sha256 = it.sha256,
+                                capturedAt = it.capturedAt,
+                                latitude = it.latitude,
+                                longitude = it.longitude,
+                            )
+                        }
+                    waypointDao.upsertWaypointWithPhotos(row, photos)
                     AppResult.Success(row.id)
                 } catch (e: SQLException) {
                     AppResult.Failure(AppError.Storage(AppError.Storage.Kind.WriteFailed, e))

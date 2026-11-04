@@ -16,7 +16,8 @@ import org.junit.Test
 
 class SaveWaypointUseCaseTest {
     private val store = FakeWaypointStore()
-    private val saveWaypoint = SaveWaypointUseCase(store)
+    private val photos = FakePhotoStore()
+    private val saveWaypoint = SaveWaypointUseCase(store, photos)
 
     private val here =
         DevicePosition(
@@ -163,6 +164,94 @@ class SaveWaypointUseCaseTest {
     }
 
     @Test
+    fun `the photos the answers name are saved with the waypoint`() = runTest {
+        photos.stored("p-1", "p-2")
+        val answers =
+            mapOf(
+                "present" to FormAnswer.Choice("yes"),
+                "name" to FormAnswer.Text("Abebe"),
+                "farm_photos" to FormAnswer.Photos(listOf("p-1", "p-2")),
+            )
+
+        saveWaypoint(here, null, WaypointInput(form = photoForm, answers = answers))
+
+        val saved = store.saved.single()
+        assertThat(saved.photos.map { it.id }).containsExactly("p-1", "p-2").inOrder()
+        assertThat(saved.photos.first().sha256).isEqualTo("sha-p-1")
+        assertThat(saved.formData)
+            .isEqualTo("""{"present":"yes","name":"Abebe","farm_photos":["p-1","p-2"]}""")
+        assertThat(photos.deleted).isEmpty()
+    }
+
+    @Test
+    fun `a photo whose file is gone is left out, and the rest is still saved`() = runTest {
+        photos.stored("p-2")
+        val answers =
+            mapOf(
+                "present" to FormAnswer.Choice("yes"),
+                "name" to FormAnswer.Text("Abebe"),
+                "farm_photos" to FormAnswer.Photos(listOf("p-1", "p-2")),
+            )
+
+        val result = saveWaypoint(here, null, WaypointInput(form = photoForm, answers = answers))
+
+        assertThat(result).isEqualTo(AppResult.Success("waypoint-1"))
+        val saved = store.saved.single()
+        assertThat(saved.photos.map { it.id }).containsExactly("p-2")
+        assertThat(saved.formData)
+            .isEqualTo("""{"present":"yes","name":"Abebe","farm_photos":["p-2"]}""")
+    }
+
+    @Test
+    fun `photos of a field the form hid are not saved, and their files are deleted`() = runTest {
+        photos.stored("p-1")
+        val answers =
+            mapOf(
+                "present" to FormAnswer.Choice("no"),
+                // Taken while "present" was "yes"; "no" hid the field.
+                "farm_photos" to FormAnswer.Photos(listOf("p-1")),
+            )
+
+        saveWaypoint(here, null, WaypointInput(form = photoForm, answers = answers))
+
+        val saved = store.saved.single()
+        assertThat(saved.photos).isEmpty()
+        assertThat(saved.formData).isEqualTo("""{"present":"no"}""")
+        assertThat(photos.deleted).containsExactly("p-1")
+    }
+
+    @Test
+    fun `a failed write deletes no photo, so the draft can be saved again`() = runTest {
+        photos.stored("p-1")
+        store.failure = AppResult.Failure(AppError.Storage(AppError.Storage.Kind.WriteFailed))
+        val answers =
+            mapOf(
+                "present" to FormAnswer.Choice("no"),
+                "farm_photos" to FormAnswer.Photos(listOf("p-1")),
+            )
+
+        saveWaypoint(here, null, WaypointInput(form = photoForm, answers = answers))
+
+        assertThat(photos.deleted).isEmpty()
+    }
+
+    @Test
+    fun `a form that is refused reads and deletes no photo`() = runTest {
+        photos.stored("p-1")
+        val answers =
+            mapOf(
+                "present" to FormAnswer.Choice("yes"),
+                "farm_photos" to FormAnswer.Photos(listOf("p-1")),
+            )
+
+        val result = saveWaypoint(here, null, WaypointInput(form = photoForm, answers = answers))
+
+        assertThat(result).isEqualTo(AppResult.Failure(AppError.Invalid(setOf("name"))))
+        assertThat(photos.described).isEmpty()
+        assertThat(photos.deleted).isEmpty()
+    }
+
+    @Test
     fun `category keys round-trip and unknown keys are no category`() {
         WaypointCategory.entries.forEach { category ->
             assertThat(WaypointCategory.fromKey(category.key)).isEqualTo(category)
@@ -203,6 +292,20 @@ class SaveWaypointUseCaseTest {
                 ),
         )
 
+    private val photoForm =
+        form.copy(
+            schema =
+                form.schema.copy(
+                    fields =
+                        form.schema.fields +
+                            FormField.Photo(
+                                key = "farm_photos",
+                                label = LocalizedText.of("Photos of the farm"),
+                                visibleIf = VisibleIf.Equals("present", "yes"),
+                            ),
+                ),
+        )
+
     private fun FormField.copyOptional(): FormField =
         (this as FormField.Select).copy(required = false)
 
@@ -214,6 +317,39 @@ class SaveWaypointUseCaseTest {
             failure?.let { return it }
             saved += waypoint
             return AppResult.Success("waypoint-${saved.size}")
+        }
+    }
+
+    private class FakePhotoStore : PhotoStore {
+        private val files = mutableMapOf<String, StoredPhoto>()
+        val described = mutableListOf<String>()
+        val deleted = mutableListOf<String>()
+
+        fun stored(vararg ids: String) {
+            ids.forEach { id ->
+                files[id] =
+                    StoredPhoto(
+                        id = id,
+                        path = "/photos/$id.jpg",
+                        width = 1600,
+                        height = 1200,
+                        bytes = 300_000,
+                        sha256 = "sha-$id",
+                        capturedAt = 1_000,
+                    )
+            }
+        }
+
+        override suspend fun store(capturePath: String): AppResult<StoredPhoto> = error("not used")
+
+        override suspend fun describe(id: String): StoredPhoto? {
+            described += id
+            return files[id]
+        }
+
+        override suspend fun delete(id: String) {
+            deleted += id
+            files -= id
         }
     }
 }

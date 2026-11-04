@@ -4,6 +4,7 @@ import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.model.form.FormAnswer
 import et.alpha.meret.core.model.form.FormAnswersJson
+import et.alpha.meret.core.model.form.FormField
 import et.alpha.meret.core.model.form.FormRules
 import et.alpha.meret.core.model.geo.DevicePosition
 
@@ -28,9 +29,16 @@ public data class WaypointInput(
  * With a form, the answers must pass [FormRules.validate] or the save is refused with
  * [AppError.Invalid] naming the fields. What is stored is [FormRules.answersToKeep]: only the
  * answers of fields the form hid are dropped.
+ *
+ * Photo answers hold stored photo ids. Each kept one is read back ([PhotoStore.describe]) and
+ * saved as a photo row with the waypoint, in one transaction. A photo whose file is gone (it
+ * cannot come back) is dropped from the answer rather than refusing the save: the rest of
+ * the record is worth more than a reference to nothing. Once the waypoint is in Room, the
+ * files of photos taken for fields the form then hid are deleted; no row will ever name them.
  */
 public class SaveWaypointUseCase(
     private val store: WaypointStore,
+    private val photos: PhotoStore,
 ) {
     /**
      * [fix] is the phone's position now; [recordingTrackId] the track being recorded, or null
@@ -49,14 +57,61 @@ public class SaveWaypointUseCase(
         return when {
             live == null -> AppResult.Failure(AppError.Gps(AppError.Gps.Kind.NoFix))
             invalid.isNotEmpty() -> AppResult.Failure(AppError.Invalid(invalid))
-            else -> store.save(newWaypoint(live, recordingTrackId, input))
+            else -> save(live, recordingTrackId, input)
         }
     }
 
+    private suspend fun save(
+        fix: DevicePosition,
+        recordingTrackId: String?,
+        input: WaypointInput,
+    ): AppResult<String> {
+        val form = input.form ?: return store.save(newWaypoint(fix, recordingTrackId, input, null))
+        val photoKeys =
+            form.schema.fields
+                .filterIsInstance<FormField.Photo>()
+                .map { it.key }
+                .toSet()
+        val kept = FormRules.answersToKeep(form.schema, input.answers)
+        val keptIds = photoIds(kept, photoKeys)
+        val stored = keptIds.mapNotNull { photos.describe(it) }
+        val found = stored.map { it.id }.toSet()
+        val answers =
+            kept
+                .mapValues { (key, answer) ->
+                    if (key in photoKeys && answer is FormAnswer.Photos) {
+                        FormAnswer.Photos(answer.photoIds.distinct().filter { it in found })
+                    } else {
+                        answer
+                    }
+                }.filterValues { !(it is FormAnswer.Photos && it.photoIds.isEmpty()) }
+        val result =
+            store.save(
+                newWaypoint(fix, recordingTrackId, input, answers).copy(photos = stored),
+            )
+        if (result is AppResult.Success) {
+            (photoIds(input.answers, photoKeys) - keptIds.toSet()).forEach { photos.delete(it) }
+        }
+        return result
+    }
+
+    /** The photo ids [answers] give the fields in [photoKeys], each once, in answer order. */
+    private fun photoIds(
+        answers: Map<String, FormAnswer>,
+        photoKeys: Set<String>,
+    ): List<String> = answers
+        .filterKeys { it in photoKeys }
+        .values
+        .filterIsInstance<FormAnswer.Photos>()
+        .flatMap { it.photoIds }
+        .distinct()
+
+    /** [answers] are those to store, or null when the waypoint has no form. */
     private fun newWaypoint(
         fix: DevicePosition,
         recordingTrackId: String?,
         input: WaypointInput,
+        answers: Map<String, FormAnswer>?,
     ): NewWaypoint {
         val form = input.form
         return NewWaypoint(
@@ -69,10 +124,7 @@ public class SaveWaypointUseCase(
             notes = input.notes.trim().ifEmpty { null },
             formTemplateId = form?.templateId,
             formVersion = form?.version,
-            formData =
-                form?.let {
-                    FormAnswersJson.encode(FormRules.answersToKeep(it.schema, input.answers))
-                },
+            formData = answers?.let(FormAnswersJson::encode),
         )
     }
 }
