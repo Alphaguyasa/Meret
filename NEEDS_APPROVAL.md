@@ -106,6 +106,12 @@ current position), and one message per answer problem, for example «እባክ�
 (Please answer this question), «ቁጥር ያስገቡ።» (Enter a number), «ሙሉ ቁጥር ያስገቡ።» (Enter a whole
 number), «ዝቅተኛው የሚፈቀደው %1$s ነው።» (The lowest allowed is …). Please check «ግዴታ» for
 "required" in particular: it shows on every required question.
+**Run 25 added 9 more** in `feature/waypoint/src/main/res/values-am/strings.xml`, for photos on
+the form: «ፎቶ አንሳ» (Take photo), «%1$d ከ%2$d ፎቶዎች» (n of max photos), «ፎቶ %1$d» (Photo n),
+«አስወግድ» (Remove), «ይህ ፎቶ ይወገድ?» (Remove this photo?), «ፎቶ %1$d አስወግድ» (Remove photo n, read
+by TalkBack), «በዚህ ስልክ ላይ የካሜራ መተግበሪያ አልተገኘም።» (No camera app was found on this phone) and
+«ፎቶው አልተቀመጠም። እንደገና ይሞክሩ።» (The photo was not saved. Try again). Please check «%1$d ከ%2$d
+ፎቶዎች» in particular: it reads "2 of 3 photos".
 **Run 14 added 2 more** in `feature/settings/src/main/res/values-am/strings.xml`: "ፈቃዶችን
 እንደገና ፈትሽ" (Check permissions again) and "የፈቃድ እና የባትሪ ደረጃዎችን፣ የተዘለሉትንም ጭምር፣ እንደገና
 ያሳያል።" (Shows the permission and battery steps again, including any that were skipped).
@@ -169,6 +175,16 @@ the list is cheap to extend and costly to rename. Tell me if field teams need ot
 (for example health post, school, market, kebele office). **Default until you answer:** the
 five above.
 
+### A16. Photos: the phone's camera app, not an in-app camera (no cost, has a default)
+The roadmap said CameraX (an in-app camera). Run 25 used the **phone's own camera app**
+instead (#82): the sheet's «Take photo» opens it and gets the picture back. Why: no new
+library and no APK growth, no `CAMERA` permission to ask for, and less memory used on
+low-RAM phones. CameraX could also not be checked from the cloud container. The cost: the
+camera screen looks different on each phone brand, and a rare camera app may not return the
+picture properly. **Default until you answer:** the phone's camera app. If field tests show
+problems on Tecno/Infinix/Itel phones, say so and an in-app camera (CameraX, Apache 2.0, free,
+about +1 MB) becomes a roadmap item.
+
 ---
 
 ## Needs a device
@@ -204,6 +220,7 @@ hardware. Steps are in the linked docs.
 | 8 | Form on the waypoint sheet (8c-2, #75): open «+»; under the notes, «Farm visit» with «Is the farmer present? (required)». Choose «Yes»: «Farmer's name» and «People in the household» appear; «No»: they go. Choose «Other» as the main crop: «Which crop?» appears. Save with nothing answered: «Not saved: some answers need attention.» and each required question shows «Please answer this question.» in red. Type «1,500» or «0» people: «Enter a number» / «The lowest allowed is 1.». Pick a planting date: it shows in the phone's language. Tick «Improved seed» and «Compost». Fill it in and Save: «Waypoint saved». Rotate the phone mid-form: every answer stays. With TalkBack, each question reads its label and, after a refused Save, its problem. Amharic text too | Any phone, outdoors |
 | 6 | Glyphs and sprite load through `asset://` in aeroplane mode: Amharic labels draw, no boxes, and no request leaves the phone. The glyph path holds a comma and spaces (`Noto Sans Regular,Noto Sans Ethiopic Regular/`) | After Phase 6d bundles `tools/out/map/` into assets |
 | 8 | Draft survives a kill (8d, #78): open «+», type a title and notes, pick a category, answer «Yes», type a name and «4» people. Swipe Meret away from recents (do not Save). Reopen and open «+»: every answer is there. Save: «Waypoint saved»; open «+» again: the sheet is empty. Install this build over the previous one with a saved waypoint on the phone: the waypoint is still in the list (the 1 → 2 migration) | Any phone |
+| 8 | Photos on the form (8e, #81, #82): on «+», under «Photos of the plot», «0 of 3 photos» and «Take photo». Tap it: the phone's camera app opens; take a picture and accept: a thumbnail appears the right way up, «1 of 3 photos». Take two more: «Take photo» greys out at 3. Cancel the camera once: nothing is added. Tap Remove under a thumbnail: «Remove this photo?»; Remove: it goes. Open the camera, and while it is open kill Meret (`adb shell am kill et.alpha.meret.debug` on the CI debug APK), then take the picture and accept: Meret comes back with the sheet and the photo on it. Save: «Waypoint saved». The app asks for no camera permission at any point. Amharic text too. **Phase 8 "Done when" as a whole:** a waypoint with three photos and a twelve-field form survives a forced process death mid-entry (`adb shell am kill et.alpha.meret.debug` with the app in the background), and after Save all three photos are in the app's storage at about 1600 px | Any phone, outdoors; the kill test with adb; ideally once on a Tecno/Infinix/Itel camera app |
 
 ---
 

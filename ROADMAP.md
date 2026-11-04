@@ -9,7 +9,7 @@ product · P2 = important, not blocking · P3 = cleanup.
 **Effort:** S = under half a day · M = about a day · L = split before starting.
 
 Phases refer to `docs/BUILD_PLAN.md`. Phases 1–4 are done (git history to `1fc66f5`). Phases 5,
-6 and 7 are done in CI; their device checks are in `NEEDS_APPROVAL.md`.
+6, 7 and 8 are done in CI; their device checks are in `NEEDS_APPROVAL.md`.
 Phase 0 (tile pack) tooling is done (`tools/`, item 12). A real Ethiopia pack has not been
 built yet: Planetiler needs a machine with ~20 GB scratch space, not the cloud container.
 
@@ -20,19 +20,6 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 33b. [P1 · M] Phase 8e-2 — Photos on the sheet: CameraX capture, rows at Save
-The pipeline is done (33a, #79): `PhotoStore.store(capturePath)` (`JpegPhotoStore`) shrinks a
-capture to 1600 px q80 in `files/photos/`, keeps GPS/time/orientation EXIF and returns size and
-SHA-256. Left: CameraX (Apache 2.0, free) capture from the photo field (`PhotoPlaceholder` in
-`WaypointForm.kt`), into `cacheDir`, then `PhotoStore` off the main thread. The field's answer
-is the list of stored photo ids, so the draft (32b, `waypoint_draft.form_data`) keeps them across
-process death. `waypoint_photo` has a foreign key to `waypoint`, so its rows are written at
-Save, in one transaction with the waypoint (a `WaypointStore.save` that takes photos). A
-discarded draft's files are deleted. Only the `CAMERA` permission, asked at first use, with
-en/am rationale. Measure the APK size delta (release-size workflow; CameraX is the first
-new dependency since Phase 6). Then Phase 8's "Done when" (three photos, twelve fields,
-forced process death) goes to the device list.
-
 ### 34. [P2 · S] Show a track on the map from its detail screen
 Track detail has no way to see the track on the map. Add «Show on map»: the map opens fitted
 to the track's stored bounds, and the earlier-tracks layer (item 27) draws it. Small,
@@ -42,6 +29,14 @@ high value for supervisors checking coverage on the device.
 `track.name` exists but nothing sets it; the list shows dates only. A rename action in track
 detail (en/am), saved to Room and re-queued for sync (`sync_state` pending, `updated_at`
 bumped). Enumerators name tracks after the kebele or farm they walked.
+
+### 36. [P2 · S] Sweep orphaned photo files
+A stored photo whose id never reached a written draft (the process died in that moment), a
+capture the camera app wrote but `PhotoStore` refused (left in `cacheDir/photo_captures/` so
+it is not lost), and the files of a draft that is never saved all stay on disk. Add a sweep,
+run when the sheet opens or from a worker: delete files in `files/photos/` that no
+`waypoint_photo` row and no draft answer names, older than a day; empty `photo_captures/` of
+files older than a day. Test with real files and real Room. Never touch a file a row names.
 
 ### 26. [P2 · S] Purge discarded tracks (waiting on A13)
 Since #59 a deleted track is marked `discarded` and keeps all its points. Nothing purges
@@ -134,3 +129,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 32a. CI prints new Room schema JSON and fails on a changed committed one (unblocks the first migration, 32b) | #76 | `9c46373` |
 | 32b. Phase 8d: waypoint sheet draft autosave to Room (database version 2, `waypoint_draft`, `MIGRATION_1_2`; written on every change, restored from Room alone after a kill; `SavedStateHandle` dropped) | #78 | `0400f02` |
 | 33a. Phase 8e-1: photo pipeline (`PhotoStore`/`JpegPhotoStore`: 1600 px q80, GPS/time/orientation EXIF kept, make/model dropped, SHA-256, `files/photos/`, atomic rename; `PhotoSizing` in `:core:common`; no new dependency) | #79 | `d5698bd` |
+| 33b-1. Phase 8e-2: photo rows at Save (`PhotoStore.describe/delete`, `waypoint_photo` rows in one transaction with the waypoint, a missing file dropped from the answer, hidden fields' photo files deleted after the save, UUID-only ids) | #81 | `1a97018` |
+| 33b-2. Phase 8e-2: photos on the sheet through the phone's camera app (`TakePicture` + non-exported `FileProvider`, no CAMERA permission, no new dependency; thumbnails, remove with confirmation, capture kept across a process death). **Phase 8 done in CI** (device rows in NEEDS_APPROVAL) | #82 | `SHA82` |

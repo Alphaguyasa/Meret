@@ -4,6 +4,31 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-11-04 — Run 25 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 33b-1 (Phase 8e-2, new split): photos are saved with the waypoint.** At Save, every photo the form's answers name is written to the database together with the waypoint, in one step, so a waypoint is never saved without its photos. A photo whose file has gone missing is left out and the rest of the record is still saved. Photos taken for a question the form then hid are deleted once the waypoint is safely saved. A photo id from a draft or a record can never point outside the app's photo folder ([#81](https://github.com/Alphaguyasa/Meret/pull/81)). **Item 33b-2: taking photos on the sheet.** «Photos of the plot» now shows «Take photo». It opens the phone's own camera app; the picture comes back shrunk (1600 px) and shows as a small thumbnail, the right way up. Up to the form's limit (3), each can be removed after a confirmation. A photo survives the app being killed while the camera is open. Meret asks for **no camera permission** and adds **no new library**: a different route than the roadmap's CameraX, explained in A16 ([#82](https://github.com/Alphaguyasa/Meret/pull/82)). **Phase 8 is done in CI.** |
+| Merged | #81 yes, `1a97018`, green on the first attempt (about 4 min). #82 MERGED82 |
+| Failed or blocked | FAILED82 Item 33b was split in two (data path, then the camera). CameraX could not be checked because Google Maven is blocked in the container, which is one reason for A16. Gradle still cannot run in the container. ktlint 1.8.0 and detekt 1.23.8 ran on every changed Kotlin file. kotlinc 2.2.10 compiled `:core:model`, `:core:common` and `:domain` and ran `SaveWaypointUseCaseTest`: 16/16 pass. |
+| Roadmap | 7 open: 34, 35, 36 (new: sweep orphaned photo files), 26 (A13), 25 (A12), 14 (A6), 18. No replan needed (5 or more open). |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | **New A16:** photos use the phone's camera app, not an in-app camera (default kept unless field tests show problems). A9: 9 new Amharic strings (photo field). 1 new "Needs a device" row: photos on the form, plus Phase 8's "Done when" as a whole. A2, A3, A5, A6, A7, A10–A15 unchanged. **Dependabot:** #30 (2026-10-21) and #68 (2026-11-01), both Gradle groups, still open and unmerged, waiting on A10. |
+| Next | 34 («Show on map» from track detail), then 35 (name a track). |
+
+Notes for the next run:
+- Photo flow: the route keeps the pending field and file in `rememberSaveable` and launches
+  `TakePicture` on a `FileProvider` URI (`${applicationId}.photocapture`, `cacheDir/photo_captures/`).
+  `WaypointCaptureViewModel.onPhotoCaptured` waits for `draft.first { it.loaded }`, stores the
+  capture through `PhotoStore`, then appends the id. `onPhotoRemove` writes the draft before
+  `PhotoStore.delete`.
+- `SaveWaypointUseCase(store, photos)` now takes a `PhotoStore`; every fake needs `describe` and
+  `delete`. Feature tests have `NoPhotos` and `FakePhotoStore`.
+- `FormFieldUiState.photos: List<FormPhoto>` (id, path or null). `FormDraft.photoPaths` is never
+  written to the draft; it is rebuilt from `describe` on restore.
+- Google Maven (`dl.google.com`) is refused by the proxy, so a library's sources cannot be
+  read in the container. Prefer platform APIs or libraries already in the build.
+
 ## 2026-11-03 — Run 24 (scheduled, cloud)
 
 | Field | Content |
