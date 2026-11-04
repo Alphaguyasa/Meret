@@ -149,6 +149,49 @@ class JpegPhotoStoreTest {
     }
 
     @Test
+    fun `a stored photo read back is described as it was stored`() = runBlocking<Unit> {
+        val photo = stored(store.store(capture(4000, 3000, 9.0301, 38.7402).path))
+
+        // A new store, as after a process death: only the id survived, in the draft.
+        val reopened =
+            JpegPhotoStore(
+                context = context,
+                ids = UuidV7Generator(FixedTime),
+                time = FixedTime,
+                dispatchers = TestDispatchers(Dispatchers.IO),
+            )
+
+        assertThat(reopened.describe(photo.id)).isEqualTo(photo)
+    }
+
+    @Test
+    fun `a photo that is not there is described as none`() = runBlocking<Unit> {
+        assertThat(store.describe("0190b4c2-7f00-7000-8000-000000000000")).isNull()
+    }
+
+    @Test
+    fun `an id that is not a photo id never names a file`() = runBlocking<Unit> {
+        val outside = File(context.filesDir, "secret.jpg")
+        outside.writeBytes(capture(400, 300).readBytes())
+
+        assertThat(store.describe("../secret")).isNull()
+        store.delete("../secret")
+
+        assertThat(outside.exists()).isTrue()
+    }
+
+    @Test
+    fun `a deleted photo's file is gone, and deleting it again is no error`() = runBlocking<Unit> {
+        val photo = stored(store.store(capture(2000, 1500).path))
+
+        store.delete(photo.id)
+        store.delete(photo.id)
+
+        assertThat(File(photo.path).exists()).isFalse()
+        assertThat(store.describe(photo.id)).isNull()
+    }
+
+    @Test
     fun `sha256 matches a known vector`() {
         val file = File(context.cacheDir, "abc.txt").apply { writeText("abc") }
 

@@ -18,13 +18,18 @@ public data class NewWaypoint(
     public val formVersion: Int? = null,
     /** The answers as `FormAnswersJson` text, hidden fields' answers already dropped. */
     public val formData: String? = null,
+    /**
+     * The photos the kept answers name, each to be a `waypoint_photo` row of this waypoint,
+     * written in the same transaction: a waypoint is never in Room without its photos.
+     */
+    public val photos: List<StoredPhoto> = emptyList(),
 )
 
 /** Writes waypoints. Room, through `:core:data`. */
 public interface WaypointStore {
     /**
-     * Writes [waypoint] as a new row waiting to be synced and returns its id (a UUIDv7).
-     * Nothing here touches the network.
+     * Writes [waypoint] as a new row waiting to be synced, and its photos, in one transaction,
+     * and returns its id (a UUIDv7). Nothing here touches the network.
      */
     public suspend fun save(waypoint: NewWaypoint): AppResult<String>
 }

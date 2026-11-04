@@ -439,7 +439,7 @@ class WaypointCaptureViewModelTest {
                         override fun observePosition() = position
                     },
                 tracking = tracking,
-                saveWaypoint = SaveWaypointUseCase(store),
+                saveWaypoint = SaveWaypointUseCase(store, NoPhotos),
                 drafts = drafts,
                 formSource = formSource,
             )

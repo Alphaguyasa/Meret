@@ -63,22 +63,11 @@ public class JpegPhotoStore
                         temporary.delete()
                         return@withContext failure(AppError.Storage.Kind.WriteFailed)
                     }
-                    val position = FloatArray(2)
-                    val located = ExifInterface(file.path).getLatLong(position)
+                    val capturedAt = time.nowMillis()
+                    // describe() reads the capture time back from here, after a process death.
+                    file.setLastModified(capturedAt)
                     capture.delete()
-                    AppResult.Success(
-                        StoredPhoto(
-                            id = id,
-                            path = file.path,
-                            width = stored.width,
-                            height = stored.height,
-                            bytes = file.length(),
-                            sha256 = sha256(file),
-                            capturedAt = time.nowMillis(),
-                            latitude = position[0].toDouble().takeIf { located },
-                            longitude = position[1].toDouble().takeIf { located },
-                        ),
-                    )
+                    AppResult.Success(read(id, file, stored, capturedAt))
                 } catch (e: IOException) {
                     temporary.delete()
                     AppResult.Failure(AppError.Storage(AppError.Storage.Kind.WriteFailed, e))
@@ -89,6 +78,52 @@ public class JpegPhotoStore
                     AppResult.Failure(AppError.Storage(AppError.Storage.Kind.ReadFailed, e))
                 }
             }
+
+        override suspend fun describe(id: String): StoredPhoto? = withContext(dispatchers.io) {
+            val file = fileOf(id)?.takeIf { it.isFile } ?: return@withContext null
+            try {
+                val size = imageSize(file) ?: return@withContext null
+                read(id, file, size, file.lastModified())
+            } catch (ignored: IOException) {
+                // Unreadable is as good as gone: Save leaves it out of the record.
+                null
+            }
+        }
+
+        override suspend fun delete(id: String) {
+            withContext(dispatchers.io) {
+                fileOf(id)?.delete()
+            }
+        }
+
+        /**
+         * The file of photo [id], or null when [id] is not one this store could have made. The
+         * id comes from a draft's or a record's answers, so it must never name a path: no
+         * `../`, no other directory.
+         */
+        private fun fileOf(id: String): File? =
+            if (ID_PATTERN.matches(id)) File(directory, "$id$SUFFIX") else null
+
+        private fun read(
+            id: String,
+            file: File,
+            size: PixelSize,
+            capturedAt: Long,
+        ): StoredPhoto {
+            val position = FloatArray(2)
+            val located = ExifInterface(file.path).getLatLong(position)
+            return StoredPhoto(
+                id = id,
+                path = file.path,
+                width = size.width,
+                height = size.height,
+                bytes = file.length(),
+                sha256 = sha256(file),
+                capturedAt = capturedAt,
+                latitude = position[0].toDouble().takeIf { located },
+                longitude = position[1].toDouble().takeIf { located },
+            )
+        }
 
         /** Writes [capture], of [source] size, shrunk to [target]; null if it does not decode. */
         private fun shrink(
@@ -153,6 +188,10 @@ public class JpegPhotoStore
             const val DIRECTORY = "photos"
             const val SUFFIX = ".jpg"
             const val TEMPORARY_SUFFIX = ".jpg.part"
+
+            /** A UUID as [UuidV7Generator] writes it: lower-case hex in 8-4-4-4-12. */
+            val ID_PATTERN: Regex =
+                Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 
             /** GPS, capture time and orientation. Nothing that identifies the phone. */
             val KEPT_TAGS: List<String> =

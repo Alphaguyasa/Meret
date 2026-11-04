@@ -41,7 +41,9 @@ public abstract class WaypointModule {
     public companion object {
         /** `:domain` has no `@Inject`. */
         @Provides
-        public fun provideSaveWaypointUseCase(store: WaypointStore): SaveWaypointUseCase =
-            SaveWaypointUseCase(store)
+        public fun provideSaveWaypointUseCase(
+            store: WaypointStore,
+            photos: PhotoStore,
+        ): SaveWaypointUseCase = SaveWaypointUseCase(store, photos)
     }
 }
