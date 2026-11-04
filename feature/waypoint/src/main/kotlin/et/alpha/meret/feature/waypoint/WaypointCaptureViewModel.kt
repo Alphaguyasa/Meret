@@ -14,6 +14,7 @@ import et.alpha.meret.core.model.form.FormAnswersJson
 import et.alpha.meret.core.model.form.FormField
 import et.alpha.meret.core.model.form.FormRules
 import et.alpha.meret.core.model.geo.DevicePosition
+import et.alpha.meret.domain.waypoint.PhotoStore
 import et.alpha.meret.domain.waypoint.SaveWaypointUseCase
 import et.alpha.meret.domain.waypoint.WaypointCategory
 import et.alpha.meret.domain.waypoint.WaypointDraft
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -55,6 +57,10 @@ import kotlin.math.abs
  * all of them. A write in progress coalesces the changes made meanwhile into the next one, so
  * fast typing is a handful of small writes, never a queue. A dismissed sheet keeps its draft,
  * for a swipe made by mistake; a saved one starts empty and the draft is deleted.
+ *
+ * A photo field's answer is the ids of photos already stored ([PhotoStore]): the camera's
+ * capture is shrunk and stored first, then its id joins the answer, so the draft names only
+ * whole files. The photo rows are written at Save, with the waypoint.
  */
 @HiltViewModel
 class WaypointCaptureViewModel
@@ -65,6 +71,7 @@ class WaypointCaptureViewModel
         private val saveWaypoint: SaveWaypointUseCase,
         private val drafts: WaypointDraftStore,
         formSource: WaypointFormSource,
+        private val photos: PhotoStore,
     ) : ViewModel() {
         private val fix: StateFlow<DevicePosition?> =
             devicePosition
@@ -86,6 +93,7 @@ class WaypointCaptureViewModel
             viewModelScope.launch {
                 val saved = drafts.load()
                 restore(saved, formSource.currentForm())
+                findRestoredPhotos()
                 // From here on, every change is written. Not before: the empty sheet of a
                 // new ViewModel must not overwrite the draft it is about to restore.
                 merge(input, draft).conflate().collect { persistDraft() }
@@ -158,6 +166,59 @@ class WaypointCaptureViewModel
         }
 
         /**
+         * The camera wrote a photo for field [key] at [capturePath]: it is stored, and joins
+         * the answer. After a process death the camera's result can arrive before the draft is
+         * read, so this waits for it rather than drop the photo.
+         */
+        fun onPhotoCaptured(
+            key: String,
+            capturePath: String,
+        ) {
+            viewModelScope.launch {
+                val current = draft.first { it.loaded }
+                if (current.form?.schema?.field(key) !is FormField.Photo) return@launch
+                when (val result = photos.store(capturePath)) {
+                    is AppResult.Success -> {
+                        val photo = result.value
+                        draft.update { it.withPhoto(key, photo.id, photo.path) }
+                    }
+
+                    is AppResult.Failure -> {
+                        mutableEvents.send(WaypointCaptureEvent.PhotoNotSaved)
+                    }
+                }
+            }
+        }
+
+        /**
+         * Takes photo [photoId] off field [key] and deletes its file, once the draft that no
+         * longer names it is written: a draft never points at a deleted photo.
+         */
+        fun onPhotoRemove(
+            key: String,
+            photoId: String,
+        ) {
+            val current = draft.value
+            val ids = (current.answers[key] as? FormAnswer.Photos)?.photoIds ?: return
+            if (photoId !in ids) return
+            val left = ids - photoId
+            draft.value =
+                current.copy(
+                    answers =
+                        if (left.isEmpty()) {
+                            current.answers - key
+                        } else {
+                            current.answers + (key to FormAnswer.Photos(left))
+                        },
+                    photoPaths = current.photoPaths - photoId,
+                )
+            viewModelScope.launch {
+                persistDraft()
+                photos.delete(photoId)
+            }
+        }
+
+        /**
          * A second tap while a save is being written is ignored: it would save twice. Nothing is
          * saved while the form is still being read, or the waypoint would miss it.
          */
@@ -194,6 +255,17 @@ class WaypointCaptureViewModel
         private fun clearInput() {
             input.value = WaypointInput()
             draft.update { FormDraft(form = it.form, loaded = it.loaded) }
+        }
+
+        /** Where the restored draft's photos are, for their thumbnails. */
+        private suspend fun findRestoredPhotos() {
+            val ids =
+                draft.value.answers.values
+                    .filterIsInstance<FormAnswer.Photos>()
+                    .flatMap { it.photoIds }
+            if (ids.isEmpty()) return
+            val paths = ids.mapNotNull { id -> photos.describe(id)?.let { id to it.path } }.toMap()
+            draft.update { it.copy(photoPaths = it.photoPaths + paths) }
         }
 
         /**
@@ -290,7 +362,22 @@ internal data class FormDraft(
     val answers: Map<String, FormAnswer> = emptyMap(),
     val numberTexts: Map<String, String> = emptyMap(),
     val showErrors: Boolean = false,
+    /** The stored file of each photo in [answers] that has one; never written to the draft. */
+    val photoPaths: Map<String, String> = emptyMap(),
 ) {
+    /** This draft with photo [id], stored at [path], added to field [key]'s answer. */
+    fun withPhoto(
+        key: String,
+        id: String,
+        path: String,
+    ): FormDraft {
+        val ids = (answers[key] as? FormAnswer.Photos)?.photoIds.orEmpty()
+        return copy(
+            answers = answers + (key to FormAnswer.Photos(ids + id)),
+            photoPaths = photoPaths + (id to path),
+        )
+    }
+
     /**
      * The answers to check and save. A number box with text that is not a number becomes a
      * text answer, which the form's checks report as the wrong type, never a silent blank.
@@ -331,6 +418,11 @@ internal data class FormDraft(
                                 numberText =
                                     numberTexts[field.key] ?: effective[field.key].numberText(),
                                 error = errors[field.key],
+                                photos =
+                                    (effective[field.key] as? FormAnswer.Photos)
+                                        ?.photoIds
+                                        .orEmpty()
+                                        .map { FormPhoto(it, photoPaths[it]) },
                             )
                         },
                 )
@@ -402,6 +494,14 @@ data class FormFieldUiState(
     /** A number field's box text; empty for other types. */
     val numberText: String = "",
     val error: FieldError? = null,
+    /** A photo field's photos, in the order taken; empty for other types. */
+    val photos: List<FormPhoto> = emptyList(),
+)
+
+/** A photo in a photo field's answer. [path] is null when its file cannot be read. */
+data class FormPhoto(
+    val id: String,
+    val path: String?,
 )
 
 /** Where the waypoint would be saved. */
@@ -424,6 +524,9 @@ sealed interface WaypointCaptureEvent {
     data class NotSaved(
         val reason: NotSavedReason,
     ) : WaypointCaptureEvent
+
+    /** The camera's photo could not be stored (unreadable, or no room); nothing changed. */
+    data object PhotoNotSaved : WaypointCaptureEvent
 }
 
 enum class NotSavedReason {

@@ -11,6 +11,11 @@ dependencies {
     // SaveWaypointUseCase, all bound in :core:data.
     implementation(project(":core:data"))
 
+    // Photos: the phone's camera app writes through a FileProvider URI (TakePicture), so no
+    // camera library and no CAMERA permission. Both are already in the app.
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.ktx)
+
     // The process-death test runs the sheet on a real Room file, closed and reopened. Test
     // only: the sheet itself never sees :core:database.
     testImplementation(project(":core:database"))

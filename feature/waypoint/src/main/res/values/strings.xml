@@ -33,8 +33,6 @@
     <string name="form_clear">Clear</string>
     <string name="form_point_value">%1$s, %2$s</string>
     <string name="form_point_use_current">Use my current position</string>
-    <string name="form_photo_not_yet">Photos can be added in a coming update.</string>
-    <string name="form_photo_kept">Photos kept: %1$d</string>
     <string name="form_error_required">Please answer this question.</string>
     <string name="form_error_not_a_number">Enter a number.</string>
     <string name="form_error_wrong_type">This answer does not fit the question. Enter it again.</string>
@@ -48,4 +46,13 @@
     <string name="form_error_too_many_photos">No more than %1$d photos.</string>
     <string name="form_error_invalid_point">This position is not valid. Take it again.</string>
     <string name="waypoint_not_saved_form">Not saved: some answers need attention.</string>
+    <string name="form_photo_take">Take photo</string>
+    <string name="form_photo_count">%1$d of %2$d photos</string>
+    <string name="form_photo_description">Photo %1$d</string>
+    <string name="form_photo_remove">Remove</string>
+    <string name="form_photo_remove_title">Remove this photo?</string>
+    <string name="form_photo_remove_confirm">Remove</string>
+    <string name="form_photo_no_camera">No camera app was found on this phone.</string>
+    <string name="waypoint_photo_not_saved">The photo was not saved. Try again.</string>
+    <string name="form_photo_remove_numbered">Remove photo %1$d</string>
 </resources>

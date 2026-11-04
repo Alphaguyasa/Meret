@@ -51,6 +51,8 @@ fun WaypointSheet(
     onNotesChange: (String) -> Unit,
     onAnswerChange: (String, FormAnswer?) -> Unit,
     onNumberTextChange: (String, String) -> Unit,
+    onTakePhoto: (String) -> Unit,
+    onRemovePhoto: (String, String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
@@ -123,6 +125,8 @@ fun WaypointSheet(
             fix = state.fix,
             onAnswerChange = onAnswerChange,
             onNumberTextChange = onNumberTextChange,
+            onTakePhoto = onTakePhoto,
+            onRemovePhoto = onRemovePhoto,
         )
 
         Row(
@@ -208,6 +212,8 @@ private fun LocatedPreview() {
                 onNotesChange = {},
                 onAnswerChange = { _, _ -> },
                 onNumberTextChange = { _, _ -> },
+                onTakePhoto = {},
+                onRemovePhoto = { _, _ -> },
                 onSave = {},
                 onCancel = {},
             )
@@ -227,6 +233,8 @@ private fun WaitingPreview() {
                 onNotesChange = {},
                 onAnswerChange = { _, _ -> },
                 onNumberTextChange = { _, _ -> },
+                onTakePhoto = {},
+                onRemovePhoto = { _, _ -> },
                 onSave = {},
                 onCancel = {},
             )

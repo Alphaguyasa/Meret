@@ -45,6 +45,7 @@ class WaypointCaptureViewModelTest {
     private val tracking = FakeTrackingController()
     private val store = FakeWaypointStore()
     private val drafts = FakeDraftStore()
+    private val photos = FakePhotoStore()
     private var formSource: WaypointFormSource = NoForm
 
     private val here =
@@ -425,6 +426,139 @@ class WaypointCaptureViewModelTest {
         assertThat(formatLimit(0.25)).isEqualTo("0.25")
     }
 
+    @Test
+    fun `a photo taken joins its field's answer and the draft`() = runTest(dispatcher) {
+        formSource = FixedForm(photoForm)
+        val (viewModel, state) = subscribe()
+
+        viewModel.onPhotoCaptured("plot_photos", "/cache/capture-1.jpg")
+        viewModel.onPhotoCaptured("plot_photos", "/cache/capture-2.jpg")
+
+        assertThat(photos.captures).containsExactly("/cache/capture-1.jpg", "/cache/capture-2.jpg")
+        val field = state().field("plot_photos")
+        assertThat(field.answer).isEqualTo(FormAnswer.Photos(listOf("photo-1", "photo-2")))
+        assertThat(field.photos)
+            .containsExactly(
+                FormPhoto("photo-1", "/photos/photo-1.jpg"),
+                FormPhoto("photo-2", "/photos/photo-2.jpg"),
+            ).inOrder()
+        assertThat(drafts.draft?.answersJson)
+            .isEqualTo("""{"plot_photos":["photo-1","photo-2"]}""")
+    }
+
+    @Test
+    fun `a photo that cannot be stored changes nothing and says so`() = runTest(dispatcher) {
+        formSource = FixedForm(photoForm)
+        photos.failure = FakePhotoStore.Full
+        val (viewModel, state) = subscribe()
+        val events = collectEvents(viewModel)
+
+        viewModel.onPhotoCaptured("plot_photos", "/cache/capture-1.jpg")
+
+        assertThat(state().field("plot_photos").answer).isNull()
+        assertThat(events).containsExactly(WaypointCaptureEvent.PhotoNotSaved)
+    }
+
+    @Test
+    fun `a capture for a field that takes no photos is not stored`() = runTest(dispatcher) {
+        formSource = FixedForm(photoForm)
+        val (viewModel, _) = subscribe()
+
+        viewModel.onPhotoCaptured("present", "/cache/capture-1.jpg")
+        viewModel.onPhotoCaptured("no_such_field", "/cache/capture-2.jpg")
+
+        assertThat(photos.captures).isEmpty()
+    }
+
+    @Test
+    fun `a capture that arrives before the draft is read is kept`() = runTest(dispatcher) {
+        // After a process death with the camera open: the result comes back first.
+        val pending = CompletableDeferred<WaypointForm?>()
+        formSource =
+            object : WaypointFormSource {
+                override suspend fun currentForm(): WaypointForm? = pending.await()
+            }
+        val (viewModel, state) = subscribe()
+
+        viewModel.onPhotoCaptured("plot_photos", "/cache/capture-1.jpg")
+        pending.complete(photoForm)
+
+        assertThat(state().field("plot_photos").answer)
+            .isEqualTo(FormAnswer.Photos(listOf("photo-1")))
+    }
+
+    @Test
+    fun `a removed photo leaves the draft first, then its file goes`() = runTest(dispatcher) {
+        formSource = FixedForm(photoForm)
+        val (viewModel, state) = subscribe()
+        viewModel.onPhotoCaptured("plot_photos", "/cache/capture-1.jpg")
+        viewModel.onPhotoCaptured("plot_photos", "/cache/capture-2.jpg")
+        var draftAtDelete: String? = null
+        photos.onDelete = { draftAtDelete = drafts.draft?.answersJson }
+
+        viewModel.onPhotoRemove("plot_photos", "photo-1")
+
+        assertThat(photos.deleted).containsExactly("photo-1")
+        assertThat(draftAtDelete).isEqualTo("""{"plot_photos":["photo-2"]}""")
+        assertThat(state().field("plot_photos").photos.map { it.id }).containsExactly("photo-2")
+
+        viewModel.onPhotoRemove("plot_photos", "photo-2")
+
+        assertThat(state().field("plot_photos").answer).isNull()
+        assertThat(photos.deleted).containsExactly("photo-1", "photo-2").inOrder()
+    }
+
+    @Test
+    fun `removing a photo the field does not hold deletes nothing`() = runTest(dispatcher) {
+        formSource = FixedForm(photoForm)
+        photos.add("photo-9")
+        val (viewModel, _) = subscribe()
+
+        viewModel.onPhotoRemove("plot_photos", "photo-9")
+
+        assertThat(photos.deleted).isEmpty()
+    }
+
+    @Test
+    fun `a restored draft's photos come back with their files`() = runTest(dispatcher) {
+        photos.add("photo-1")
+        drafts.draft =
+            WaypointDraft(
+                formTemplateId = "template-1",
+                formVersion = 2,
+                answersJson = """{"plot_photos":["photo-1","photo-gone"]}""",
+            )
+        formSource = FixedForm(photoForm)
+
+        val (_, state) = subscribe()
+
+        assertThat(state().field("plot_photos").photos)
+            .containsExactly(
+                FormPhoto("photo-1", "/photos/photo-1.jpg"),
+                FormPhoto("photo-gone", null),
+            ).inOrder()
+    }
+
+    @Test
+    fun `saved photos go to the store with the waypoint, and the sheet starts empty`() =
+        runTest(dispatcher) {
+            formSource = FixedForm(photoForm)
+            position.value = here
+            val (viewModel, state) = subscribe()
+            viewModel.onAnswerChange("present", FormAnswer.Choice("no"))
+            viewModel.onPhotoCaptured("plot_photos", "/cache/capture-1.jpg")
+
+            viewModel.onSave()
+
+            assertThat(
+                store.saved
+                    .single()
+                    .photos
+                    .map { it.id },
+            ).containsExactly("photo-1")
+            assertThat(state().field("plot_photos").photos).isEmpty()
+        }
+
     private fun CaptureState.readyKeys(): List<String> =
         (form as FormUiState.Ready).fields.map { it.field.key }
 
@@ -439,9 +573,10 @@ class WaypointCaptureViewModelTest {
                         override fun observePosition() = position
                     },
                 tracking = tracking,
-                saveWaypoint = SaveWaypointUseCase(store, NoPhotos),
+                saveWaypoint = SaveWaypointUseCase(store, photos),
                 drafts = drafts,
                 formSource = formSource,
+                photos = photos,
             )
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel to { viewModel.uiState.value }
@@ -498,6 +633,20 @@ class WaypointCaptureViewModelTest {
                                 min = 1.0,
                             ),
                         ),
+                ),
+        )
+
+    private val photoForm =
+        visitForm.copy(
+            schema =
+                visitForm.schema.copy(
+                    fields =
+                        visitForm.schema.fields +
+                            FormField.Photo(
+                                key = "plot_photos",
+                                label = LocalizedText.of("Photos of the plot"),
+                                maxCount = 3,
+                            ),
                 ),
         )
 

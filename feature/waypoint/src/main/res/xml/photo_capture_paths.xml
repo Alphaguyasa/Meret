@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The only directory the camera app is given: the waypoint sheet's captures, in cacheDir.
+    Each capture is shared as one URI with a one-off write grant; nothing else is exposed.
+-->
+<paths>
+    <cache-path name="photo_captures" path="photo_captures/" />
+</paths>

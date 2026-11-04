@@ -33,8 +33,6 @@
     <string name="form_clear">አጽዳ</string>
     <string name="form_point_value">%1$s, %2$s</string>
     <string name="form_point_use_current">አሁን ያለሁበትን ቦታ ተጠቀም</string>
-    <string name="form_photo_not_yet">ፎቶዎች በሚመጣው ዝማኔ መጨመር ይቻላል።</string>
-    <string name="form_photo_kept">የተጠበቁ ፎቶዎች፦ %1$d</string>
     <string name="form_error_required">እባክዎ ይህን ጥያቄ ይመልሱ።</string>
     <string name="form_error_not_a_number">ቁጥር ያስገቡ።</string>
     <string name="form_error_wrong_type">ይህ መልስ ከጥያቄው ጋር አይስማማም። እንደገና ያስገቡ።</string>
@@ -48,4 +46,13 @@
     <string name="form_error_too_many_photos">ከ%1$d ፎቶዎች አይበልጥ።</string>
     <string name="form_error_invalid_point">ይህ ቦታ ትክክል አይደለም። እንደገና ይውሰዱ።</string>
     <string name="waypoint_not_saved_form">አልተቀመጠም፦ አንዳንድ መልሶች መስተካከል አለባቸው።</string>
+    <string name="form_photo_take">ፎቶ አንሳ</string>
+    <string name="form_photo_count">%1$d ከ%2$d ፎቶዎች</string>
+    <string name="form_photo_description">ፎቶ %1$d</string>
+    <string name="form_photo_remove">አስወግድ</string>
+    <string name="form_photo_remove_title">ይህ ፎቶ ይወገድ?</string>
+    <string name="form_photo_remove_confirm">አስወግድ</string>
+    <string name="form_photo_no_camera">በዚህ ስልክ ላይ የካሜራ መተግበሪያ አልተገኘም።</string>
+    <string name="waypoint_photo_not_saved">ፎቶው አልተቀመጠም። እንደገና ይሞክሩ።</string>
+    <string name="form_photo_remove_numbered">ፎቶ %1$d አስወግድ</string>
 </resources>

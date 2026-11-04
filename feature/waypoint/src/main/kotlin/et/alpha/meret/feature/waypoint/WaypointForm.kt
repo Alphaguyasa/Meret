@@ -69,6 +69,8 @@ internal fun WaypointFormSection(
     fix: CaptureFix,
     onAnswerChange: (String, FormAnswer?) -> Unit,
     onNumberTextChange: (String, String) -> Unit,
+    onTakePhoto: (String) -> Unit,
+    onRemovePhoto: (String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (form !is FormUiState.Ready) return
@@ -95,6 +97,8 @@ internal fun WaypointFormSection(
                 fix = fix,
                 onAnswerChange = { onAnswerChange(state.field.key, it) },
                 onNumberTextChange = { onNumberTextChange(state.field.key, it) },
+                onTakePhoto = { onTakePhoto(state.field.key) },
+                onRemovePhoto = { onRemovePhoto(state.field.key, it) },
             )
         }
     }
@@ -107,6 +111,8 @@ private fun FormFieldControl(
     fix: CaptureFix,
     onAnswerChange: (FormAnswer?) -> Unit,
     onNumberTextChange: (String) -> Unit,
+    onTakePhoto: () -> Unit,
+    onRemovePhoto: (String) -> Unit,
 ) {
     val field = state.field
     val label = fieldLabel(field, language)
@@ -141,7 +147,7 @@ private fun FormFieldControl(
                     }
 
                     is FormField.Photo -> {
-                        PhotoPlaceholder(state.answer)
+                        PhotoControl(field, state.photos, onTakePhoto, onRemovePhoto)
                     }
 
                     is FormField.Unsupported -> {
@@ -469,14 +475,6 @@ private fun PointControl(
             ) { Text(stringResource(R.string.form_clear)) }
         }
     }
-}
-
-/** Taking photos is roadmap item 33. Photos already in the answer are kept and counted. */
-@Composable
-private fun PhotoPlaceholder(answer: FormAnswer?) {
-    val count = (answer as? FormAnswer.Photos)?.photoIds?.size ?: 0
-    Note(stringResource(R.string.form_photo_not_yet))
-    if (count > 0) Note(stringResource(R.string.form_photo_kept, count))
 }
 
 @Composable

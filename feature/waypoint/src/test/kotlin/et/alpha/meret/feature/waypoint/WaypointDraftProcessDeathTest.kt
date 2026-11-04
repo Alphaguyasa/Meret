@@ -124,6 +124,7 @@ class WaypointDraftProcessDeathTest {
                 dispatchers = StandardDispatcherProvider(),
             ),
         formSource = FixedForm,
+        photos = NoPhotos,
     )
 
     private suspend fun awaitDraft(
