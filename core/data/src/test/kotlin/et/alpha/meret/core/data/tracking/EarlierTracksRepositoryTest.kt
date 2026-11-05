@@ -115,6 +115,34 @@ class EarlierTracksRepositoryTest {
     }
 
     @Test
+    fun `a pinned track is drawn even where thirty newer ones crowd, and first`() =
+        runBlocking<Unit> {
+            val oldest = ADDIS_WALK.shifted(0.02)
+            record("oldest", startedAt = 500L, line = oldest)
+            repeat(EarlierTracksRepository.MAX_TRACKS + 5) { index ->
+                record("track-$index", startedAt = 1_000L + index, line = ADDIS_WALK)
+            }
+            assertThat(repository.observeEarlierTracks(ADDIS).first())
+                .doesNotContain(TrackLine(listOf(oldest)))
+
+            val lines = repository.observeEarlierTracks(ADDIS, pinnedTrackId = "oldest").first()
+
+            assertThat(lines).hasSize(EarlierTracksRepository.MAX_TRACKS)
+            assertThat(lines.first()).isEqualTo(TrackLine(listOf(oldest)))
+        }
+
+    @Test
+    fun `a pinned track outside the area, or not finished, is not drawn`() = runBlocking<Unit> {
+        record("mekelle", startedAt = 1_000L, line = ADDIS_WALK.shifted(4.5))
+        record("recording", startedAt = 2_000L, line = ADDIS_WALK, status = TrackStatus.ACTIVE)
+
+        assertThat(repository.observeEarlierTracks(ADDIS, pinnedTrackId = "mekelle").first())
+            .isEmpty()
+        assertThat(repository.observeEarlierTracks(ADDIS, pinnedTrackId = "recording").first())
+            .isEmpty()
+    }
+
+    @Test
     fun `a track that changes is drawn as it now is`() = runBlocking<Unit> {
         record("walk", startedAt = 1_000L, line = ADDIS_WALK)
         assertThat(repository.observeEarlierTracks(ADDIS).first())

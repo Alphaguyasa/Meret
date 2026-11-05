@@ -11,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -32,10 +33,14 @@ class EarlierTracksViewModel
         /** The ground on screen when the camera last rested; null until the map reports. */
         private val visibleArea = MutableStateFlow<BoundingBox?>(null)
 
+        /** A track opened on the map from its detail screen, drawn however many crowd it. */
+        private val pinnedTrackId = MutableStateFlow<String?>(null)
+
         /**
          * Loaded for an area larger than the screen ([EarlierTracksArea]), so small pans ask
          * Room nothing, and at most once per [AREA_THROTTLE_MS] while the camera keeps coming
-         * to rest. Empty until the map has reported where it is.
+         * to rest. Empty until the map has reported where it is. The [pin]ned track is always
+         * among them where it meets the area.
          */
         @OptIn(ExperimentalCoroutinesApi::class)
         val lines: StateFlow<List<TrackLine>> =
@@ -46,7 +51,8 @@ class EarlierTracksViewModel
                     EarlierTracksArea.next(loaded, visible)
                 }.filterNotNull()
                 .distinctUntilChanged()
-                .flatMapLatest { area -> repository.observeEarlierTracks(area) }
+                .combine(pinnedTrackId) { area, pinned -> area to pinned }
+                .flatMapLatest { (area, pinned) -> repository.observeEarlierTracks(area, pinned) }
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -56,6 +62,11 @@ class EarlierTracksViewModel
         /** The camera came to rest over [area]. Null, while no map is drawn, is ignored. */
         fun onVisibleAreaChanged(area: BoundingBox?) {
             if (area != null) visibleArea.value = area
+        }
+
+        /** Keeps [trackId] on the map, past the cap on how many are drawn, until another pin. */
+        fun pin(trackId: String) {
+            pinnedTrackId.value = trackId
         }
 
         private companion object {

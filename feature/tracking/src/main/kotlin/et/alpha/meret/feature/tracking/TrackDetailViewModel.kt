@@ -8,6 +8,7 @@ import et.alpha.meret.core.data.tracking.TrackRepository
 import et.alpha.meret.core.data.tracking.TrackingController
 import et.alpha.meret.core.model.ElevationSample
 import et.alpha.meret.core.model.SegmentSummary
+import et.alpha.meret.core.model.geo.BoundingBox
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -27,6 +28,8 @@ sealed interface TrackDetailUiState {
         val segments: List<SegmentSummary>,
         /** Fewer than two samples draws no profile. */
         val elevation: List<ElevationSample>,
+        /** The ground the track covers; null before its first accepted fix (nothing to show). */
+        val bounds: BoundingBox? = null,
     ) : TrackDetailUiState
 }
 
@@ -54,6 +57,7 @@ class TrackDetailViewModel
                         pointCount = detail.track.pointCount,
                         segments = detail.summary.segments,
                         elevation = detail.summary.elevation,
+                        bounds = detail.track.bounds,
                     )
                 }
             }.stateIn(

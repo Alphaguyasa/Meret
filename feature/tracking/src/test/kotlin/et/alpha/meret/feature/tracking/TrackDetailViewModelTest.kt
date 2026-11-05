@@ -11,6 +11,7 @@ import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.TrackDetail
 import et.alpha.meret.core.model.TrackStatus
 import et.alpha.meret.core.model.TrackSummary
+import et.alpha.meret.core.model.geo.BoundingBox
 import et.alpha.meret.feature.tracking.service.FakeTrackingController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -65,6 +66,25 @@ class TrackDetailViewModelTest {
     }
 
     @Test
+    fun `the detail carries the ground the track covers, for «Show on map»`() =
+        runTest(dispatcher) {
+            repository.detail.value = TrackDetail(track(bounds = BOUNDS), SUMMARY)
+
+            val state = subscribe(viewModel())
+
+            assertThat((state() as TrackDetailUiState.Ready).bounds).isEqualTo(BOUNDS)
+        }
+
+    @Test
+    fun `a track with no fix yet has no ground to show`() = runTest(dispatcher) {
+        repository.detail.value = TrackDetail(track(bounds = null), SUMMARY)
+
+        val state = subscribe(viewModel())
+
+        assertThat((state() as TrackDetailUiState.Ready).bounds).isNull()
+    }
+
+    @Test
     fun `a track still recording follows the recorder's state`() = runTest(dispatcher) {
         repository.detail.value = TrackDetail(track(status = TrackStatus.ACTIVE), SUMMARY)
         tracking.state.value = TrackingState.Recording(TRACK_ID, isPaused = false)
@@ -93,7 +113,10 @@ class TrackDetailViewModelTest {
         return { viewModel.uiState.value }
     }
 
-    private fun track(status: TrackStatus = TrackStatus.COMPLETED) = Track(
+    private fun track(
+        status: TrackStatus = TrackStatus.COMPLETED,
+        bounds: BoundingBox? = null,
+    ) = Track(
         id = TRACK_ID,
         projectId = "local",
         deviceId = "device",
@@ -102,6 +125,7 @@ class TrackDetailViewModelTest {
         status = status,
         pointCount = 42,
         updatedAt = 1_000L,
+        bounds = bounds,
     )
 
     private class FakeRepository : TrackRepository {
@@ -120,6 +144,7 @@ class TrackDetailViewModelTest {
 
     private companion object {
         const val TRACK_ID = "walk"
+        val BOUNDS = BoundingBox(9.0, 38.74, 9.02, 38.76)
         val SUMMARY =
             TrackSummary(
                 segments =

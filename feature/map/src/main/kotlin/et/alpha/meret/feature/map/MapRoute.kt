@@ -28,7 +28,6 @@ import et.alpha.meret.core.designsystem.format.formatDistance
 import et.alpha.meret.core.designsystem.format.formatDuration
 import et.alpha.meret.core.maps.view.OfflineMap
 import et.alpha.meret.core.maps.view.rememberOfflineMapController
-import et.alpha.meret.core.model.geo.LatLng
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -48,17 +47,18 @@ import et.alpha.meret.core.designsystem.R as DesignR
  * `onDismiss`. The sheet lives in `:feature:waypoint`, which this module may not see; the
  * app passes it in.
  *
- * [centreOn] is a place to show, such as a waypoint picked in the Waypoints tab: the map
- * centres on it, stops following the user, and calls [onCentred] so the request is not
- * replayed. It comes from the app for the same reason the sheet does.
+ * [focus] is something to show, such as a waypoint picked in the Waypoints tab or a track
+ * opened from its detail screen: the map centres on it or fits it, stops following the user,
+ * and calls [onFocused] so the request is not replayed. It comes from the app for the same
+ * reason the sheet does.
  */
 @Composable
 fun MapRoute(
     onOpenDiagnostics: () -> Unit,
     modifier: Modifier = Modifier,
     waypointSheet: @Composable (onDismiss: () -> Unit) -> Unit = {},
-    centreOn: LatLng? = null,
-    onCentred: () -> Unit = {},
+    focus: MapFocus? = null,
+    onFocused: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     viewModel: MapViewModel = hiltViewModel(),
     earlierTracksViewModel: EarlierTracksViewModel = hiltViewModel(),
@@ -106,11 +106,22 @@ fun MapRoute(
         }
     }
     val mapController = rememberOfflineMapController()
-    LaunchedEffect(mapController, centreOn) {
-        if (centreOn != null) {
-            mapController.centreOn(centreOn)
-            onCentred()
+    LaunchedEffect(mapController, focus) {
+        when (focus) {
+            null -> {
+                return@LaunchedEffect
+            }
+
+            is MapFocus.Place -> {
+                mapController.centreOn(focus.position)
+            }
+
+            is MapFocus.Track -> {
+                earlierTracksViewModel.pin(focus.trackId)
+                mapController.fitTo(focus.bounds)
+            }
         }
+        onFocused()
     }
     LaunchedEffect(mapController, position) {
         mapController.showPosition(position)

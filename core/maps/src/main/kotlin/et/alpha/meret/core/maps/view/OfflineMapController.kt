@@ -35,6 +35,15 @@ internal interface MapCameraTarget {
         minZoom: Double?,
     )
 
+    /**
+     * Animates the camera to show all of [area], with room around it for the screen's own
+     * controls, zoomed in no further than [maxZoom].
+     */
+    fun fitTo(
+        area: BoundingBox,
+        maxZoom: Double,
+    )
+
     /** Draws the location puck at [position], or removes it when null. */
     fun showPuck(position: DevicePosition?)
 
@@ -63,9 +72,10 @@ internal interface MapCameraTarget {
  * first centring after it turns on zooms in to street level, so a recentre from the
  * whole-country view is useful; later ones keep the user's zoom.
  *
- * [centreOn] shows a place that is not the user, such as a waypoint picked from the list: it
- * turns follow mode off, so the next fix does not pull the map away again. Given before a map
- * is attached (the map tab is still opening), it is kept and applied when one attaches.
+ * [centreOn] shows a place that is not the user, such as a waypoint picked from the list, and
+ * [fitTo] an area, such as a track opened from its detail screen. Both turn follow mode off,
+ * so the next fix does not pull the map away again. Given before a map is attached (the map
+ * tab is still opening), the latest one is kept and applied when one attaches.
  */
 @Stable
 public class OfflineMapController internal constructor() {
@@ -90,7 +100,7 @@ public class OfflineMapController internal constructor() {
     private var earlierTracks: List<TrackLine> = emptyList()
     private var waypoints: List<WaypointMarker> = emptyList()
     private var zoomInOnNextCentre = true
-    private var pendingCentre: LatLng? = null
+    private var pendingMove: CameraMove? = null
 
     public fun zoomIn() {
         target?.zoomBy(ZOOM_STEP)
@@ -107,7 +117,7 @@ public class OfflineMapController internal constructor() {
 
     /** Centres the map on the user and keeps it there until the user moves the map. */
     public fun recentre() {
-        pendingCentre = null
+        pendingMove = null
         isFollowing = true
         zoomInOnNextCentre = true
         centreIfFollowing()
@@ -118,13 +128,33 @@ public class OfflineMapController internal constructor() {
      * the user. The recentre button follows again.
      */
     public fun centreOn(position: LatLng) {
+        move(CameraMove.Centre(position))
+    }
+
+    /**
+     * Shows all of [area], zoomed in no further than [MAX_FIT_ZOOM] so a few metres of track
+     * do not fill the screen with a blur, and stops following the user. The recentre button
+     * follows again.
+     */
+    public fun fitTo(area: BoundingBox) {
+        move(CameraMove.Fit(area))
+    }
+
+    private fun move(move: CameraMove) {
         isFollowing = false
         val target = target
         if (target == null) {
-            pendingCentre = position
+            pendingMove = move
         } else {
-            pendingCentre = null
-            target.centreOn(position, FOLLOW_ZOOM)
+            pendingMove = null
+            target.perform(move)
+        }
+    }
+
+    private fun MapCameraTarget.perform(move: CameraMove) {
+        when (move) {
+            is CameraMove.Centre -> centreOn(move.position, FOLLOW_ZOOM)
+            is CameraMove.Fit -> fitTo(move.area, MAX_FIT_ZOOM)
         }
     }
 
@@ -163,10 +193,10 @@ public class OfflineMapController internal constructor() {
         target.showTrackLine(trackLine)
         target.showWaypoints(waypoints)
         target.showPuck(position)
-        val pending = pendingCentre
+        val pending = pendingMove
         if (pending != null) {
-            pendingCentre = null
-            target.centreOn(pending, FOLLOW_ZOOM)
+            pendingMove = null
+            target.perform(pending)
         } else {
             centreIfFollowing()
         }
@@ -204,12 +234,26 @@ public class OfflineMapController internal constructor() {
         }
     }
 
+    /** A camera move asked for while no map was attached. */
+    private sealed interface CameraMove {
+        data class Centre(
+            val position: LatLng,
+        ) : CameraMove
+
+        data class Fit(
+            val area: BoundingBox,
+        ) : CameraMove
+    }
+
     private companion object {
         /** One zoom level: each tap halves or doubles the ground on screen. */
         const val ZOOM_STEP = 1.0
 
         /** Street level: footpaths and buildings are visible, about 2 m per dp at 9°N. */
         const val FOLLOW_ZOOM = 16.0
+
+        /** About 0.5 m per dp: a 30 m walk still reads as a line, not a smear. */
+        const val MAX_FIT_ZOOM = 18.0
     }
 }
 

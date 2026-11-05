@@ -107,6 +107,19 @@ class EarlierTracksViewModelTest {
         assertThat(last.corners.all { it in repository.requested.last() }).isTrue()
     }
 
+    @Test
+    fun `a pinned track is asked for in the area on screen`() = runViewModelTest { viewModel ->
+        backgroundScope.launch { viewModel.lines.collect {} }
+
+        viewModel.onVisibleAreaChanged(SCREEN)
+        runCurrent()
+        viewModel.pin("track-1")
+        runCurrent()
+
+        assertThat(repository.pinned).containsExactly(null, "track-1").inOrder()
+        assertThat(repository.requested.distinct()).hasSize(1)
+    }
+
     private fun runViewModelTest(body: suspend TestScope.(EarlierTracksViewModel) -> Unit) =
         runTest(dispatcher) {
             val viewModel = EarlierTracksViewModel(repository)
@@ -127,9 +140,14 @@ class EarlierTracksViewModelTest {
     private class FakeEarlierTracks : EarlierTracksRepository {
         val lines = MutableStateFlow<List<TrackLine>>(emptyList())
         val requested = mutableListOf<BoundingBox>()
+        val pinned = mutableListOf<String?>()
 
-        override fun observeEarlierTracks(area: BoundingBox): Flow<List<TrackLine>> = flow {
+        override fun observeEarlierTracks(
+            area: BoundingBox,
+            pinnedTrackId: String?,
+        ): Flow<List<TrackLine>> = flow {
             requested += area
+            pinned += pinnedTrackId
             emitAll(lines)
         }
     }
