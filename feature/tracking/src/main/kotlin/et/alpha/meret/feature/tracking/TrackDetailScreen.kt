@@ -11,12 +11,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -26,6 +35,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import et.alpha.meret.core.designsystem.component.EmptyState
@@ -37,6 +48,7 @@ import et.alpha.meret.core.designsystem.theme.Spacing
 import et.alpha.meret.core.model.ElevationSample
 import et.alpha.meret.core.model.SegmentSummary
 import et.alpha.meret.core.model.SyncState
+import et.alpha.meret.core.model.TrackNames
 import et.alpha.meret.core.model.geo.BoundingBox
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -46,13 +58,15 @@ import et.alpha.meret.core.designsystem.R as DesignR
  * One track: the header the list row shows, the four totals, the elevation profile, and
  * one line per segment (a segment ends at each pause). Numbers, not bars: field workers
  * check figures against what they walked. «Show on map» opens the map fitted to the track; a
- * track with no accepted fix yet has nothing to show and no button.
+ * track with no accepted fix yet has nothing to show and no button. «Rename» names the
+ * track, for example after the kebele or farm walked; an empty name shows the date again.
  */
 @Composable
 fun TrackDetailScreen(
     state: TrackDetailUiState,
     onBack: () -> Unit,
     onShowOnMap: (trackId: String, bounds: BoundingBox) -> Unit,
+    onRename: (name: String) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
@@ -63,7 +77,7 @@ fun TrackDetailScreen(
     when (state) {
         TrackDetailUiState.Loading -> Unit
         TrackDetailUiState.NotFound -> NotFound(onBack, padded)
-        is TrackDetailUiState.Ready -> Detail(state, onBack, onShowOnMap, padded)
+        is TrackDetailUiState.Ready -> Detail(state, onBack, onShowOnMap, onRename, padded)
     }
 }
 
@@ -87,11 +101,27 @@ private fun Detail(
     state: TrackDetailUiState.Ready,
     onBack: () -> Unit,
     onShowOnMap: (trackId: String, bounds: BoundingBox) -> Unit,
+    onRename: (name: String) -> Unit,
     modifier: Modifier,
 ) {
+    // The text being typed while the rename dialog is open; null while it is closed. Saved,
+    // so a rotation or a background kill does not lose a half-typed name.
+    var renaming by rememberSaveable { mutableStateOf<String?>(null) }
+    val typed = renaming
+    if (typed != null) {
+        RenameDialog(
+            text = typed,
+            onTextChange = { renaming = it },
+            onSave = {
+                onRename(typed)
+                renaming = null
+            },
+            onDismiss = { renaming = null },
+        )
+    }
     LazyColumn(modifier) {
         item { BackButton(onBack) }
-        item { Header(state) }
+        item { Header(state, onRename = { renaming = state.track.name.orEmpty() }) }
         val bounds = state.bounds
         if (bounds != null) {
             item { ShowOnMapButton(onClick = { onShowOnMap(state.track.id, bounds) }) }
@@ -127,13 +157,63 @@ private fun ShowOnMapButton(onClick: () -> Unit) {
 }
 
 @Composable
-private fun Header(state: TrackDetailUiState.Ready) {
+private fun RenameDialog(
+    text: String,
+    onTextChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.track_rename_title)) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { typed ->
+                    // A paste longer than the limit is refused whole rather than cut.
+                    if (typed.codePointCount(0, typed.length) <= TrackNames.MAX_LENGTH) {
+                        onTextChange(typed)
+                    }
+                },
+                label = { Text(stringResource(R.string.track_rename_label)) },
+                supportingText = { Text(stringResource(R.string.track_rename_hint)) },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions = KeyboardActions(onDone = { onSave() }),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onSave) { Text(stringResource(R.string.track_rename_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.track_rename_cancel)) }
+        },
+    )
+}
+
+@Composable
+private fun Header(
+    state: TrackDetailUiState.Ready,
+    onRename: () -> Unit,
+) {
     val track = state.track
     Column(
         modifier = Modifier.padding(horizontal = Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        Text(text = track.title(), style = MaterialTheme.typography.titleLarge)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = track.title(),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onRename) { Text(stringResource(R.string.track_detail_rename)) }
+        }
         val (label, color) = track.standing()
         Text(text = label, style = MaterialTheme.typography.labelLarge, color = color)
         val (distance, unit) = distanceText(track.distanceMetres)
@@ -290,6 +370,7 @@ private fun DetailPreview() {
                 ),
             onBack = {},
             onShowOnMap = { _, _ -> },
+            onRename = {},
         )
     }
 }

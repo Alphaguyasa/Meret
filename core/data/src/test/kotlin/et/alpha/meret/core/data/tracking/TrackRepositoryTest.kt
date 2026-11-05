@@ -144,6 +144,57 @@ class TrackRepositoryTest {
     }
 
     @Test
+    fun `a rename is saved, tidied, and queued to sync again`() = runBlocking<Unit> {
+        database.trackDao().upsertTrack(track("walk").copy(syncState = SyncState.SYNCED))
+
+        val result = repository.renameTrack("walk", "  Kebele 03\n farm ")
+
+        assertThat(result).isEqualTo(AppResult.Success(Unit))
+        val row = checkNotNull(database.trackDao().getTrack("walk"))
+        assertThat(row.name).isEqualTo("Kebele 03 farm")
+        assertThat(row.syncState).isEqualTo(SyncState.PENDING)
+        assertThat(row.updatedAt).isEqualTo(FixedTime.nowMillis())
+        val listed = repository.observeTracks().first()
+        assertThat(listed.map(Track::name)).containsExactly("Kebele 03 farm")
+    }
+
+    @Test
+    fun `a blank name removes the name and keeps the rest of the track`() = runBlocking<Unit> {
+        database.trackDao().upsertTrack(
+            track("walk").copy(name = "Kebele 03", pointCount = 12, distanceMeters = 340.0),
+        )
+
+        assertThat(repository.renameTrack("walk", "   ")).isEqualTo(AppResult.Success(Unit))
+
+        val row = checkNotNull(database.trackDao().getTrack("walk"))
+        assertThat(row.name).isNull()
+        assertThat(row.pointCount).isEqualTo(12)
+        assertThat(row.distanceMeters).isEqualTo(340.0)
+        assertThat(row.status).isEqualTo(TrackStatus.COMPLETED)
+    }
+
+    @Test
+    fun `the track being recorded can be named`() = runBlocking<Unit> {
+        database.trackDao().upsertTrack(track("live", status = TrackStatus.ACTIVE))
+        tracking.state.value = TrackingState.Recording("live", isPaused = false)
+
+        assertThat(repository.renameTrack("live", "Farm 7")).isEqualTo(AppResult.Success(Unit))
+        assertThat(checkNotNull(database.trackDao().getTrack("live")).name).isEqualTo("Farm 7")
+    }
+
+    @Test
+    fun `a discarded or missing track cannot be renamed`() = runBlocking<Unit> {
+        database.trackDao().upsertTrack(track("gone", status = TrackStatus.DISCARDED))
+
+        val discarded = (repository.renameTrack("gone", "Farm") as AppResult.Failure).error
+        val missing = (repository.renameTrack("missing", "Farm") as AppResult.Failure).error
+
+        assertThat((discarded as AppError.Storage).kind).isEqualTo(AppError.Storage.Kind.NotFound)
+        assertThat((missing as AppError.Storage).kind).isEqualTo(AppError.Storage.Kind.NotFound)
+        assertThat(checkNotNull(database.trackDao().getTrack("gone")).name).isNull()
+    }
+
+    @Test
     fun `the detail holds the track and a summary of its segments`() = runBlocking<Unit> {
         database.trackDao().upsertTrack(track("walk"))
         database.trackPointDao().insertPoints(

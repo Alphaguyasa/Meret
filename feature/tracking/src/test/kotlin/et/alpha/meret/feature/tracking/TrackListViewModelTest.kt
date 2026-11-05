@@ -257,6 +257,11 @@ class TrackListViewModelTest {
 
         override fun observeTrackDetail(trackId: String): Flow<TrackDetail?> = flowOf(null)
 
+        override suspend fun renameTrack(
+            trackId: String,
+            name: String,
+        ): AppResult<Unit> = error("not used")
+
         override suspend fun discardTrack(trackId: String): AppResult<Unit> {
             val outcome = result
             if (outcome is AppResult.Success) {
