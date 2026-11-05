@@ -12,6 +12,7 @@ import et.alpha.meret.core.datastore.TrackingConfigStore
 import et.alpha.meret.core.location.filter.TrackSummariser
 import et.alpha.meret.core.model.Track
 import et.alpha.meret.core.model.TrackDetail
+import et.alpha.meret.core.model.TrackNames
 import et.alpha.meret.core.model.TrackStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -42,6 +43,17 @@ public interface TrackRepository {
      * reboot) can be discarded. No such track is [AppError.Storage.Kind.NotFound].
      */
     public suspend fun discardTrack(trackId: String): AppResult<Unit>
+
+    /**
+     * The user's name for a track, stored as [TrackNames.normalise] makes it; a blank name
+     * removes it, and the track is shown by its date again. The track is queued to sync again.
+     * A track being recorded can be named. No such track, or a discarded one, is
+     * [AppError.Storage.Kind.NotFound].
+     */
+    public suspend fun renameTrack(
+        trackId: String,
+        name: String,
+    ): AppResult<Unit>
 }
 
 public class DefaultTrackRepository
@@ -82,6 +94,27 @@ public class DefaultTrackRepository
                 } catch (e: SQLException) {
                     AppResult.Failure(AppError.Storage(AppError.Storage.Kind.WriteFailed, e))
                 }
+            }
+        }
+
+        override suspend fun renameTrack(
+            trackId: String,
+            name: String,
+        ): AppResult<Unit> = withContext(dispatchers.io) {
+            try {
+                val changed =
+                    trackDao.renameTrack(
+                        trackId = trackId,
+                        name = TrackNames.normalise(name),
+                        updatedAt = time.nowMillis(),
+                    )
+                if (changed > 0) {
+                    AppResult.Success(Unit)
+                } else {
+                    AppResult.Failure(AppError.Storage(AppError.Storage.Kind.NotFound))
+                }
+            } catch (e: SQLException) {
+                AppResult.Failure(AppError.Storage(AppError.Storage.Kind.WriteFailed, e))
             }
         }
 

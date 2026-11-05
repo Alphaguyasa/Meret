@@ -140,6 +140,24 @@ public interface TrackDao {
     )
 
     /**
+     * The user's rename, or no name with null. Queued to sync again with a new [updatedAt];
+     * nothing else in the row changes, so a recording writing its batches is unaffected.
+     * Returns the number of rows changed, 0 for no such track or a discarded one.
+     */
+    @Query(
+        """
+        UPDATE track
+        SET name = :name, sync_state = 'pending', updated_at = :updatedAt
+        WHERE id = :trackId AND status != 'discarded'
+        """,
+    )
+    public suspend fun renameTrack(
+        trackId: String,
+        name: String?,
+        updatedAt: Long,
+    ): Int
+
+    /**
      * The user's delete: the row and every point stay, marked discarded and queued to sync
      * again, so the server can learn of it. Returns the number of rows changed, 0 for no such
      * track.

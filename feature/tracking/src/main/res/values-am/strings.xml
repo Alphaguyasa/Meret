@@ -32,6 +32,13 @@
     <string name="tracks_ok">እሺ</string>
     <string name="track_detail_back">ወደ መስመሮች ተመለስ</string>
     <string name="track_detail_show_on_map">በካርታው ላይ አሳይ</string>
+    <string name="track_detail_rename">ስም ቀይር</string>
+    <string name="track_rename_title">ለዚህ መስመር ስም ይስጡ</string>
+    <string name="track_rename_label">የመስመሩ ስም</string>
+    <string name="track_rename_hint">ለምሳሌ የተጓዙበት ቀበሌ ወይም እርሻ። ቀኑ እንዲታይ ባዶ ይተዉት።</string>
+    <string name="track_rename_save">አስቀምጥ</string>
+    <string name="track_rename_cancel">ይቅር</string>
+    <string name="track_rename_failed">ስሙ አልተቀመጠም። እንደገና ይሞክሩ።</string>
     <string name="track_detail_not_found">መስመሩ አልተገኘም</string>
     <string name="track_detail_not_found_body">ይህ መስመር ተሰርዟል፣ ወይም በዚህ ስልክ ላይ የለም።</string>
     <string name="track_detail_elevation">ከፍታ</string>
