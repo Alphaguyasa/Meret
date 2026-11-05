@@ -4,6 +4,32 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-11-05 — Run 26 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 34: «Show on map» from a track's detail screen.** The button opens the map tab with the whole track on screen, clear of the GPS chip and the bottom buttons, and stops following the phone so walking does not pull the map away (the crosshair follows again). A track of a few metres opens at street level, not zoomed into a blur. The opened track is always drawn, even in a village where 30 newer tracks crowd the area, which is the most the map draws at once ([#84](https://github.com/Alphaguyasa/Meret/pull/84)). **Item 35: name a track.** Track detail has «Rename» by the title. Enumerators can name a track after the kebele or farm they walked; the list and the detail show the name, and an empty name shows the date again. The name is saved on the phone first and the track is marked to sync again. Renaming the track being recorded does not disturb the recording. Stray spaces and line breaks are tidied, and names are capped at 80 characters ([#85](https://github.com/Alphaguyasa/Meret/pull/85)). |
+| Merged | #84 yes, `fc84a07`, green on the first attempt (about 5 min). #85 yes, `6fd0dc3`, green on the first attempt (about 5 min). |
+| Failed or blocked | Nothing failed. Gradle still cannot run in the container. ktlint 1.8.0 and detekt 1.23.8 passed on every changed Kotlin file. kotlinc 2.2.10 ran the new `TrackNamesTest` locally: 6/6 pass. MapLibre's `getCameraForLatLngBounds` and `LatLngBounds.from` were checked against the 12.3.1 sources jar from Maven Central before use. |
+| Roadmap | 5 open: 36 (sweep orphaned photo files), 26 (A13), 25 (A12), 14 (A6), 18. No replan needed (5 open; the trigger is fewer than 5). The next run that closes 36 will replan. |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | A9: 8 new Amharic strings (track detail: «Show on map» and the rename dialog; please check «ስም ቀይር» for Rename). 1 new "Needs a device" row: show a track on the map and name it. A2, A3, A5, A6, A7, A10–A16 unchanged. **Dependabot:** #30 (2026-10-21) and #68 (2026-11-01), both Gradle groups, still open and unmerged, waiting on A10. |
+| Next | 36 (sweep orphaned photo files), then replan: with 26, 25 and 14 blocked on Alpha and 18 small, Phase 9 (sync) or Phase 10 (measurement) should be split into items. |
+
+Notes for the next run:
+- `MapRoute(focus: MapFocus?, onFocused)` replaced `centreOn/onCentred`. `MapFocus.Place(LatLng)` centres
+  at street level; `MapFocus.Track(trackId, bounds)` fits and pins the track in `EarlierTracksViewModel`.
+  `OfflineMapController.fitTo(BoundingBox)` exists; a move asked for before the map attaches is kept,
+  the latest one winning.
+- `EarlierTracksRepository.observeEarlierTracks(area, pinnedTrackId = null)`; the DAO orders
+  `id IS :pinnedTrackId` first.
+- `TrackRepository.renameTrack(trackId, name)` exists; every fake needs it. `TrackNames.normalise` is in
+  `:core:model`.
+- MapLibre sources: `curl` the `-sources.jar` from `repo1.maven.org/maven2/org/maplibre/gl/android-sdk/<v>/`
+  and extract it with `unzip` (it warns about overlapping entries but extracts).
+- Two items touching the same screen: build the second on a local branch, and rebase it onto main
+  after the first merges and **before its first push**, so no force-push is needed.
+
 ## 2026-11-04 — Run 25 (scheduled, cloud)
 
 | Field | Content |

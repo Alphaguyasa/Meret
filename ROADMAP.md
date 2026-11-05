@@ -20,16 +20,6 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 34. [P2 · S] Show a track on the map from its detail screen
-Track detail has no way to see the track on the map. Add «Show on map»: the map opens fitted
-to the track's stored bounds, and the earlier-tracks layer (item 27) draws it. Small,
-high value for supervisors checking coverage on the device.
-
-### 35. [P2 · S] Name a track
-`track.name` exists but nothing sets it; the list shows dates only. A rename action in track
-detail (en/am), saved to Room and re-queued for sync (`sync_state` pending, `updated_at`
-bumped). Enumerators name tracks after the kebele or farm they walked.
-
 ### 36. [P2 · S] Sweep orphaned photo files
 A stored photo whose id never reached a written draft (the process died in that moment), a
 capture the camera app wrote but `PhotoStore` refused (left in `cacheDir/photo_captures/` so
@@ -131,3 +121,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 33a. Phase 8e-1: photo pipeline (`PhotoStore`/`JpegPhotoStore`: 1600 px q80, GPS/time/orientation EXIF kept, make/model dropped, SHA-256, `files/photos/`, atomic rename; `PhotoSizing` in `:core:common`; no new dependency) | #79 | `d5698bd` |
 | 33b-1. Phase 8e-2: photo rows at Save (`PhotoStore.describe/delete`, `waypoint_photo` rows in one transaction with the waypoint, a missing file dropped from the answer, hidden fields' photo files deleted after the save, UUID-only ids) | #81 | `1a97018` |
 | 33b-2. Phase 8e-2: photos on the sheet through the phone's camera app (`TakePicture` + non-exported `FileProvider`, no CAMERA permission, no new dependency; thumbnails, remove with confirmation, capture kept across a process death). **Phase 8 done in CI** (device rows in NEEDS_APPROVAL) | #82 | `107e997` |
+| 34. «Show on map» from track detail (map fits the stored bounds, follow off; the opened track pinned past the 30-track cap of the earlier-tracks layer) | #84 | `fc84a07` |
+| 35. Name a track from its detail screen (rename dialog en/am; `TrackNames.normalise`; only `name`, `sync_state` pending and `updated_at` change) | #85 | `6fd0dc3` |
