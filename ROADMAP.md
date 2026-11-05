@@ -122,4 +122,4 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 33b-1. Phase 8e-2: photo rows at Save (`PhotoStore.describe/delete`, `waypoint_photo` rows in one transaction with the waypoint, a missing file dropped from the answer, hidden fields' photo files deleted after the save, UUID-only ids) | #81 | `1a97018` |
 | 33b-2. Phase 8e-2: photos on the sheet through the phone's camera app (`TakePicture` + non-exported `FileProvider`, no CAMERA permission, no new dependency; thumbnails, remove with confirmation, capture kept across a process death). **Phase 8 done in CI** (device rows in NEEDS_APPROVAL) | #82 | `107e997` |
 | 34. «Show on map» from track detail (map fits the stored bounds, follow off; the opened track pinned past the 30-track cap of the earlier-tracks layer) | #84 | `fc84a07` |
-| 35. Name a track from its detail screen (rename dialog en/am; `TrackNames.normalise`; only `name`, `sync_state` pending and `updated_at` change) | #85 | `SHA35` |
+| 35. Name a track from its detail screen (rename dialog en/am; `TrackNames.normalise`; only `name`, `sync_state` pending and `updated_at` change) | #85 | `6fd0dc3` |
