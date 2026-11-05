@@ -22,6 +22,7 @@ import et.alpha.meret.core.model.geo.WaypointMarker
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -107,7 +108,7 @@ private suspend fun MapLibreMap.bindTo(
     colours: PuckColours,
 ) {
     uiSettings.isCompassEnabled = false
-    val target = MapLibreCamera(this, colours)
+    val target = MapLibreCamera(this, colours, view.resources.displayMetrics.density)
     val onMove = MapLibreMap.OnCameraMoveListener { controller.onCameraMoved(readout()) }
     val onIdle =
         MapLibreMap.OnCameraIdleListener {
@@ -175,6 +176,8 @@ private const val MAX_LONGITUDE = 180.0
 private class MapLibreCamera(
     private val map: MapLibreMap,
     private val colours: PuckColours,
+    /** Screen pixels per dp, for the room [fitTo] leaves around an area. */
+    private val density: Float,
 ) : MapCameraTarget {
     private var puckJson: String = LocationPuck.geoJson(null, colours)
     private var lineJson: String = LiveTrackLine.geoJson(null)
@@ -198,6 +201,35 @@ private class MapLibreCamera(
             }
         map.easeCamera(update, CENTRE_ANIMATION_MS)
     }
+
+    /**
+     * Fits [area] inside the screen less the GPS chip at the top and the record and waypoint
+     * buttons at the bottom, at the current bearing. An area with no size (a track of one
+     * fix) has no fitting zoom, so it is shown at [maxZoom].
+     */
+    override fun fitTo(
+        area: BoundingBox,
+        maxZoom: Double,
+    ) {
+        val bounds =
+            LatLngBounds.from(
+                latNorth = area.maxLatitude,
+                lonEast = area.maxLongitude,
+                latSouth = area.minLatitude,
+                lonWest = area.minLongitude,
+            )
+        val side = px(FIT_PADDING_SIDE_DP)
+        val padding = intArrayOf(side, px(FIT_PADDING_TOP_DP), side, px(FIT_PADDING_BOTTOM_DP))
+        val fitted = map.getCameraForLatLngBounds(bounds, padding)
+        val centre = MapLibreLatLng(area.center.latitude, area.center.longitude)
+        val zoom = fitted?.zoom?.takeIf { it.isFinite() }?.coerceAtMost(maxZoom) ?: maxZoom
+        map.easeCamera(
+            CameraUpdateFactory.newLatLngZoom(fitted?.target ?: centre, zoom),
+            CENTRE_ANIMATION_MS,
+        )
+    }
+
+    private fun px(dp: Float): Int = (dp * density).toInt()
 
     override fun showPuck(position: DevicePosition?) {
         puckJson = LocationPuck.geoJson(position, colours)
@@ -367,6 +399,9 @@ private class MapLibreCamera(
 
     private companion object {
         const val CENTRE_ANIMATION_MS = 500
+        const val FIT_PADDING_SIDE_DP = 40f
+        const val FIT_PADDING_TOP_DP = 72f
+        const val FIT_PADDING_BOTTOM_DP = 168f
         const val ACCURACY_FILL_OPACITY = 0.15f
         const val DOT_RADIUS_DP = 7f
         const val DOT_HALO_DP = 2f

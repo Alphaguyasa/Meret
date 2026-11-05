@@ -203,6 +203,50 @@ class OfflineMapControllerTest {
     }
 
     @Test
+    fun `fitting an area stops following, and later fixes leave it there`() {
+        controller.attach(map)
+        controller.showPosition(HERE)
+
+        controller.fitTo(AREA)
+        controller.showPosition(NEXT)
+
+        assertThat(controller.isFollowing).isFalse()
+        assertThat(map.cameraCalls)
+            .containsExactly("centre 9.03,38.74 zoom 16.0", "fit 9.0,38.7..9.1,38.8 max 18.0")
+            .inOrder()
+        assertThat(map.puck).isEqualTo(NEXT)
+    }
+
+    @Test
+    fun `an area asked for before the map is ready is fitted when it attaches, not the user`() {
+        controller.showPosition(HERE)
+
+        controller.fitTo(AREA)
+        controller.attach(map)
+
+        assertThat(map.cameraCalls).containsExactly("fit 9.0,38.7..9.1,38.8 max 18.0")
+    }
+
+    @Test
+    fun `only the latest move asked for before the map is ready is applied`() {
+        controller.fitTo(AREA)
+        controller.centreOn(PLACE)
+        controller.attach(map)
+
+        assertThat(map.cameraCalls).containsExactly("centre 9.1,38.8 zoom 16.0")
+    }
+
+    @Test
+    fun `recentre before the map is ready drops a pending fit`() {
+        controller.fitTo(AREA)
+        controller.recentre()
+        controller.showPosition(HERE)
+        controller.attach(map)
+
+        assertThat(map.cameraCalls).containsExactly("centre 9.03,38.74 zoom 16.0")
+    }
+
+    @Test
     fun `losing the position removes the puck and leaves the camera alone`() {
         controller.attach(map)
         controller.showPosition(HERE)
@@ -310,6 +354,15 @@ class OfflineMapControllerTest {
         ) {
             val zoom = minZoom?.let { " zoom $it" }.orEmpty()
             cameraCalls += "centre ${position.latitude},${position.longitude}$zoom"
+        }
+
+        override fun fitTo(
+            area: BoundingBox,
+            maxZoom: Double,
+        ) {
+            cameraCalls +=
+                "fit ${area.minLatitude},${area.minLongitude}.." +
+                "${area.maxLatitude},${area.maxLongitude} max $maxZoom"
         }
 
         override fun showPuck(position: DevicePosition?) {

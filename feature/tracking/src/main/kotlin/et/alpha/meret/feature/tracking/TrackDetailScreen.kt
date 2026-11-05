@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import et.alpha.meret.core.designsystem.theme.Spacing
 import et.alpha.meret.core.model.ElevationSample
 import et.alpha.meret.core.model.SegmentSummary
 import et.alpha.meret.core.model.SyncState
+import et.alpha.meret.core.model.geo.BoundingBox
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import et.alpha.meret.core.designsystem.R as DesignR
@@ -43,12 +45,14 @@ import et.alpha.meret.core.designsystem.R as DesignR
 /**
  * One track: the header the list row shows, the four totals, the elevation profile, and
  * one line per segment (a segment ends at each pause). Numbers, not bars: field workers
- * check figures against what they walked.
+ * check figures against what they walked. «Show on map» opens the map fitted to the track; a
+ * track with no accepted fix yet has nothing to show and no button.
  */
 @Composable
 fun TrackDetailScreen(
     state: TrackDetailUiState,
     onBack: () -> Unit,
+    onShowOnMap: (trackId: String, bounds: BoundingBox) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
@@ -59,7 +63,7 @@ fun TrackDetailScreen(
     when (state) {
         TrackDetailUiState.Loading -> Unit
         TrackDetailUiState.NotFound -> NotFound(onBack, padded)
-        is TrackDetailUiState.Ready -> Detail(state, onBack, padded)
+        is TrackDetailUiState.Ready -> Detail(state, onBack, onShowOnMap, padded)
     }
 }
 
@@ -82,11 +86,16 @@ private fun NotFound(
 private fun Detail(
     state: TrackDetailUiState.Ready,
     onBack: () -> Unit,
+    onShowOnMap: (trackId: String, bounds: BoundingBox) -> Unit,
     modifier: Modifier,
 ) {
     LazyColumn(modifier) {
         item { BackButton(onBack) }
         item { Header(state) }
+        val bounds = state.bounds
+        if (bounds != null) {
+            item { ShowOnMapButton(onClick = { onShowOnMap(state.track.id, bounds) }) }
+        }
         item { Section(stringResource(R.string.track_detail_elevation)) }
         item { ElevationProfile(state.elevation) }
         item { Section(stringResource(R.string.track_detail_segments)) }
@@ -101,6 +110,19 @@ private fun Detail(
 private fun BackButton(onBack: () -> Unit) {
     TextButton(onClick = onBack, modifier = Modifier.padding(start = Spacing.xs)) {
         Text(stringResource(R.string.track_detail_back))
+    }
+}
+
+@Composable
+private fun ShowOnMapButton(onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+    ) {
+        Text(stringResource(R.string.track_detail_show_on_map))
     }
 }
 
@@ -264,8 +286,10 @@ private fun DetailPreview() {
                             SegmentSummary(1, 312, 950.0, 960_000L),
                         ),
                     elevation = List(40) { ElevationSample(it * 60.0, 2_400 + 20 * sin(it / 5.0)) },
+                    bounds = BoundingBox(9.0, 38.74, 9.02, 38.76),
                 ),
             onBack = {},
+            onShowOnMap = { _, _ -> },
         )
     }
 }

@@ -20,8 +20,14 @@ public interface EarlierTracksRepository {
      * The finished tracks whose bounds meet [area], newest first and at most [MAX_TRACKS],
      * as display lines: simplified, outliers dropped. Updates when a track is stopped,
      * reopened or discarded. The track being recorded is never in it: it is not finished.
+     *
+     * [pinnedTrackId], a finished track opened on the map, is always among them when it meets
+     * [area], even if [MAX_TRACKS] newer ones do too.
      */
-    public fun observeEarlierTracks(area: BoundingBox): Flow<List<TrackLine>>
+    public fun observeEarlierTracks(
+        area: BoundingBox,
+        pinnedTrackId: String? = null,
+    ): Flow<List<TrackLine>>
 
     public companion object {
         /**
@@ -50,13 +56,17 @@ public class DefaultEarlierTracksRepository
     ) : EarlierTracksRepository {
         private val cache = TrackLineCache(MAX_CACHED_LINES)
 
-        override fun observeEarlierTracks(area: BoundingBox): Flow<List<TrackLine>> = trackDao
+        override fun observeEarlierTracks(
+            area: BoundingBox,
+            pinnedTrackId: String?,
+        ): Flow<List<TrackLine>> = trackDao
             .observeFinishedTracksIn(
                 minLatitude = area.minLatitude,
                 minLongitude = area.minLongitude,
                 maxLatitude = area.maxLatitude,
                 maxLongitude = area.maxLongitude,
                 limit = EarlierTracksRepository.MAX_TRACKS,
+                pinnedTrackId = pinnedTrackId,
             ).map { rows -> rows.map { lineOf(it) } }
             // Every batch the recording writes touches `track` and re-runs the query; the
             // earlier tracks have not changed, so the map is not handed them again.

@@ -29,7 +29,8 @@ public interface TrackDao {
     /**
      * Finished tracks whose bounds meet the box, newest first, at most [limit]: the earlier
      * tracks the map draws. A track with no accepted fix has no bounds and is left out, as
-     * are open and discarded ones.
+     * are open and discarded ones. [pinnedTrackId], when it is one of them, comes first
+     * whatever its age, so a track opened on the map is drawn even where newer ones crowd.
      *
      * No index on the `bbox_*` columns: a phone holds hundreds of tracks, not millions, and
      * the scan is over the small `track` table, never `track_point`.
@@ -41,7 +42,7 @@ public interface TrackDao {
           AND bbox_min_lat IS NOT NULL
           AND bbox_min_lat <= :maxLatitude AND bbox_max_lat >= :minLatitude
           AND bbox_min_lon <= :maxLongitude AND bbox_max_lon >= :minLongitude
-        ORDER BY started_at DESC
+        ORDER BY (id IS :pinnedTrackId) DESC, started_at DESC
         LIMIT :limit
         """,
     )
@@ -51,6 +52,7 @@ public interface TrackDao {
         maxLatitude: Double,
         maxLongitude: Double,
         limit: Int,
+        pinnedTrackId: String?,
     ): Flow<List<TrackEntity>>
 
     /**

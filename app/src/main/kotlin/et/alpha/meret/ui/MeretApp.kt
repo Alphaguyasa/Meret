@@ -36,7 +36,7 @@ import androidx.navigation.navArgument
 import et.alpha.meret.core.designsystem.component.OfflineIndicator
 import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
-import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.feature.map.MapFocus
 import et.alpha.meret.feature.map.MapRoute
 import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
@@ -106,10 +106,11 @@ private fun MeretShell(
     // default until then — and the expected state in the field regardless.
     val isOffline = remember { true }
 
-    // A waypoint picked in the Waypoints tab, until the map has centred on it. Held here
-    // because the two features may not see each other. Not saved: a process death between
-    // the tap and the map opening only loses the centring, never data.
-    var centreRequest by remember { mutableStateOf<LatLng?>(null) }
+    // A waypoint picked in the Waypoints tab, or a track opened from its detail screen, until
+    // the map has shown it. Held here because the features may not see each other. Not saved:
+    // a process death between the tap and the map opening only loses the camera move, never
+    // data.
+    var mapFocus by remember { mutableStateOf<MapFocus?>(null) }
 
     Column(modifier = modifier.fillMaxSize()) {
         OfflineIndicator(visible = isOffline)
@@ -173,8 +174,8 @@ private fun MeretShell(
                             waypointSheet = { onDismiss ->
                                 WaypointCaptureRoute(onDismiss = onDismiss)
                             },
-                            centreOn = centreRequest,
-                            onCentred = { centreRequest = null },
+                            focus = mapFocus,
+                            onFocused = { mapFocus = null },
                         )
                     }
                     composable(TRACKS_ROUTE) {
@@ -194,13 +195,17 @@ private fun MeretShell(
                     ) {
                         TrackDetailRoute(
                             onBack = { navController.popBackStack() },
+                            onShowOnMap = { trackId, bounds ->
+                                mapFocus = MapFocus.Track(trackId, bounds)
+                                navController.navigateToTopLevel(TopLevelDestination.Map)
+                            },
                             modifier = Modifier.padding(innerPadding),
                         )
                     }
                     composable(WAYPOINTS_ROUTE) {
                         WaypointListRoute(
                             onShowOnMap = { position ->
-                                centreRequest = position
+                                mapFocus = MapFocus.Place(position)
                                 navController.navigateToTopLevel(TopLevelDestination.Map)
                             },
                             modifier = Modifier.padding(innerPadding),
