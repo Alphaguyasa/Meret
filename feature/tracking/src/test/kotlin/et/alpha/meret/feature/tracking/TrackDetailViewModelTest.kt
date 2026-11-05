@@ -2,6 +2,7 @@ package et.alpha.meret.feature.tracking
 
 import androidx.lifecycle.SavedStateHandle
 import com.google.common.truth.Truth.assertThat
+import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.data.tracking.TrackRepository
 import et.alpha.meret.core.data.tracking.TrackingState
@@ -108,6 +109,31 @@ class TrackDetailViewModelTest {
         assertThat(state()).isEqualTo(TrackDetailUiState.NotFound)
     }
 
+    @Test
+    fun `a rename goes to the repository for this track, with no message`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val events = mutableListOf<TrackDetailEvent>()
+        backgroundScope.launch { viewModel.events.collect { events += it } }
+
+        viewModel.onRename("Kebele 03")
+
+        assertThat(repository.renames).containsExactly(TRACK_ID to "Kebele 03")
+        assertThat(events).isEmpty()
+    }
+
+    @Test
+    fun `a rename that is not saved says so`() = runTest(dispatcher) {
+        repository.renameResult =
+            AppResult.Failure(AppError.Storage(AppError.Storage.Kind.WriteFailed))
+        val viewModel = viewModel()
+        val events = mutableListOf<TrackDetailEvent>()
+        backgroundScope.launch { viewModel.events.collect { events += it } }
+
+        viewModel.onRename("Kebele 03")
+
+        assertThat(events).containsExactly(TrackDetailEvent.RenameFailed)
+    }
+
     private fun TestScope.subscribe(viewModel: TrackDetailViewModel): () -> TrackDetailUiState {
         backgroundScope.launch { viewModel.uiState.collect {} }
         return { viewModel.uiState.value }
@@ -140,6 +166,17 @@ class TrackDetailViewModelTest {
         }
 
         override suspend fun discardTrack(trackId: String): AppResult<Unit> = error("not used")
+
+        val renames = mutableListOf<Pair<String, String>>()
+        var renameResult: AppResult<Unit> = AppResult.Success(Unit)
+
+        override suspend fun renameTrack(
+            trackId: String,
+            name: String,
+        ): AppResult<Unit> {
+            renames += trackId to name
+            return renameResult
+        }
     }
 
     private companion object {

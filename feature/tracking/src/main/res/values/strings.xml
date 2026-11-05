@@ -32,6 +32,13 @@
     <string name="tracks_ok">OK</string>
     <string name="track_detail_back">Back to tracks</string>
     <string name="track_detail_show_on_map">Show on map</string>
+    <string name="track_detail_rename">Rename</string>
+    <string name="track_rename_title">Name this track</string>
+    <string name="track_rename_label">Track name</string>
+    <string name="track_rename_hint">For example, the kebele or farm you walked. Leave empty to show the date.</string>
+    <string name="track_rename_save">Save</string>
+    <string name="track_rename_cancel">Cancel</string>
+    <string name="track_rename_failed">The name was not saved. Try again.</string>
     <string name="track_detail_not_found">Track not found</string>
     <string name="track_detail_not_found_body">This track was deleted, or is not on this phone.</string>
     <string name="track_detail_elevation">Elevation</string>
