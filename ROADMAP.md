@@ -20,6 +20,47 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
+### 37. [P1 · S] Area units: m², hectare and timad (Phase 10a)
+A pure `:core:model`/`:core:common` formatter for an area in m²: m² below 1,000, hectares to
+2 decimals above, and *timad* with a configurable hectares-per-timad (default 0.25, Phase 10
+of `docs/BUILD_PLAN.md`), plus perimeter in m / km. Locale-aware digits, en and am unit
+labels in `strings.xml`. Unit tests with known fixtures (1 ha = 4 timad at 0.25; 0.3 ha at a
+0.5 ratio = 0.6 timad), including 0 and an invalid ratio (≤ 0 falls back to 0.25).
+
+### 38. [P1 · M] Measurement repository and save use case (Phase 10b)
+`MeasurementRepository` in `:core:data` (Room only) and `SaveMeasurementUseCase` in
+`:domain`: a ring of vertices (tapped or walked) is validated (at least 3 distinct vertices,
+non-zero area), its area (`GeoMath.geodesicPolygonArea`) and perimeter computed, its
+vertices stored as GeoJSON, and the row written `pending` with a UUIDv7 and `project_id`
+`local`, as tracks and waypoints are. A name is normalised like a track's. Tests: a
+reference plot from a GIS computation matches within 0.1% (the Phase 10 acceptance for the
+tapped mode), a two-point ring is refused, the GeoJSON round-trips. No schema change
+expected (`measurement` exists since Phase 3); if one is needed, a migration and its test.
+
+### 39. [P1 · M] Tap-the-vertices measurement on the map (Phase 10c)
+`:feature:measure`: from the map, «Measure» opens a mode where each tap adds a vertex at the
+crosshair; the ring is drawn (MapLibre line + fill; check the API against the sources jar),
+with live area (item 37's units) and perimeter, «Undo last point», «Clear» and «Save» with a
+name. The ring in progress survives process death (Room or DataStore, not the ViewModel).
+en/am strings, TalkBack labels. ViewModel tests with a fake repository.
+
+### 40. [P1 · M] Walk-the-perimeter measurement (Phase 10d)
+The same screen in walking mode: vertices are taken from filtered fixes while the worker
+walks the boundary (a new vertex every few metres of movement, fixes worse than the accuracy
+gate skipped, raw fixes never changed). Uses the tracking service so it survives the screen
+going off and process death. Tests replay a GPX fixture of a walked rectangle through
+`ReplayLocationEngine`: the area is within 3% of the fixture's known area (the Phase 10
+acceptance, on the desk; the field check goes in "Needs a device").
+
+### 41. [P2 · S] Saved measurements: list and map overlay (Phase 10e)
+A list of saved measurements (name, area in the chosen unit, date), rename and delete
+(marked `discarded`, like tracks), and saved plots drawn on the map as outlines. Export is
+Phase 12.
+
+### 42. [P2 · S] Timad size setting (Phase 10f)
+Settings: hectares per timad (default 0.25; the size differs by region), stored in DataStore
+and used everywhere item 37's formatter is. Validated input, en/am.
+
 ### 36. [P2 · S] Sweep orphaned photo files
 A stored photo whose id never reached a written draft (the process died in that moment), a
 capture the camera app wrote but `PhotoStore` refused (left in `cacheDir/photo_captures/` so
@@ -56,7 +97,7 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
   sign-in have `project_id` and `user_id` `"local"` (`RoomNewTrackStore`); sync must give them
   the signed-in user and a real project before upload. `device_id` is a random per-install id
   (`DeviceIdentityStore`), never a hardware id.
-- Phase 10 — Measurement
+- Phase 10 — Measurement: split into items 37–42 above (run 27).
 - Phase 11 — Assignments and coverage
 - Phase 12 — Export
 - Phase 13 — Peer sync

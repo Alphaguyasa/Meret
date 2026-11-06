@@ -191,6 +191,17 @@ picture properly. **Default until you answer:** the phone's camera app. If field
 problems on Tecno/Infinix/Itel phones, say so and an in-app camera (CameraX, Apache 2.0, free,
 about +1 MB) becomes a roadmap item.
 
+### A17. A Supabase project for sync (no cost on the free tier; needed before Phase 9)
+Phase 9 (sync) needs a Supabase project, and only you can create one: it needs your
+account, and the cloud runs must not sign up for services. The free tier is enough (500 MB
+database, 1 GB file storage; PostGIS is included). The free tier pauses a project after a week
+with no activity, but un-pausing is free. **What to do, when you want sync:** create a free
+project, turn on the PostGIS extension, and put its URL and anon key in GitHub Actions
+secrets (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), never in the repo. Do not enter payment
+details. **Default until you answer:** the runs build Phase 10 (measurement), which needs no
+server, and Phase 9's SQL schema and RLS tests can be written offline later. Photo storage
+(1 GB) fills at about 3,000 photos; how to handle that is a later question.
+
 ---
 
 ## Needs a device
