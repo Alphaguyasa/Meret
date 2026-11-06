@@ -592,8 +592,7 @@ class WaypointCaptureViewModelTest {
                 saveWaypoint = SaveWaypointUseCase(store, photos),
                 drafts = drafts,
                 formSource = formSource,
-                photos = photos,
-                photoSweeper = sweeper,
+                photos = WaypointPhotoFiles(photos, sweeper),
             )
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel to { viewModel.uiState.value }

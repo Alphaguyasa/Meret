@@ -75,13 +75,11 @@ public class FilePhotoSweeper
 
         private fun File.isOlderThan(cutoff: Long): Boolean = isFile && lastModified() <= cutoff
 
-        private fun String.isStoredPhoto(): Boolean =
-            endsWith(JpegPhotoStore.SUFFIX) &&
-                JpegPhotoStore.ID_PATTERN.matches(removeSuffix(JpegPhotoStore.SUFFIX))
+        private fun String.isStoredPhoto(): Boolean = endsWith(JpegPhotoStore.SUFFIX) &&
+            JpegPhotoStore.ID_PATTERN.matches(removeSuffix(JpegPhotoStore.SUFFIX))
 
-        private fun String.isPartialWrite(): Boolean =
-            endsWith(JpegPhotoStore.TEMPORARY_SUFFIX) &&
-                JpegPhotoStore.ID_PATTERN.matches(removeSuffix(JpegPhotoStore.TEMPORARY_SUFFIX))
+        private fun String.isPartialWrite(): Boolean = endsWith(JpegPhotoStore.TEMPORARY_SUFFIX) &&
+            JpegPhotoStore.ID_PATTERN.matches(removeSuffix(JpegPhotoStore.TEMPORARY_SUFFIX))
 
         internal companion object {
             /** As in `feature/waypoint`'s `photo_capture_paths.xml` and `WaypointCaptureRoute`. */

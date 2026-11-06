@@ -15,7 +15,6 @@ import et.alpha.meret.core.model.form.FormField
 import et.alpha.meret.core.model.form.FormRules
 import et.alpha.meret.core.model.geo.DevicePosition
 import et.alpha.meret.domain.waypoint.PhotoStore
-import et.alpha.meret.domain.waypoint.PhotoSweeper
 import et.alpha.meret.domain.waypoint.SaveWaypointUseCase
 import et.alpha.meret.domain.waypoint.WaypointCategory
 import et.alpha.meret.domain.waypoint.WaypointDraft
@@ -62,7 +61,7 @@ import kotlin.math.abs
  * A photo field's answer is the ids of photos already stored ([PhotoStore]): the camera's
  * capture is shrunk and stored first, then its id joins the answer, so the draft names only
  * whole files. The photo rows are written at Save, with the waypoint. Opening the sheet
- * sweeps the photo files that nothing names any more ([PhotoSweeper]).
+ * sweeps the photo files that nothing names any more ([WaypointPhotoFiles.sweep]).
  */
 @HiltViewModel
 class WaypointCaptureViewModel
@@ -73,8 +72,7 @@ class WaypointCaptureViewModel
         private val saveWaypoint: SaveWaypointUseCase,
         private val drafts: WaypointDraftStore,
         formSource: WaypointFormSource,
-        private val photos: PhotoStore,
-        private val photoSweeper: PhotoSweeper,
+        private val photos: WaypointPhotoFiles,
     ) : ViewModel() {
         private val fix: StateFlow<DevicePosition?> =
             devicePosition
@@ -98,7 +96,7 @@ class WaypointCaptureViewModel
                 restore(saved, formSource.currentForm())
                 findRestoredPhotos()
                 // Once the draft in Room is the one just restored: files it names are kept.
-                launch { photoSweeper.sweep() }
+                launch { photos.sweep() }
                 // From here on, every change is written. Not before: the empty sheet of a
                 // new ViewModel must not overwrite the draft it is about to restore.
                 merge(input, draft).conflate().collect { persistDraft() }

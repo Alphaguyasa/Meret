@@ -129,19 +129,18 @@ class FilePhotoSweeperTest {
         }
 
     @Test
-    fun `only the orphans go when kept and orphaned photos sit side by side`() =
-        runBlocking<Unit> {
-            val saved = photo(ID_1, ageMillis = TWO_DAYS)
-            val orphan = photo(ID_2, ageMillis = TWO_DAYS)
-            val fresh = photo(ID_3, ageMillis = ONE_HOUR)
-            val row = photoRow(ID_1, saved)
-            database.waypointDao().upsertWaypointWithPhotos(waypoint(), listOf(row))
+    fun `only the orphans go when kept and orphaned photos sit side by side`() = runBlocking<Unit> {
+        val saved = photo(ID_1, ageMillis = TWO_DAYS)
+        val orphan = photo(ID_2, ageMillis = TWO_DAYS)
+        val fresh = photo(ID_3, ageMillis = ONE_HOUR)
+        val row = photoRow(ID_1, saved)
+        database.waypointDao().upsertWaypointWithPhotos(waypoint(), listOf(row))
 
-            assertThat(sweeper.sweep()).isEqualTo(1)
-            assertThat(photos.list()!!.toList()).containsExactly("$ID_1.jpg", "$ID_3.jpg")
-            assertThat(orphan.exists()).isFalse()
-            assertThat(fresh.exists()).isTrue()
-        }
+        assertThat(sweeper.sweep()).isEqualTo(1)
+        assertThat(photos.list()!!.toList()).containsExactly("$ID_1.jpg", "$ID_3.jpg")
+        assertThat(orphan.exists()).isFalse()
+        assertThat(fresh.exists()).isTrue()
+    }
 
     @Test
     fun `an old interrupted write is deleted, and files the store did not make are left`() =

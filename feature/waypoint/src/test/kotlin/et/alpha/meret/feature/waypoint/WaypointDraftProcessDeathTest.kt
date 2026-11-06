@@ -124,8 +124,7 @@ class WaypointDraftProcessDeathTest {
                 dispatchers = StandardDispatcherProvider(),
             ),
         formSource = FixedForm,
-        photos = NoPhotos,
-        photoSweeper = FakePhotoSweeper(),
+        photos = WaypointPhotoFiles(NoPhotos, FakePhotoSweeper()),
     )
 
     private suspend fun awaitDraft(
