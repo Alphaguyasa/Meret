@@ -20,13 +20,46 @@ Acceptance criteria that need a physical phone are not claimed by CI. They are l
 
 ## Open
 
-### 36. [P2 · S] Sweep orphaned photo files
-A stored photo whose id never reached a written draft (the process died in that moment), a
-capture the camera app wrote but `PhotoStore` refused (left in `cacheDir/photo_captures/` so
-it is not lost), and the files of a draft that is never saved all stay on disk. Add a sweep,
-run when the sheet opens or from a worker: delete files in `files/photos/` that no
-`waypoint_photo` row and no draft answer names, older than a day; empty `photo_captures/` of
-files older than a day. Test with real files and real Room. Never touch a file a row names.
+### 37. [P1 · S] Area units: m², hectare and timad (Phase 10a)
+A pure `:core:model`/`:core:common` formatter for an area in m²: m² below 1,000, hectares to
+2 decimals above, and *timad* with a configurable hectares-per-timad (default 0.25, Phase 10
+of `docs/BUILD_PLAN.md`), plus perimeter in m / km. Locale-aware digits, en and am unit
+labels in `strings.xml`. Unit tests with known fixtures (1 ha = 4 timad at 0.25; 0.3 ha at a
+0.5 ratio = 0.6 timad), including 0 and an invalid ratio (≤ 0 falls back to 0.25).
+
+### 38. [P1 · M] Measurement repository and save use case (Phase 10b)
+`MeasurementRepository` in `:core:data` (Room only) and `SaveMeasurementUseCase` in
+`:domain`: a ring of vertices (tapped or walked) is validated (at least 3 distinct vertices,
+non-zero area), its area (`GeoMath.geodesicPolygonArea`) and perimeter computed, its
+vertices stored as GeoJSON, and the row written `pending` with a UUIDv7 and `project_id`
+`local`, as tracks and waypoints are. A name is normalised like a track's. Tests: a
+reference plot from a GIS computation matches within 0.1% (the Phase 10 acceptance for the
+tapped mode), a two-point ring is refused, the GeoJSON round-trips. No schema change
+expected (`measurement` exists since Phase 3); if one is needed, a migration and its test.
+
+### 39. [P1 · M] Tap-the-vertices measurement on the map (Phase 10c)
+`:feature:measure`: from the map, «Measure» opens a mode where each tap adds a vertex at the
+crosshair; the ring is drawn (MapLibre line + fill; check the API against the sources jar),
+with live area (item 37's units) and perimeter, «Undo last point», «Clear» and «Save» with a
+name. The ring in progress survives process death (Room or DataStore, not the ViewModel).
+en/am strings, TalkBack labels. ViewModel tests with a fake repository.
+
+### 40. [P1 · M] Walk-the-perimeter measurement (Phase 10d)
+The same screen in walking mode: vertices are taken from filtered fixes while the worker
+walks the boundary (a new vertex every few metres of movement, fixes worse than the accuracy
+gate skipped, raw fixes never changed). Uses the tracking service so it survives the screen
+going off and process death. Tests replay a GPX fixture of a walked rectangle through
+`ReplayLocationEngine`: the area is within 3% of the fixture's known area (the Phase 10
+acceptance, on the desk; the field check goes in "Needs a device").
+
+### 41. [P2 · S] Saved measurements: list and map overlay (Phase 10e)
+A list of saved measurements (name, area in the chosen unit, date), rename and delete
+(marked `discarded`, like tracks), and saved plots drawn on the map as outlines. Export is
+Phase 12.
+
+### 42. [P2 · S] Timad size setting (Phase 10f)
+Settings: hectares per timad (default 0.25; the size differs by region), stored in DataStore
+and used everywhere item 37's formatter is. Validated input, en/am.
 
 ### 26. [P2 · S] Purge discarded tracks (waiting on A13)
 Since #59 a deleted track is marked `discarded` and keeps all its points. Nothing purges
@@ -43,12 +76,6 @@ secrets, a signed release built by a manual workflow, never a keystore in the re
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
 low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 
-### 18. [P3 · S] Cover `tools/package-lock.json` with Dependabot
-`tools/` now has npm dependencies (fontnik, sharp, Maki). Dependabot alerts (A10) will flag
-advisories in the lockfile, but nothing proposes routine updates. Add an `npm` entry for
-`/tools`, monthly, sharing the 2-open-PR budget (lower the Gradle limit or group). sharp was
-pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
-
 ### Later phases (expand into items when they reach the top)
 - Phase 9 — Sync (Supabase schema + RLS tests first, free tier only). Waypoints (since #69)
   are written `pending` with no outbox row, like tracks: sync builds the outbox payload from
@@ -56,7 +83,7 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
   sign-in have `project_id` and `user_id` `"local"` (`RoomNewTrackStore`); sync must give them
   the signed-in user and a real project before upload. `device_id` is a random per-install id
   (`DeviceIdentityStore`), never a hardware id.
-- Phase 10 — Measurement
+- Phase 10 — Measurement: split into items 37–42 above (run 27).
 - Phase 11 — Assignments and coverage
 - Phase 12 — Export
 - Phase 13 — Peer sync
@@ -123,3 +150,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 33b-2. Phase 8e-2: photos on the sheet through the phone's camera app (`TakePicture` + non-exported `FileProvider`, no CAMERA permission, no new dependency; thumbnails, remove with confirmation, capture kept across a process death). **Phase 8 done in CI** (device rows in NEEDS_APPROVAL) | #82 | `107e997` |
 | 34. «Show on map» from track detail (map fits the stored bounds, follow off; the opened track pinned past the 30-track cap of the earlier-tracks layer) | #84 | `fc84a07` |
 | 35. Name a track from its detail screen (rename dialog en/am; `TrackNames.normalise`; only `name`, `sync_state` pending and `updated_at` change) | #85 | `6fd0dc3` |
+| 36. Sweep orphaned photo files when the waypoint sheet opens (`PhotoSweeper`/`FilePhotoSweeper`: `<uuid>.jpg` a day old that no row, draft or saved answer names; `.jpg.part` and `photo_captures/` a day old; nothing deleted if Room cannot be read; `WaypointPhotoFiles` bundles store and sweeper) | #87 | `fc42fe3` |
+| 18. Dependabot: monthly grouped npm updates for `tools/` (limits are per ecosystem, so up to 3 open) | #88 | `7d7bf0f` |
