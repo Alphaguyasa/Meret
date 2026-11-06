@@ -73,6 +73,14 @@ public interface WaypointDao {
     @Query("SELECT * FROM waypoint WHERE sync_state = :syncState ORDER BY recorded_at ASC")
     public suspend fun getWaypointsBySyncState(syncState: SyncState): List<WaypointEntity>
 
+    /**
+     * Whether any saved waypoint's answers contain [text]. [text] must hold no `%` or `_`: the
+     * orphan photo sweep passes a photo id (hex and dashes). A full scan, so only for the few
+     * files no photo row names.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM waypoint WHERE form_data LIKE '%' || :text || '%')")
+    public suspend fun anyWaypointAnswersContain(text: String): Boolean
+
     @Upsert
     public suspend fun upsertWaypoint(waypoint: WaypointEntity)
 

@@ -3,6 +3,7 @@ package et.alpha.meret.feature.waypoint
 import et.alpha.meret.core.common.result.AppError
 import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.domain.waypoint.PhotoStore
+import et.alpha.meret.domain.waypoint.PhotoSweeper
 import et.alpha.meret.domain.waypoint.StoredPhoto
 
 /** A photo store with nothing in it, for sheets whose forms take no photos. */
@@ -60,5 +61,17 @@ internal class FakePhotoStore : PhotoStore {
     companion object {
         val Full: AppResult.Failure =
             AppResult.Failure(AppError.Storage(AppError.Storage.Kind.OutOfSpace))
+    }
+}
+
+/** Counts sweeps; [onSweep] sees the moment each one starts. */
+internal class FakePhotoSweeper : PhotoSweeper {
+    var sweeps = 0
+    var onSweep: () -> Unit = {}
+
+    override suspend fun sweep(): Int {
+        onSweep()
+        sweeps++
+        return 0
     }
 }

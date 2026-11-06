@@ -32,6 +32,14 @@ public interface WaypointPhotoDao {
         limit: Int,
     ): List<WaypointPhotoEntity>
 
+    /** Every photo row's id: the files the orphan sweep must never touch. */
+    @Query("SELECT id FROM waypoint_photo")
+    public suspend fun getPhotoIds(): List<String>
+
+    /** Every photo row's file, in case a row ever names a file not called after its id. */
+    @Query("SELECT local_path FROM waypoint_photo")
+    public suspend fun getPhotoLocalPaths(): List<String>
+
     @Query("SELECT COUNT(*) FROM waypoint_photo WHERE upload_state != 'uploaded'")
     public fun observeOutstandingUploadCount(): Flow<Int>
 
