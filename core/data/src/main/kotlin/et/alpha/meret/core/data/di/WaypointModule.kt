@@ -5,12 +5,14 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import et.alpha.meret.core.data.photo.FilePhotoSweeper
 import et.alpha.meret.core.data.photo.JpegPhotoStore
 import et.alpha.meret.core.data.waypoint.BundledWaypointFormSource
 import et.alpha.meret.core.data.waypoint.RoomWaypointDraftStore
 import et.alpha.meret.core.data.waypoint.RoomWaypointRepository
 import et.alpha.meret.core.data.waypoint.WaypointRepository
 import et.alpha.meret.domain.waypoint.PhotoStore
+import et.alpha.meret.domain.waypoint.PhotoSweeper
 import et.alpha.meret.domain.waypoint.SaveWaypointUseCase
 import et.alpha.meret.domain.waypoint.WaypointDraftStore
 import et.alpha.meret.domain.waypoint.WaypointFormSource
@@ -37,6 +39,9 @@ public abstract class WaypointModule {
 
     @Binds
     public abstract fun bindPhotoStore(store: JpegPhotoStore): PhotoStore
+
+    @Binds
+    public abstract fun bindPhotoSweeper(sweeper: FilePhotoSweeper): PhotoSweeper
 
     public companion object {
         /** `:domain` has no `@Inject`. */

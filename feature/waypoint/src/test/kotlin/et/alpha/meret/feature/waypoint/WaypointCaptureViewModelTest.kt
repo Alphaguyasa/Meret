@@ -46,6 +46,7 @@ class WaypointCaptureViewModelTest {
     private val store = FakeWaypointStore()
     private val drafts = FakeDraftStore()
     private val photos = FakePhotoStore()
+    private val sweeper = FakePhotoSweeper()
     private var formSource: WaypointFormSource = NoForm
 
     private val here =
@@ -559,6 +560,21 @@ class WaypointCaptureViewModelTest {
             assertThat(state().field("plot_photos").photos).isEmpty()
         }
 
+    @Test
+    fun `opening the sheet sweeps orphaned photos once, after the draft is restored`() =
+        runTest(dispatcher) {
+            drafts.draft = WaypointDraft(title = "Borehole", notes = "Pump broken")
+            var loadsAtSweep = -1
+            sweeper.onSweep = { loadsAtSweep = drafts.loads }
+
+            val (_, state) = subscribe()
+
+            assertThat(sweeper.sweeps).isEqualTo(1)
+            assertThat(loadsAtSweep).isEqualTo(1)
+            assertThat(state().title).isEqualTo("Borehole")
+            assertThat(drafts.draft?.title).isEqualTo("Borehole")
+        }
+
     private fun CaptureState.readyKeys(): List<String> =
         (form as FormUiState.Ready).fields.map { it.field.key }
 
@@ -577,6 +593,7 @@ class WaypointCaptureViewModelTest {
                 drafts = drafts,
                 formSource = formSource,
                 photos = photos,
+                photoSweeper = sweeper,
             )
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel to { viewModel.uiState.value }
@@ -654,9 +671,13 @@ class WaypointCaptureViewModelTest {
     private class FakeDraftStore : WaypointDraftStore {
         var draft: WaypointDraft? = null
         var writes = 0
+        var loads = 0
         var failure: AppResult.Failure? = null
 
-        override suspend fun load(): WaypointDraft? = draft
+        override suspend fun load(): WaypointDraft? {
+            loads++
+            return draft
+        }
 
         override suspend fun save(draft: WaypointDraft): AppResult<Unit> {
             writes++
