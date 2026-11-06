@@ -61,14 +61,6 @@ Phase 12.
 Settings: hectares per timad (default 0.25; the size differs by region), stored in DataStore
 and used everywhere item 37's formatter is. Validated input, en/am.
 
-### 36. [P2 · S] Sweep orphaned photo files
-A stored photo whose id never reached a written draft (the process died in that moment), a
-capture the camera app wrote but `PhotoStore` refused (left in `cacheDir/photo_captures/` so
-it is not lost), and the files of a draft that is never saved all stay on disk. Add a sweep,
-run when the sheet opens or from a worker: delete files in `files/photos/` that no
-`waypoint_photo` row and no draft answer names, older than a day; empty `photo_captures/` of
-files older than a day. Test with real files and real Room. Never touch a file a row names.
-
 ### 26. [P2 · S] Purge discarded tracks (waiting on A13)
 Since #59 a deleted track is marked `discarded` and keeps all its points. Nothing purges
 them, so a phone that records and deletes a lot keeps the storage. The policy (when, and
@@ -83,12 +75,6 @@ secrets, a signed release built by a manual workflow, never a keystore in the re
 ### 14. [P2 · M] Encrypt the Room database at rest
 Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
 low-end phones, key in Android Keystore, migration of existing plaintext DBs).
-
-### 18. [P3 · S] Cover `tools/package-lock.json` with Dependabot
-`tools/` now has npm dependencies (fontnik, sharp, Maki). Dependabot alerts (A10) will flag
-advisories in the lockfile, but nothing proposes routine updates. Add an `npm` entry for
-`/tools`, monthly, sharing the 2-open-PR budget (lower the Gradle limit or group). sharp was
-pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 
 ### Later phases (expand into items when they reach the top)
 - Phase 9 — Sync (Supabase schema + RLS tests first, free tier only). Waypoints (since #69)
@@ -164,3 +150,5 @@ pinned to 0.35.5 in run 7 because 0.34.4 had a high-severity libvips advisory.
 | 33b-2. Phase 8e-2: photos on the sheet through the phone's camera app (`TakePicture` + non-exported `FileProvider`, no CAMERA permission, no new dependency; thumbnails, remove with confirmation, capture kept across a process death). **Phase 8 done in CI** (device rows in NEEDS_APPROVAL) | #82 | `107e997` |
 | 34. «Show on map» from track detail (map fits the stored bounds, follow off; the opened track pinned past the 30-track cap of the earlier-tracks layer) | #84 | `fc84a07` |
 | 35. Name a track from its detail screen (rename dialog en/am; `TrackNames.normalise`; only `name`, `sync_state` pending and `updated_at` change) | #85 | `6fd0dc3` |
+| 36. Sweep orphaned photo files when the waypoint sheet opens (`PhotoSweeper`/`FilePhotoSweeper`: `<uuid>.jpg` a day old that no row, draft or saved answer names; `.jpg.part` and `photo_captures/` a day old; nothing deleted if Room cannot be read; `WaypointPhotoFiles` bundles store and sweeper) | #87 | `fc42fe3` |
+| 18. Dependabot: monthly grouped npm updates for `tools/` (limits are per ecosystem, so up to 3 open) | #88 | `7d7bf0f` |

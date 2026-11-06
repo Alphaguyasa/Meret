@@ -157,6 +157,13 @@ row: measured 800 µs/row vs 65 µs/row on the reference device. Return `Unit`; 
 a count, take a `SELECT total_changes()` delta inside the transaction
 (`TrackPointDao.appendBatch` is the worked example).
 
+**CI reports cannot be read from the container.** The `reports` artifact downloads from a
+blob host the proxy refuses, and downloading ktlint/detekt jars is refused too. Read
+failures from the job log (`get_job_logs`); it names the failing task but not the ktlint
+line. Known traps: with `ktlint_function_signature_body_expression_wrapping = default`, a
+body's first line must sit on the signature line whenever it fits in 100 columns; detekt's
+`LongParameterList` fails a constructor at 7 parameters (group dependencies instead).
+
 **Room schema JSON cannot be generated in the cloud container** (no Gradle: Google Maven is
 blocked). CI's "Check Room schemas" step prints any new `core/database/schemas/.../<n>.json`
 to the job log and the run summary as a warning; copy it into the PR verbatim (read it with
@@ -231,8 +238,9 @@ version and log the question in `NEEDS_APPROVAL.md`.
   Check with `git log -1 --format='%an %ae%n%b'` before pushing.
 - **Dependabot PRs** (`.github/dependabot.yml`: monthly, minor and patch only, at most 1
   open per ecosystem: Gradle, Actions, and npm for `tools/`). Check them at the start of
-  each run and list them in the report. Do not merge them until Alpha answers A10 in `NEEDS_APPROVAL.md`: a squash merge is authored by
-  `dependabot[bot]`, which breaks the "commits show Alphaguyasa only" rule. Do not push
+  each run and list them in the report. Do not merge them until Alpha answers A10 in
+  `NEEDS_APPROVAL.md`: a squash merge is authored by `dependabot[bot]`, which breaks the
+  "commits show Alphaguyasa only" rule. Do not push
   fixes to a Dependabot branch; a red update gets a roadmap item instead.
 - Never commit secrets. Supabase URL and anon key go in `local.properties` and are read
   through `BuildConfig`. `local.properties` is gitignored (verified 2026-10-14).

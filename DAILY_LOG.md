@@ -4,6 +4,27 @@ One entry per run, newest first, in the REPORT format from CLAUDE.md.
 
 ---
 
+## 2026-11-06 — Run 27 (scheduled, cloud)
+
+| Field | Content |
+|---|---|
+| Done | **Item 36: orphaned photo files are swept.** When the waypoint sheet opens, Meret deletes photo files that nothing will use: a photo whose id never reached the saved draft (the app died at that moment), a photo dropped from a draft, an interrupted write, and camera captures that could not be stored. Only files at least a day old are touched. A file that any photo row, saved waypoint or open draft names is **never** deleted. If the database cannot be read, no photo is deleted ([#87](https://github.com/Alphaguyasa/Meret/pull/87)). **Item 18: Dependabot now proposes updates for `tools/`** (the tile, glyph and sprite builders), one grouped PR a month ([#88](https://github.com/Alphaguyasa/Meret/pull/88)). |
+| Merged | #87 yes, `fc42fe3`: the first run failed ktlint (`:core:data`, main and test) and detekt (`:feature:waypoint`). Fixed on the first attempt, then green (about 5 min). #88 yes, `7d7bf0f`, green on the first attempt (about 1.5 min). |
+| Failed or blocked | One CI failure on #87, fixed on the first attempt. The cause had to be worked out without the report: the CI `reports` artifact host is blocked by the proxy, and this run's permission check refused downloading ktlint/detekt (from GitHub releases and from Maven Central). The two traps are now in CLAUDE.md. **The roadmap was wrong** about item 18: Dependabot's open-PR limits apply to each ecosystem separately, so the PRs cannot share a 2-PR budget. Up to 3 can now be open; the YAML comment and CLAUDE.md say so. Gradle still cannot run in the container. |
+| Roadmap | **Replanned** (only 3 items would have been open, all waiting on Alpha). Phase 10 (measurement, fully offline) was split into items 37–42: area units incl. timad, measurement save, tap mode, walk mode, saved list and overlay, timad setting. 9 open: 37–42, 26 (A13), 25 (A12), 14 (A6). Phase 9 (sync) waits on a Supabase project (new A17). |
+| Model | Claude Opus 5.5 (`claude-opus-5-5`). Anthropic's models page lists no newer Opus. No action. |
+| Needs approval | **New A17:** a free-tier Supabase project for sync (only Alpha can create it; no payment details). No new Amharic strings. No new device rows. A2, A3, A5, A6, A7, A9–A16 unchanged. **Dependabot:** #30 (2026-10-21) and #68 (2026-11-01), both Gradle groups, still open and unmerged, waiting on A10. |
+| Next | 37 (area units: m², ha, timad), then 38 (measurement save use case). |
+
+Notes for the next run:
+- Local `main` in the container can be stale (the clone starts on a detached HEAD at origin/main). Run
+  `git fetch origin main && git checkout -B main origin/main` before branching.
+- `WaypointCaptureViewModel(photos: WaypointPhotoFiles)`: `WaypointPhotoFiles(store, sweeper)` delegates
+  `PhotoStore` and adds `sweep()`. Feature tests use `FakePhotoSweeper`.
+- `FilePhotoSweeper.CAPTURE_DIRECTORY` must match `photo_capture_paths.xml` and `WaypointCaptureRoute`.
+- `GeoMath.geodesicPolygonArea/polygonPerimeter`, `Measurement`, `MeasurementEntity` and `MeasurementDao`
+  already exist for Phase 10. `:feature:measure` has no code yet.
+
 ## 2026-11-05 — Run 26 (scheduled, cloud)
 
 | Field | Content |
