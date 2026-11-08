@@ -42,7 +42,7 @@ internal fun Project.configureKotlinAndroid(extension: CommonExtension) {
     extension.compileOptions.sourceCompatibility = BuildConfig.JAVA_VERSION
     extension.compileOptions.targetCompatibility = BuildConfig.JAVA_VERSION
 
-    // A missing Amharic string is a shipping bug, not a suggestion. CLAUDE.md
+    // A missing Amharic string is a shipping bug, not a suggestion. The engineering handbook
     // invariant 6: values-am/ must never be allowed to drift.
     extension.lint.error.add("MissingTranslation")
     extension.lint.abortOnError = true

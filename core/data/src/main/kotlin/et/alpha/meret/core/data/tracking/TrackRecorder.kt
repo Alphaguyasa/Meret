@@ -71,7 +71,7 @@ public class TrackRecorder
  * ## Nothing is dropped
  *
  * Every fix that reaches the recorder while it is recording becomes a row. Fixes the
- * validity gate rejects are written with `is_outlier = 1` (CLAUDE.md invariant 2), and the
+ * validity gate rejects are written with `is_outlier = 1` (the engineering handbook invariant 2), and the
  * last partial batch is written on [pause] and [stop]. The channel is unbounded so the
  * engine-side collector never suspends: a suspended collector would make the engine's own
  * buffer overflow, and that drops fixes before they ever reach here.

@@ -31,7 +31,7 @@ import et.alpha.meret.core.database.entity.WaypointPhotoEntity
 
 /**
  * The device's copy of everything. This is the only source the UI reads from — no screen
- * ever waits on a network call, per CLAUDE.md invariant 1.
+ * ever waits on a network call, per the engineering handbook invariant 1.
  *
  * Every table in `DATA_MODEL.md` lands in version 1, including the ones later phases fill.
  * Adding a table is a migration and a migration test; declaring it now costs a few unused

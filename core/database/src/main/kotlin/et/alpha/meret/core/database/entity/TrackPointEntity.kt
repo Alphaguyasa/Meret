@@ -16,7 +16,7 @@ import et.alpha.meret.core.model.LocationProvider
  *
  * [latitude]/[longitude] are exactly what the platform reported and are never rewritten.
  * [filteredLatitude]/[filteredLongitude] hold the Kalman output beside them so filtering can
- * be re-run later against the original data, per CLAUDE.md invariant 2.
+ * be re-run later against the original data, per the engineering handbook invariant 2.
  *
  * The unique index on `(track_id, seq)` is what makes a replayed insert a no-op: a chunk
  * re-sent after a crash collides and is ignored rather than duplicating the line.

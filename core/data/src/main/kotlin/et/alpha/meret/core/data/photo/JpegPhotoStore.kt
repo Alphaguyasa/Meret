@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 /**
  * Waypoint photos as JPEG files in `files/photos/`: app-private, and excluded from every
- * backup and device transfer by the app's backup rules (NEEDS_APPROVAL A5).
+ * backup and device transfer by the app's backup rules (the decision log A5).
  *
  * The capture is decoded skipping pixels by a power of two, then scaled to the exact size
  * ([PhotoSizing]), so a 12 MP capture never sits in memory whole. The new file is written

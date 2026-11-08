@@ -14,7 +14,7 @@ internal object MapLibreSetup {
     fun ensure(context: Context) {
         if (done) return
         // MapLibre's Logger writes to Logcat (it is @Keep, so native code may call it too),
-        // and nothing reaches Logcat from this app (detekt ForbiddenImport, CLAUDE.md).
+        // and nothing reaches Logcat from this app (detekt ForbiddenImport, the engineering handbook).
         Logger.setVerbosity(Logger.NONE)
         MapLibre.getInstance(context.applicationContext)
         // Tiles come from a pack on the phone; caching them again wastes storage. The tile

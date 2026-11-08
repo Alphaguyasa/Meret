@@ -24,7 +24,7 @@ class FixPipelineTest {
     }
 
     /**
-     * Invariant 2 in `CLAUDE.md`: filtering never deletes a raw fix. A rejected fix is a row in
+     * Invariant 2 in the engineering handbook: filtering never deletes a raw fix. A rejected fix is a row in
      * the track like any other — it is evidence about the device and the sky.
      */
     @Test

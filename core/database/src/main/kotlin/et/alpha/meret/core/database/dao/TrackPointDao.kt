@@ -97,7 +97,7 @@ public interface TrackPointDao {
      *
      * IGNORE rather than REPLACE is load-bearing: a replayed chunk must be a no-op, and
      * REPLACE would delete and re-insert the row, which cascades and rewrites data that
-     * CLAUDE.md invariant 2 says is immutable.
+     * The engineering handbook invariant 2 says is immutable.
      *
      * **Returns nothing on purpose.** Declaring `List<Long>` here makes Room call
      * `getLastInsertedRowId` after every row, and that helper runs `SELECT changes()` and

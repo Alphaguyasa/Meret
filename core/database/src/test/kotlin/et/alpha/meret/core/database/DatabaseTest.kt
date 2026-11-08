@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * A fresh in-memory [MeretDatabase] per test.
  *
- * In-memory rather than a temp file, per CLAUDE.md — but note that it is the *same* Room
+ * In-memory rather than a temp file, per the engineering handbook — but note that it is the *same* Room
  * schema either way, foreign keys and indices included, so a cascade or a unique-constraint
  * violation fails here exactly as it would on a device.
  */

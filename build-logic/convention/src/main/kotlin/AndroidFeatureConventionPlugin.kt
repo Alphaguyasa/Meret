@@ -6,7 +6,7 @@ import org.gradle.kotlin.dsl.project
 
 /**
  * Everything a `:feature:*` module gets for free: Compose, Hilt, navigation, and the
- * core modules it is allowed to see. CLAUDE.md forbids feature-to-feature dependencies,
+ * core modules it is allowed to see. The engineering handbook forbids feature-to-feature dependencies,
  * so this plugin never wires one.
  */
 class AndroidFeatureConventionPlugin : Plugin<Project> {

@@ -6,7 +6,7 @@
 # the worst case is 3 open (Gradle, Actions, npm); the Actions and npm ones are rare.
 #
 # Major versions are ignored here. A major bump of AGP, Kotlin, Compose or Room needs a
-# planned roadmap item (CLAUDE.md lists what AGP 9 alone broke), not a bot PR.
+# planned roadmap item (the engineering handbook lists what AGP 9 alone broke), not a bot PR.
 # Security updates are separate from this file: Dependabot raises those whenever an
 # advisory matches, whatever the schedule, once "Dependabot security updates" is on in
 # the repo settings.

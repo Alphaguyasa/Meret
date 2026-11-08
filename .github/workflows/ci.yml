@@ -6,8 +6,8 @@ on:
     paths-ignore:
       - '**.md'
   pull_request:
-    # A PR that touches only Markdown (DAILY_LOG, ROADMAP, docs) builds nothing, so it
-    # spends no Actions minutes. CLAUDE.md's merge policy treats "no checks" on such a PR
+    # A PR that touches only Markdown (the dev log, ROADMAP, docs) builds nothing, so it
+    # spends no Actions minutes. The engineering handbook's merge policy treats "no checks" on such a PR
     # as passing. Anything else — code, Gradle, resources, this file — runs the full job.
     paths-ignore:
       - '**.md'

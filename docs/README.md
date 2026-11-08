@@ -104,12 +104,10 @@ customised deployment.
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | Drop this in the repo root. Claude Code's persistent context. |
 | `ARCHITECTURE.md` | Module graph, layering rules, key decisions |
 | `DATA_MODEL.md` | Room schema, PostGIS schema, sync protocol |
 | `MAPS_OFFLINE.md` | Tile pipeline, style JSON, glyphs, local tile server |
 | `LOCATION_ENGINE.md` | Permissions, foreground service, filtering, battery, OEMs |
 | `DESIGN_SYSTEM.md` | Tokens, components, field-usability rules |
 | `BUILD_PLAN.md` | 14 phases with acceptance criteria |
-| `SESSION_PROMPTS.md` | Copy-paste prompts, one per Claude Code session |
 | `tools/build-tiles.sh` | Generates the Ethiopia tile pack |

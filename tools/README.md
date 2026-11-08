@@ -66,7 +66,7 @@ sqlite3 $P "select json_extract(value,'$.vector_layers[*].id') from metadata whe
 ## Refreshing the app's copy
 
 The app ships the glyph stack and the sprite as committed assets in `:core:maps`
-(NEEDS_APPROVAL A11, default (a)). After a font, `fonts.json` or `sprite-icons.txt`
+(the decision log A11, default (a)). After a font, `fonts.json` or `sprite-icons.txt`
 change, rebuild and copy:
 
 ```bash
@@ -101,4 +101,4 @@ A new font stack in the style needs its directory copied too, and its font's lic
   from there up is a symbol layer; the test checks it.
 - **Desk ≠ field.** The preview serves glyphs over HTTP. On a phone they load through
   `asset://`, with a comma and spaces in the path. Check that in aeroplane mode on a device
-  before calling the map done (NEEDS_APPROVAL, "Needs a device").
+  before calling the map done (the decision log, "Needs a device").

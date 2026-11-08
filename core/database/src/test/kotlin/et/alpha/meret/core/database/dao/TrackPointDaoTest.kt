@@ -129,7 +129,7 @@ class TrackPointDaoTest : DatabaseTest() {
             updatedAt = 5_000L,
         )
 
-        // Kept for audit, per CLAUDE.md invariant 2.
+        // Kept for audit, per the engineering handbook invariant 2.
         assertThat(pointDao.countPoints(Fixtures.TRACK_ID)).isEqualTo(6)
         val track = requireNotNull(trackDao.getTrack(Fixtures.TRACK_ID))
         assertThat(track.pointCount).isEqualTo(6)

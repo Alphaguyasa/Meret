@@ -8,7 +8,7 @@
     Android 12+ it does NOT stop device-to-device transfer. Only these rules do.
 
     Records leave the device one way: sync (or peer sync) to the project's own server.
-    See NEEDS_APPROVAL.md A5. Guarded by BackupRulesTest.
+    See the decision log A5. Guarded by BackupRulesTest.
 -->
 <data-extraction-rules>
     <cloud-backup>

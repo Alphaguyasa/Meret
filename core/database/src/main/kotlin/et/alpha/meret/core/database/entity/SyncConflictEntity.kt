@@ -11,7 +11,7 @@ import et.alpha.meret.core.model.OutboxEntityType
  * A write the server rejected on a stale `base_version`, parked for a human.
  *
  * Both payloads are kept verbatim and nothing is auto-resolved. Picking a winner by
- * timestamp is not available to us: CLAUDE.md's device-clock warning applies here too, and
+ * timestamp is not available to us: the engineering handbook's device-clock warning applies here too, and
  * an enumerator's observation and a supervisor's correction are both real.
  */
 @Entity(

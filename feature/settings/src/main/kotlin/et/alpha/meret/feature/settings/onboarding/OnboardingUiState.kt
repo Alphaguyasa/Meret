@@ -3,7 +3,7 @@ package et.alpha.meret.feature.settings.onboarding
 import et.alpha.meret.core.location.compat.OemGuidance
 import et.alpha.meret.domain.onboarding.OnboardingStep
 
-/** The permission onboarding screen. One state per screen, per CLAUDE.md. */
+/** The permission onboarding screen. One state per screen, per the engineering handbook. */
 sealed interface OnboardingUiState {
     /** Before the first snapshot and the stored skips have been read. */
     data object Loading : OnboardingUiState

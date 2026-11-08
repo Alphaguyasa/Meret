@@ -2,7 +2,7 @@ package et.alpha.meret.core.model
 
 /**
  * The recording in progress on this device, as the tracking service needs it to survive
- * process death (CLAUDE.md invariant 7).
+ * process death (the engineering handbook invariant 7).
  *
  * This is deliberately *not* the [Track] row. The row lives in Room and holds the data; this
  * is the small amount of runtime state a restarted service needs to pick up the same track

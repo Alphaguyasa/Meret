@@ -33,7 +33,7 @@ public object DatabaseModule {
     ): MeretDatabase = Room
         .databaseBuilder(context, MeretDatabase::class.java, MeretDatabase.NAME)
         // No allowMainThreadQueries and no destructive fallback, ever. Room's own
-        // executors keep every query off the main thread (CLAUDE.md invariant 5).
+        // executors keep every query off the main thread (the engineering handbook invariant 5).
         .addMeretMigrations()
         .build()
 

@@ -9,7 +9,7 @@ import et.alpha.meret.core.model.TrackingConfig
  * One fix, fully processed: the row to persist plus the running totals it moved.
  *
  * [point] is always present, for a rejected fix as much as an accepted one — invariant 2
- * in `CLAUDE.md` is that filtering never deletes a raw fix. A rejected point carries
+ * in the engineering handbook is that filtering never deletes a raw fix. A rejected point carries
  * `isOutlier = true` and a null [TrackPoint.filteredPosition], because it was never fed to
  * the filter.
  *

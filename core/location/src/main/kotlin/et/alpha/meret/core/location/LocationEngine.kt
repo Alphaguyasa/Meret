@@ -75,7 +75,7 @@ public enum class EngineKind {
  * not the flow's.
  *
  * Implementations emit **raw** fixes only. No filtering, no rejection, no smoothing —
- * invariant 2 in `CLAUDE.md` requires that raw fixes reach storage untouched, and an
+ * invariant 2 in the engineering handbook requires that raw fixes reach storage untouched, and an
  * engine that quietly dropped a bad fix would make that impossible to honour.
  */
 public interface LocationEngine {

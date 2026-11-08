@@ -1,7 +1,7 @@
 # ROADMAP.md
 
 Prioritized backlog. The daily run takes the **top open item** first. Mark an item done by
-moving it to "Done" with its PR number and squash commit SHA. Replan (see CLAUDE.md, daily loop
+moving it to "Done" with its PR number and squash commit SHA. Replan (see the engineering handbook, daily loop
 step 5) when fewer than 5 items are open.
 
 **Priority:** P0 = data safety / privacy / broken build · P1 = next phase of the core
@@ -9,12 +9,12 @@ product · P2 = important, not blocking · P3 = cleanup.
 **Effort:** S = under half a day · M = about a day · L = split before starting.
 
 Phases refer to `docs/BUILD_PLAN.md`. Phases 1–4 are done (git history to `1fc66f5`). Phases 5,
-6, 7 and 8 are done in CI; their device checks are in `NEEDS_APPROVAL.md`.
+6, 7 and 8 are done in CI; their device checks are in the decision log.
 Phase 0 (tile pack) tooling is done (`tools/`, item 12). A real Ethiopia pack has not been
 built yet: Planetiler needs a machine with ~20 GB scratch space, not the cloud container.
 
 Acceptance criteria that need a physical phone are not claimed by CI. They are listed in
-`NEEDS_APPROVAL.md` under "Needs a device".
+The decision log under "Needs a device".
 
 ---
 
@@ -73,7 +73,7 @@ Needs Alpha's call on who holds the upload key (A12). Then: the key in GitHub Ac
 secrets, a signed release built by a manual workflow, never a keystore in the repo.
 
 ### 14. [P2 · M] Encrypt the Room database at rest
-Blocked: needs a decision in NEEDS_APPROVAL.md (SQLCipher size and speed cost on
+Blocked: needs a decision in the decision log (SQLCipher size and speed cost on
 low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 
 ### Later phases (expand into items when they reach the top)
@@ -128,7 +128,7 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 16. "Check permissions again" on the diagnostics screen | #48 | `d889766` |
 | 13 · 6f-2b-2. Live puck while idle: map-only `PreviewLocationSource`, unbatched, foreground only | #50 | `7eabc40` |
 | 13 · 6g-1. Pack import: `MbtilesPackInstaller` (copy, check pbf, rename) and `TilePackRepository.importPack` | #51 | `a914448` |
-| 13 · 6g-2. Packs screen: picker, progress, en/am errors, pack list with delete, orphan sweep. **Phase 6 done in CI** (device rows in NEEDS_APPROVAL) | #53 | `b2d474a` |
+| 13 · 6g-2. Packs screen: picker, progress, en/am errors, pack list with delete, orphan sweep. **Phase 6 done in CI** (device rows in the decision log) | #53 | `b2d474a` |
 | 19. Per-ABI release APKs (`armeabi-v7a`, `arm64-v8a`, universal) and the `release-size` workflow | #54 | `60fa667` |
 | 20. Phase 7a: record button starts, pauses, stops (`StartTrackingUseCase`, `RecordingCommands`, `DeviceIdentityStore`), tracking bar stats | #56 | `fa90463` |
 | 21. Phase 7b: live track line (`TrackingController.activeLine`, `throttleLatest` 2 s, Douglas–Peucker 3 m, own line layer under the puck) | #57 | `ff9a1d4` |
@@ -136,7 +136,7 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 23a. Phase 7d-1: track detail (totals, elevation profile, segment list; `TrackSummariser`), list rows open it | #60 | `6db9994` |
 | 23b. Phase 7d-2: undo a long-press stop (6 s snackbar, `TrackingController.reopen`, new segment), tracking bar segment count | #62 | `24d9969` |
 | 24. Every DataStore test on a scope that ends with the test (`backgroundScope`, or cancelled in `@After`) | #63 | `74a918f` |
-| 27. Phase 7e: earlier tracks on the map (completed tracks in view, 30 newest, cached lines, loaded for 2× the screen on camera rest). **Phase 7 done in CI** (device rows in NEEDS_APPROVAL) | #65 | `de1952a` |
+| 27. Phase 7e: earlier tracks on the map (completed tracks in view, 30 newest, cached lines, loaded for 2× the screen on camera rest). **Phase 7 done in CI** (device rows in the decision log) | #65 | `de1952a` |
 | 15. Template leftovers: placeholder launcher icon (A14) instead of the robot, unused density webps removed, `gradle.properties` header | #66 | `8f222f3` |
 | 28. Phase 8a: save a waypoint from the map (sheet with live position, title, category, notes; Room first, live fix only, `track_id` while recording) | #69 | `ce57e91` |
 | 29a. Phase 8b-1: saved waypoints on the map, clustered (MapLibre cluster source, count labels, marker read capped at 5,000) | #70 | `b48a5c9` |
@@ -147,7 +147,7 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 32b. Phase 8d: waypoint sheet draft autosave to Room (database version 2, `waypoint_draft`, `MIGRATION_1_2`; written on every change, restored from Room alone after a kill; `SavedStateHandle` dropped) | #78 | `0400f02` |
 | 33a. Phase 8e-1: photo pipeline (`PhotoStore`/`JpegPhotoStore`: 1600 px q80, GPS/time/orientation EXIF kept, make/model dropped, SHA-256, `files/photos/`, atomic rename; `PhotoSizing` in `:core:common`; no new dependency) | #79 | `d5698bd` |
 | 33b-1. Phase 8e-2: photo rows at Save (`PhotoStore.describe/delete`, `waypoint_photo` rows in one transaction with the waypoint, a missing file dropped from the answer, hidden fields' photo files deleted after the save, UUID-only ids) | #81 | `1a97018` |
-| 33b-2. Phase 8e-2: photos on the sheet through the phone's camera app (`TakePicture` + non-exported `FileProvider`, no CAMERA permission, no new dependency; thumbnails, remove with confirmation, capture kept across a process death). **Phase 8 done in CI** (device rows in NEEDS_APPROVAL) | #82 | `107e997` |
+| 33b-2. Phase 8e-2: photos on the sheet through the phone's camera app (`TakePicture` + non-exported `FileProvider`, no CAMERA permission, no new dependency; thumbnails, remove with confirmation, capture kept across a process death). **Phase 8 done in CI** (device rows in the decision log) | #82 | `107e997` |
 | 34. «Show on map» from track detail (map fits the stored bounds, follow off; the opened track pinned past the 30-track cap of the earlier-tracks layer) | #84 | `fc84a07` |
 | 35. Name a track from its detail screen (rename dialog en/am; `TrackNames.normalise`; only `name`, `sync_state` pending and `updated_at` change) | #85 | `6fd0dc3` |
 | 36. Sweep orphaned photo files when the waypoint sheet opens (`PhotoSweeper`/`FilePhotoSweeper`: `<uuid>.jpg` a day old that no row, draft or saved answer names; `.jpg.part` and `photo_captures/` a day old; nothing deleted if Room cannot be read; `WaypointPhotoFiles` bundles store and sweeper) | #87 | `fc42fe3` |

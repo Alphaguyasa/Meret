@@ -1,6 +1,6 @@
 # BUILD_PLAN.md
 
-14 phases. One Claude Code session each, roughly. Phases 1–8 are the shippable core;
+14 phases. Roughly one working session each. Phases 1–8 are the shippable core;
 9–14 are what turn it into a product and a portfolio piece.
 
 Do not start a phase before the previous one's acceptance criteria pass. The temptation

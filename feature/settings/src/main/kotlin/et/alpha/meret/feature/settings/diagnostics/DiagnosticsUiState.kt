@@ -2,7 +2,7 @@ package et.alpha.meret.feature.settings.diagnostics
 
 import et.alpha.meret.domain.diagnostics.DiagnosticsSnapshot
 
-/** The diagnostics screen. One state per screen, per CLAUDE.md. */
+/** The diagnostics screen. One state per screen, per the engineering handbook. */
 sealed interface DiagnosticsUiState {
     /** Before the first snapshot has been read. */
     data object Loading : DiagnosticsUiState
