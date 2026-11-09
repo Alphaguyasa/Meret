@@ -29,6 +29,8 @@
     <string name="unit_metres">m</string>
     <string name="unit_kilometres">km</string>
     <string name="unit_hectares">ha</string>
+    <string name="unit_square_metres">m²</string>
+    <string name="unit_timad">timad</string>
 
     <!-- Connectivity and sync -->
     <string name="offline_working_locally">Offline — saving to this device</string>
