@@ -18,7 +18,7 @@ internal object MeasureRing {
     const val FILL_LAYER_ID = "meret-measure-ring-fill"
     const val LINE_LAYER_ID = "meret-measure-ring-line"
     const val CORNER_LAYER_ID = "meret-measure-ring-corner"
-    const val PROPERTY_KIND = "kind"
+    const val PROPERTY_KIND = LocationPuck.PROPERTY_KIND
     const val KIND_FILL = "fill"
     const val KIND_LINE = "line"
     const val KIND_CORNER = "corner"

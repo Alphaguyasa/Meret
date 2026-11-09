@@ -351,12 +351,12 @@ class OfflineMapControllerTest {
 
     @Test
     fun `there is no camera centre until a map is attached`() {
-        assertThat(controller.cameraCentre()).isNull()
+        assertThat(controller.cameraCentre).isNull()
 
         map.centre = LatLng(9.03, 38.74)
         controller.attach(map)
 
-        assertThat(controller.cameraCentre()).isEqualTo(LatLng(9.03, 38.74))
+        assertThat(controller.cameraCentre).isEqualTo(LatLng(9.03, 38.74))
     }
 
     private class RecordingCamera : MapCameraTarget {

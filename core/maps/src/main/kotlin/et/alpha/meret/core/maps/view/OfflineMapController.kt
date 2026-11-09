@@ -202,7 +202,8 @@ public class OfflineMapController internal constructor() {
     }
 
     /** The ground under the middle of the map, or null while no map is attached. */
-    public fun cameraCentre(): LatLng? = target?.centre()
+    public val cameraCentre: LatLng?
+        get() = target?.centre()
 
     internal fun attach(target: MapCameraTarget) {
         this.target = target

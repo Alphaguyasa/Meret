@@ -283,7 +283,7 @@ private class MapLibreCamera(
         style.addSource(GeoJsonSource(MeasureRing.SOURCE_ID, measureJson))
         style.addLayer(
             FillLayer(MeasureRing.FILL_LAYER_ID, MeasureRing.SOURCE_ID)
-                .withFilter(measureKindIs(MeasureRing.KIND_FILL))
+                .withFilter(kindIs(MeasureRing.KIND_FILL))
                 .withProperties(
                     PropertyFactory.fillColor(colours.track),
                     PropertyFactory.fillOpacity(MEASURE_FILL_OPACITY),
@@ -291,7 +291,7 @@ private class MapLibreCamera(
         )
         style.addLayer(
             LineLayer(MeasureRing.LINE_LAYER_ID, MeasureRing.SOURCE_ID)
-                .withFilter(measureKindIs(MeasureRing.KIND_LINE))
+                .withFilter(kindIs(MeasureRing.KIND_LINE))
                 .withProperties(
                     PropertyFactory.lineColor(colours.track),
                     PropertyFactory.lineWidth(TRACK_LINE_WIDTH_DP),
@@ -301,7 +301,7 @@ private class MapLibreCamera(
         )
         style.addLayer(
             CircleLayer(MeasureRing.CORNER_LAYER_ID, MeasureRing.SOURCE_ID)
-                .withFilter(measureKindIs(MeasureRing.KIND_CORNER))
+                .withFilter(kindIs(MeasureRing.KIND_CORNER))
                 .withProperties(
                     PropertyFactory.circleRadius(WAYPOINT_RADIUS_DP),
                     PropertyFactory.circleColor(colours.track),
@@ -310,9 +310,6 @@ private class MapLibreCamera(
                 ),
         )
     }
-
-    private fun measureKindIs(kind: String): Expression =
-        Expression.eq(Expression.get(MeasureRing.PROPERTY_KIND), kind)
 
     /**
      * Clustered: a cluster is a larger circle with its count, a single waypoint a small one,
