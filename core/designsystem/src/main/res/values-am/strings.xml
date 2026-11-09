@@ -27,6 +27,8 @@
     <string name="unit_metres">ሜ</string>
     <string name="unit_kilometres">ኪሜ</string>
     <string name="unit_hectares">ሄክታር</string>
+    <string name="unit_square_metres">ሜ²</string>
+    <string name="unit_timad">ጥማድ</string>
 
     <!-- Connectivity and sync -->
     <string name="offline_working_locally">ከመስመር ውጭ — በዚህ መሣሪያ ላይ እየተቀመጠ ነው</string>
