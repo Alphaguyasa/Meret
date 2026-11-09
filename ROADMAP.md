@@ -20,30 +20,6 @@ The decision log under "Needs a device".
 
 ## Open
 
-### 37. [P1 · S] Area units: m², hectare and timad (Phase 10a)
-A pure `:core:model`/`:core:common` formatter for an area in m²: m² below 1,000, hectares to
-2 decimals above, and *timad* with a configurable hectares-per-timad (default 0.25, Phase 10
-of `docs/BUILD_PLAN.md`), plus perimeter in m / km. Locale-aware digits, en and am unit
-labels in `strings.xml`. Unit tests with known fixtures (1 ha = 4 timad at 0.25; 0.3 ha at a
-0.5 ratio = 0.6 timad), including 0 and an invalid ratio (≤ 0 falls back to 0.25).
-
-### 38. [P1 · M] Measurement repository and save use case (Phase 10b)
-`MeasurementRepository` in `:core:data` (Room only) and `SaveMeasurementUseCase` in
-`:domain`: a ring of vertices (tapped or walked) is validated (at least 3 distinct vertices,
-non-zero area), its area (`GeoMath.ellipsoidalPolygonArea`, because the spherical formula is 0.4% high at Ethiopia's latitudes) and perimeter computed, its
-vertices stored as GeoJSON, and the row written `pending` with a UUIDv7 and `project_id`
-`local`, as tracks and waypoints are. A name is normalised like a track's. Tests: a
-reference plot from a GIS computation matches within 0.1% (the Phase 10 acceptance for the
-tapped mode), a two-point ring is refused, the GeoJSON round-trips. No schema change
-expected (`measurement` exists since Phase 3); if one is needed, a migration and its test.
-
-### 39. [P1 · M] Tap-the-vertices measurement on the map (Phase 10c)
-`:feature:measure`: from the map, «Measure» opens a mode where each tap adds a vertex at the
-crosshair; the ring is drawn (MapLibre line + fill; check the API against the sources jar),
-with live area (item 37's units) and perimeter, «Undo last point», «Clear» and «Save» with a
-name. The ring in progress survives process death (Room or DataStore, not the ViewModel).
-en/am strings, TalkBack labels. ViewModel tests with a fake repository.
-
 ### 40. [P1 · M] Walk-the-perimeter measurement (Phase 10d)
 The same screen in walking mode: vertices are taken from filtered fixes while the worker
 walks the boundary (a new vertex every few metres of movement, fixes worse than the accuracy
@@ -152,3 +128,5 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 35. Name a track from its detail screen (rename dialog en/am; `TrackNames.normalise`; only `name`, `sync_state` pending and `updated_at` change) | #85 | `6fd0dc3` |
 | 36. Sweep orphaned photo files when the waypoint sheet opens (`PhotoSweeper`/`FilePhotoSweeper`: `<uuid>.jpg` a day old that no row, draft or saved answer names; `.jpg.part` and `photo_captures/` a day old; nothing deleted if Room cannot be read; `WaypointPhotoFiles` bundles store and sweeper) | #87 | `fc42fe3` |
 | 18. Dependabot: monthly grouped npm updates for `tools/` (limits are per ecosystem, so up to 3 open) | #88 | `7d7bf0f` |
+| 37. Area units: m² below 1,000, hectares to two places, timad at a configurable size, en/am labels | #90 | `088df42` |
+| 38. Save a measurement: `SaveMeasurementUseCase` (three distinct vertices, at least 1 m²), area on the WGS84 ellipsoid, ring stored as GeoJSON, row written `pending` | #91 | `8899f93` |
