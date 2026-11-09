@@ -12,4 +12,5 @@
     <string name="map_recording_not_started">መቅዳት አልጀመረም። መተግበሪያው አካባቢዎን እንዲጠቀም መፈቀዱን አረጋግጠው እንደገና ይንኩ።</string>
     <string name="map_recording_stopped">መስመሩ ተቀምጧል። በስህተት ነው ያቆሙት?</string>
     <string name="map_recording_resume">መቅዳት ቀጥል</string>
+    <string name="map_measure">ቦታ ለካ</string>
 </resources>

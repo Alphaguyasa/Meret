@@ -326,6 +326,39 @@ class OfflineMapControllerTest {
         assertThat(controller.visibleArea).isNull()
     }
 
+    @Test
+    fun `the ring reaches the attached map, and is drawn again after a re-attach`() {
+        val ring = listOf(LatLng(9.0, 38.7), LatLng(9.1, 38.7))
+        controller.showMeasureRing(ring)
+        controller.attach(map)
+        assertThat(map.rings.last()).isEqualTo(ring)
+
+        controller.showMeasureRing(emptyList())
+
+        assertThat(map.rings.last()).isEmpty()
+    }
+
+    @Test
+    fun `the same ring is not handed to the map twice`() {
+        controller.attach(map)
+        val ring = listOf(LatLng(9.0, 38.7))
+
+        controller.showMeasureRing(ring)
+        controller.showMeasureRing(ring)
+
+        assertThat(map.rings.filter { it == ring }).hasSize(1)
+    }
+
+    @Test
+    fun `there is no camera centre until a map is attached`() {
+        assertThat(controller.cameraCentre()).isNull()
+
+        map.centre = LatLng(9.03, 38.74)
+        controller.attach(map)
+
+        assertThat(controller.cameraCentre()).isEqualTo(LatLng(9.03, 38.74))
+    }
+
     private class RecordingCamera : MapCameraTarget {
         /** Camera moves only; the puck is kept apart in [puck]. */
         val cameraCalls = mutableListOf<String>()
@@ -339,6 +372,17 @@ class OfflineMapControllerTest {
 
         /** Every set of waypoints handed to the map, in order. */
         val waypoints = mutableListOf<List<WaypointMarker>>()
+
+        /** Every measured ring handed to the map, in order. */
+        val rings = mutableListOf<List<LatLng>>()
+
+        var centre: LatLng? = null
+
+        override fun showMeasureRing(vertices: List<LatLng>) {
+            rings += vertices
+        }
+
+        override fun centre(): LatLng? = centre
 
         override fun zoomBy(delta: Double) {
             cameraCalls += "zoom $delta"

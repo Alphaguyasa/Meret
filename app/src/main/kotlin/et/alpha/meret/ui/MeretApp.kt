@@ -38,6 +38,7 @@ import et.alpha.meret.core.designsystem.theme.MeretTheme
 import et.alpha.meret.core.designsystem.theme.Sizes
 import et.alpha.meret.feature.map.MapFocus
 import et.alpha.meret.feature.map.MapRoute
+import et.alpha.meret.feature.measure.MeasureRoute
 import et.alpha.meret.feature.settings.diagnostics.DiagnosticsRoute
 import et.alpha.meret.feature.settings.onboarding.OnboardingRoute
 import et.alpha.meret.feature.tiles.TilePacksRoute
@@ -176,6 +177,9 @@ private fun MeretShell(
                             },
                             focus = mapFocus,
                             onFocused = { mapFocus = null },
+                            measureMode = { cameraCentre, showRing, onExit ->
+                                MeasureRoute(cameraCentre, showRing, onExit)
+                            },
                         )
                     }
                     composable(TRACKS_ROUTE) {

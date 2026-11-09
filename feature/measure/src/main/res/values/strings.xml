@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="measure_hint">Move the map until the cross is on a corner, then tap Add corner.</string>
+    <string name="measure_area">Area: %1$s %2$s (%3$s %4$s)</string>
+    <string name="measure_perimeter">Perimeter: %1$s %2$s · Corners: %3$d</string>
+    <string name="measure_add_corner">Add corner</string>
+    <string name="measure_undo">Undo last point</string>
+    <string name="measure_clear">Clear</string>
+    <string name="measure_close">Close</string>
+    <string name="measure_save">Save</string>
+    <string name="measure_cancel">Cancel</string>
+    <string name="measure_clear_title">Clear all corners?</string>
+    <string name="measure_clear_body">The whole ring is removed.</string>
+    <string name="measure_save_title">Save this plot</string>
+    <string name="measure_name_label">Name (optional)</string>
+    <string name="measure_saved">Plot saved</string>
+    <string name="measure_not_a_plot">Needs at least three corners that are not on one line.</string>
+    <string name="measure_storage_failed">Not saved: the phone could not write it. Free some storage and try again.</string>
+</resources>
