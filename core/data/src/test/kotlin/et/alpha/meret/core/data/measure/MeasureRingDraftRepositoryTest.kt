@@ -74,7 +74,8 @@ class MeasureRingDraftRepositoryTest {
     fun `the ring is still there after the process is killed`() = runBlocking<Unit> {
         val first = MeasureRingDraftRepository(dataStore())
         first.update { listOf(A, B, C) }
-        scopes.single().coroutineContext.job.cancelAndJoin()
+        val killed = scopes.single()
+        killed.coroutineContext.job.cancelAndJoin()
 
         val reopened = MeasureRingDraftRepository(dataStore())
 
