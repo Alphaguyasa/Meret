@@ -20,13 +20,6 @@ The decision log under "Needs a device".
 
 ## Open
 
-### 39. [P1 · M] Tap-the-vertices measurement on the map (Phase 10c)
-`:feature:measure`: from the map, «Measure» opens a mode where each tap adds a vertex at the
-crosshair; the ring is drawn (MapLibre line + fill; check the API against the sources jar),
-with live area (item 37's units) and perimeter, «Undo last point», «Clear» and «Save» with a
-name. The ring in progress survives process death (Room or DataStore, not the ViewModel).
-en/am strings, TalkBack labels. ViewModel tests with a fake repository.
-
 ### 40. [P1 · M] Walk-the-perimeter measurement (Phase 10d)
 The same screen in walking mode: vertices are taken from filtered fixes while the worker
 walks the boundary (a new vertex every few metres of movement, fixes worse than the accuracy
