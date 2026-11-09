@@ -428,6 +428,59 @@ class GeoMathTest {
         assertThat(GeoMath.normaliseLongitude(540.0)).isWithin(1e-9).of(-180.0)
     }
 
+    @Test
+    fun `ellipsoidal area matches WGS84 GIS references to a tenth of a percent`() {
+        // Reference areas from GeographicLib (pyproj Geod, WGS84).
+        val plot =
+            listOf(
+                LatLng(9.0300, 38.7400),
+                LatLng(9.0312, 38.7403),
+                LatLng(9.0310, 38.7415),
+                LatLng(9.0298, 38.7411),
+            )
+        val district =
+            listOf(
+                LatLng(7.5, 37.0),
+                LatLng(7.5, 37.2),
+                LatLng(7.7, 37.25),
+                LatLng(7.72, 36.98),
+            )
+        val south =
+            listOf(
+                LatLng(-1.30, 36.80),
+                LatLng(-1.30, 36.81),
+                LatLng(-1.29, 36.81),
+                LatLng(-1.29, 36.80),
+            )
+        val north =
+            listOf(
+                LatLng(60.00, 10.00),
+                LatLng(60.00, 10.02),
+                LatLng(60.01, 10.02),
+                LatLng(60.01, 10.00),
+            )
+
+        assertThat(relativeError(GeoMath.ellipsoidalPolygonArea(plot), 17_632.7409))
+            .isLessThan(REFERENCE_TOLERANCE)
+        assertThat(relativeError(GeoMath.ellipsoidalPolygonArea(district), 604_087_966.0))
+            .isLessThan(REFERENCE_TOLERANCE)
+        assertThat(relativeError(GeoMath.ellipsoidalPolygonArea(south), 1_230_601.233))
+            .isLessThan(REFERENCE_TOLERANCE)
+        assertThat(relativeError(GeoMath.ellipsoidalPolygonArea(north), 1_243_174.471))
+            .isLessThan(REFERENCE_TOLERANCE)
+    }
+
+    @Test
+    fun `ellipsoidal area is positive in either winding and zero for a degenerate ring`() {
+        val triangle = listOf(LatLng(9.0, 38.0), LatLng(9.0, 38.01), LatLng(9.01, 38.01))
+
+        assertThat(GeoMath.ellipsoidalPolygonArea(triangle)).isGreaterThan(0.0)
+        assertThat(GeoMath.ellipsoidalPolygonArea(triangle.reversed()))
+            .isWithin(1e-6)
+            .of(GeoMath.ellipsoidalPolygonArea(triangle))
+        assertThat(GeoMath.ellipsoidalPolygonArea(triangle.take(2))).isEqualTo(0.0)
+    }
+
     // ---- Helpers ---------------------------------------------------------------------
 
     /**

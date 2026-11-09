@@ -21,9 +21,9 @@ public enum class MeasurementMethod(
  * A saved area or distance measurement.
  *
  * [areaSquareMeters] and [perimeterMeters] are populated for [MeasurementKind.AREA];
- * [distanceMeters] for [MeasurementKind.DISTANCE]. Area is geodesic, computed by spherical
- * excess, not by projecting to a plane — a one-hectare plot measured on a local planar
- * approximation is fine, a 200-hectare one is not.
+ * [distanceMeters] for [MeasurementKind.DISTANCE]. Area is on the WGS84 ellipsoid (spherical
+ * excess on the authalic sphere), not by projecting to a plane — a one-hectare plot measured
+ * on a local planar approximation is fine, a 200-hectare one is not.
  */
 public data class Measurement(
     public val id: String,
