@@ -152,7 +152,8 @@ public object GeoMath {
     private fun authalicQ(sinLatitude: Double): Double {
         val scaled = eccentricity * sinLatitude
         val logTerm = ln((1.0 - scaled) / (1.0 + scaled)) / (2.0 * eccentricity)
-        return (1.0 - WGS84_ECCENTRICITY_SQUARED) * (sinLatitude / (1.0 - scaled * scaled) - logTerm)
+        val sineTerm = sinLatitude / (1.0 - scaled * scaled)
+        return (1.0 - WGS84_ECCENTRICITY_SQUARED) * (sineTerm - logTerm)
     }
 
     /**
