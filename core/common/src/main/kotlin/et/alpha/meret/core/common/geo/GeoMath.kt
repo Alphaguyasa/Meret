@@ -152,7 +152,7 @@ public object GeoMath {
     private fun authalicQ(sinLatitude: Double): Double {
         val scaled = eccentricity * sinLatitude
         val logTerm = ln((1.0 - scaled) / (1.0 + scaled)) / (2.0 * eccentricity)
-        return (1.0 - eccentricitySquared) * (sinLatitude / (1.0 - scaled * scaled) - logTerm)
+        return (1.0 - WGS84_ECCENTRICITY_SQUARED) * (sinLatitude / (1.0 - scaled * scaled) - logTerm)
     }
 
     /**
@@ -312,10 +312,10 @@ public object GeoMath {
     private const val MIN_COS_LATITUDE = 1e-6
     private const val WGS84_SEMI_MAJOR_AXIS = 6_378_137.0
     private const val WGS84_FLATTENING = 1.0 / 298.257223563
+    private const val WGS84_ECCENTRICITY_SQUARED = WGS84_FLATTENING * (2.0 - WGS84_FLATTENING)
 
     // In this order: each is read while the next is initialised.
-    private val eccentricitySquared = WGS84_FLATTENING * (2.0 - WGS84_FLATTENING)
-    private val eccentricity = sqrt(eccentricitySquared)
+    private val eccentricity = sqrt(WGS84_ECCENTRICITY_SQUARED)
     private val polarQ = authalicQ(1.0)
 
     /** What a square metre on the mean-radius sphere is on the authalic one. */
