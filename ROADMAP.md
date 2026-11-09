@@ -130,3 +130,4 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 18. Dependabot: monthly grouped npm updates for `tools/` (limits are per ecosystem, so up to 3 open) | #88 | `7d7bf0f` |
 | 37. Area units: m² below 1,000, hectares to two places, timad at a configurable size, en/am labels | #90 | `088df42` |
 | 38. Save a measurement: `SaveMeasurementUseCase` (three distinct vertices, at least 1 m²), area on the WGS84 ellipsoid, ring stored as GeoJSON, row written `pending` | #91 | `8899f93` |
+| 39. Measure a plot by tapping its corners (`:feature:measure`: ring draft in the preferences file, live area and perimeter, map ring layers, crosshair panel, undo, clear, save with a name) | #92, #93 | `857ca3e`, to come |

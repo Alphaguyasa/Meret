@@ -47,6 +47,7 @@ import et.alpha.meret.core.designsystem.component.GpsQuality
 import et.alpha.meret.core.designsystem.component.GpsQualityChip
 import et.alpha.meret.core.designsystem.component.MinusGlyph
 import et.alpha.meret.core.designsystem.component.NorthArrowGlyph
+import et.alpha.meret.core.designsystem.component.PlotGlyph
 import et.alpha.meret.core.designsystem.component.PlusGlyph
 import et.alpha.meret.core.designsystem.component.RecordButton
 import et.alpha.meret.core.designsystem.component.RecordingState
@@ -95,6 +96,10 @@ public data class MapUiState(
  * the zoom buttons, compass and scale bar stay hidden.
  *
  * [isFollowing] marks the recentre button as on while the map keeps the user in the centre.
+ *
+ * While [measuring], a cross marks the middle of the map, the record and waypoint controls
+ * step aside and [measurePanel] sits above the tracking bar. [onMeasure] starts it, and needs a
+ * drawn map, so its button is hidden while [camera] is null.
  */
 @Composable
 public fun MapScreen(
@@ -114,6 +119,9 @@ public fun MapScreen(
     onResetNorth: () -> Unit = {},
     isFollowing: Boolean = false,
     snackbar: @Composable () -> Unit = {},
+    measuring: Boolean = false,
+    onMeasure: () -> Unit = {},
+    measurePanel: @Composable () -> Unit = {},
 ) {
     var barExpanded by remember { mutableStateOf(false) }
 
@@ -125,6 +133,13 @@ public fun MapScreen(
             BasemapSurface(
                 installed = state.basemapInstalled,
                 modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        if (measuring && camera != null) {
+            CrosshairGlyph(
+                modifier = Modifier.align(Alignment.Center).size(Sizes.touchTargetMin),
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
 
@@ -189,16 +204,29 @@ public fun MapScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom,
             ) {
-                MapControl(
-                    onClick = onAddWaypoint,
-                    contentDescription = stringResource(R.string.map_add_waypoint),
-                ) { PlusGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                if (measuring) {
+                    // Keeps the zoom controls where the thumb left them.
+                    Spacer(Modifier.weight(1f))
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        if (camera != null) {
+                            MapControl(
+                                onClick = onMeasure,
+                                contentDescription = stringResource(R.string.map_measure),
+                            ) { PlotGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                        }
+                        MapControl(
+                            onClick = onAddWaypoint,
+                            contentDescription = stringResource(R.string.map_add_waypoint),
+                        ) { PlusGlyph(it, tint = MaterialTheme.colorScheme.onSurface) }
+                    }
 
-                RecordButton(
-                    state = state.recordingState,
-                    onTap = onRecordTap,
-                    onLongPress = onRecordLongPress,
-                )
+                    RecordButton(
+                        state = state.recordingState,
+                        onTap = onRecordTap,
+                        onLongPress = onRecordLongPress,
+                    )
+                }
 
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     if (camera != null) {
@@ -232,6 +260,11 @@ public fun MapScreen(
             }
 
             Spacer(Modifier.height(Spacing.sm))
+
+            if (measuring) {
+                measurePanel()
+                Spacer(Modifier.height(Spacing.xs))
+            }
 
             state.trackingStats?.let { stats ->
                 TrackingBar(

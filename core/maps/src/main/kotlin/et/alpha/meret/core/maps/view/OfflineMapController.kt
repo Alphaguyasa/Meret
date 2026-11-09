@@ -55,6 +55,12 @@ internal interface MapCameraTarget {
 
     /** Draws these waypoints over the tracks and under the puck, replacing the last set. */
     fun showWaypoints(markers: List<WaypointMarker>)
+
+    /** Draws the plot being measured over the lines; empty removes it. */
+    fun showMeasureRing(vertices: List<LatLng>)
+
+    /** The ground under the middle of the map. */
+    fun centre(): LatLng?
 }
 
 /**
@@ -99,6 +105,7 @@ public class OfflineMapController internal constructor() {
     private var trackLine: TrackLine? = null
     private var earlierTracks: List<TrackLine> = emptyList()
     private var waypoints: List<WaypointMarker> = emptyList()
+    private var measureRing: List<LatLng> = emptyList()
     private var zoomInOnNextCentre = true
     private var pendingMove: CameraMove? = null
 
@@ -187,11 +194,23 @@ public class OfflineMapController internal constructor() {
         target?.showWaypoints(markers)
     }
 
+    /** The plot being measured, a corner per tap; empty removes it. */
+    public fun showMeasureRing(vertices: List<LatLng>) {
+        if (vertices == measureRing) return
+        measureRing = vertices
+        target?.showMeasureRing(vertices)
+    }
+
+    /** The ground under the middle of the map, or null while no map is attached. */
+    public val cameraCentre: LatLng?
+        get() = target?.centre()
+
     internal fun attach(target: MapCameraTarget) {
         this.target = target
         target.showEarlierTracks(earlierTracks)
         target.showTrackLine(trackLine)
         target.showWaypoints(waypoints)
+        target.showMeasureRing(measureRing)
         target.showPuck(position)
         val pending = pendingMove
         if (pending != null) {

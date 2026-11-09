@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="measure_hint">መስቀሉ ጥግ ላይ እስኪደርስ ካርታውን ያንቀሳቅሱ፣ ከዚያ «ጥግ ጨምር»ን ይንኩ።</string>
+    <string name="measure_area">ስፋት፦ %1$s %2$s (%3$s %4$s)</string>
+    <string name="measure_perimeter">ዙሪያ፦ %1$s %2$s · ጥጎች፦ %3$d</string>
+    <string name="measure_add_corner">ጥግ ጨምር</string>
+    <string name="measure_undo">የመጨረሻውን ነጥብ ቀልብስ</string>
+    <string name="measure_clear">አጽዳ</string>
+    <string name="measure_close">ዝጋ</string>
+    <string name="measure_save">አስቀምጥ</string>
+    <string name="measure_cancel">ይቅር</string>
+    <string name="measure_clear_title">ሁሉንም ጥጎች ላጽዳ?</string>
+    <string name="measure_clear_body">ሙሉው ዙሪያ ይጠፋል።</string>
+    <string name="measure_save_title">ይህን ቦታ አስቀምጥ</string>
+    <string name="measure_name_label">ስም (አማራጭ)</string>
+    <string name="measure_saved">ቦታው ተቀምጧል</string>
+    <string name="measure_not_a_plot">በአንድ መስመር ላይ ያልሆኑ ቢያንስ ሦስት ጥጎች ያስፈልጋሉ።</string>
+    <string name="measure_storage_failed">አልተቀመጠም፦ ስልኩ ሊጽፈው አልቻለም። ቦታ ያስለቅቁና እንደገና ይሞክሩ።</string>
+</resources>

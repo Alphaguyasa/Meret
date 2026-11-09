@@ -183,6 +183,7 @@ private class MapLibreCamera(
     private var lineJson: String = LiveTrackLine.geoJson(null)
     private var earlierJson: String = EarlierTrackLines.geoJson(emptyList())
     private var waypointsJson: String = WaypointMarkers.geoJson(emptyList())
+    private var measureJson: String = MeasureRing.geoJson(emptyList())
 
     override fun zoomBy(delta: Double) = map.animateCamera(CameraUpdateFactory.zoomBy(delta))
 
@@ -252,15 +253,62 @@ private class MapLibreCamera(
         map.style?.getSourceAs<GeoJsonSource>(WaypointMarkers.SOURCE_ID)?.setGeoJson(waypointsJson)
     }
 
+    override fun showMeasureRing(vertices: List<LatLng>) {
+        measureJson = MeasureRing.geoJson(vertices)
+        map.style?.getSourceAs<GeoJsonSource>(MeasureRing.SOURCE_ID)?.setGeoJson(measureJson)
+    }
+
+    override fun centre(): LatLng? =
+        map.cameraPosition.target?.let { LatLng(it.latitude, it.longitude) }
+
     /**
-     * Adds the earlier tracks, the live line over them, the waypoints over the lines, then the
-     * puck over everything, on top of [style], once per style.
+     * Adds the earlier tracks, the live line over them, the waypoints over the lines, the plot
+     * being measured over those, then the puck over everything, on top of [style], once per
+     * style.
      */
     fun install(style: Style) {
         installEarlierTracks(style)
         installTrackLine(style)
         installWaypoints(style)
+        installMeasureRing(style)
         installPuck(style)
+    }
+
+    private fun installMeasureRing(style: Style) {
+        val source = style.getSourceAs<GeoJsonSource>(MeasureRing.SOURCE_ID)
+        if (source != null) {
+            source.setGeoJson(measureJson)
+            return
+        }
+        style.addSource(GeoJsonSource(MeasureRing.SOURCE_ID, measureJson))
+        style.addLayer(
+            FillLayer(MeasureRing.FILL_LAYER_ID, MeasureRing.SOURCE_ID)
+                .withFilter(kindIs(MeasureRing.KIND_FILL))
+                .withProperties(
+                    PropertyFactory.fillColor(colours.track),
+                    PropertyFactory.fillOpacity(MEASURE_FILL_OPACITY),
+                ),
+        )
+        style.addLayer(
+            LineLayer(MeasureRing.LINE_LAYER_ID, MeasureRing.SOURCE_ID)
+                .withFilter(kindIs(MeasureRing.KIND_LINE))
+                .withProperties(
+                    PropertyFactory.lineColor(colours.track),
+                    PropertyFactory.lineWidth(TRACK_LINE_WIDTH_DP),
+                    PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                    PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                ),
+        )
+        style.addLayer(
+            CircleLayer(MeasureRing.CORNER_LAYER_ID, MeasureRing.SOURCE_ID)
+                .withFilter(kindIs(MeasureRing.KIND_CORNER))
+                .withProperties(
+                    PropertyFactory.circleRadius(WAYPOINT_RADIUS_DP),
+                    PropertyFactory.circleColor(colours.track),
+                    PropertyFactory.circleStrokeWidth(WAYPOINT_HALO_DP),
+                    PropertyFactory.circleStrokeColor(colours.halo),
+                ),
+        )
     }
 
     /**
@@ -403,6 +451,7 @@ private class MapLibreCamera(
         const val FIT_PADDING_TOP_DP = 72f
         const val FIT_PADDING_BOTTOM_DP = 168f
         const val ACCURACY_FILL_OPACITY = 0.15f
+        const val MEASURE_FILL_OPACITY = 0.2f
         const val DOT_RADIUS_DP = 7f
         const val DOT_HALO_DP = 2f
         const val TRACK_LINE_WIDTH_DP = 4f

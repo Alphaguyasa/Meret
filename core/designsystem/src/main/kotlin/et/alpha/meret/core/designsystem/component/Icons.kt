@@ -152,6 +152,32 @@ public fun MinusGlyph(
     }
 }
 
+/** A four-sided plot outline: the map's measure control. */
+@Composable
+public fun PlotGlyph(
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Canvas(modifier.iconSemantics(contentDescription)) {
+        val w = size.width
+        val h = size.height
+        val outline =
+            androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.18f, h * 0.32f)
+                lineTo(w * 0.68f, h * 0.15f)
+                lineTo(w * 0.86f, h * 0.66f)
+                lineTo(w * 0.34f, h * 0.85f)
+                close()
+            }
+        drawPath(
+            outline,
+            tint,
+            style = Stroke(width = w * STROKE_FRACTION, join = StrokeJoin.Round),
+        )
+    }
+}
+
 /**
  * Compass needle pointing up: the north half in [northTint], the south half outlined.
  * Rotate it by minus the map's bearing so it keeps pointing at north.

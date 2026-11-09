@@ -28,6 +28,7 @@ import et.alpha.meret.core.designsystem.format.formatDistance
 import et.alpha.meret.core.designsystem.format.formatDuration
 import et.alpha.meret.core.maps.view.OfflineMap
 import et.alpha.meret.core.maps.view.rememberOfflineMapController
+import et.alpha.meret.core.model.geo.LatLng
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -51,6 +52,10 @@ import et.alpha.meret.core.designsystem.R as DesignR
  * opened from its detail screen: the map centres on it or fits it, stops following the user,
  * and calls [onFocused] so the request is not replayed. It comes from the app for the same
  * reason the sheet does.
+ *
+ * The «Measure» button shows [measureMode] over the map, for the same reason again; it reads
+ * the point under the cross, draws its ring through the two functions it is given, and leaves
+ * by calling the third.
  */
 @Composable
 fun MapRoute(
@@ -60,6 +65,11 @@ fun MapRoute(
     focus: MapFocus? = null,
     onFocused: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
+    measureMode: @Composable (
+        cameraCentre: () -> LatLng?,
+        showRing: (List<LatLng>) -> Unit,
+        onExit: () -> Unit,
+    ) -> Unit = { _, _, _ -> },
     viewModel: MapViewModel = hiltViewModel(),
     earlierTracksViewModel: EarlierTracksViewModel = hiltViewModel(),
     waypointsViewModel: MapWaypointsViewModel = hiltViewModel(),
@@ -74,6 +84,7 @@ fun MapRoute(
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val snackbarHost = remember { SnackbarHostState() }
     var addingWaypoint by rememberSaveable { mutableStateOf(false) }
+    var measuring by rememberSaveable { mutableStateOf(false) }
     val stoppedText = stringResource(R.string.map_recording_stopped)
     val resumeText = stringResource(R.string.map_recording_resume)
     LaunchedEffect(viewModel, lifecycle) {
@@ -167,6 +178,13 @@ fun MapRoute(
         onResetNorth = mapController::resetNorth,
         isFollowing = mapController.isFollowing,
         snackbar = { SnackbarHost(snackbarHost) },
+        measuring = measuring,
+        onMeasure = { measuring = true },
+        measurePanel = {
+            measureMode(mapController::cameraCentre, mapController::showMeasureRing) {
+                measuring = false
+            }
+        },
     )
     if (addingWaypoint) {
         waypointSheet { addingWaypoint = false }
