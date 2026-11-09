@@ -52,11 +52,8 @@ public object RingGeoJson {
         null
     }
 
-    private fun open(ring: List<LatLng>): List<LatLng> = if (ring.size > 1 && ring.first() == ring.last()) {
-        ring.dropLast(1)
-    } else {
-        ring
-    }
+    private fun open(ring: List<LatLng>): List<LatLng> =
+        if (ring.size > 1 && ring.first() == ring.last()) ring.dropLast(1) else ring
 
     private fun positions(ring: JsonArray): List<LatLng>? {
         val read = ring.map(::position)
