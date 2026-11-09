@@ -6,6 +6,7 @@ import kotlin.math.abs
 import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -119,14 +120,40 @@ public object GeoMath {
      * three vertices is zero area, as is any degenerate or collinear ring.
      *
      * Accuracy: exact for a spherical polygon with great-circle edges. Against a GIS
-     * reference computed on the WGS84 ellipsoid the difference is under 0.1% for the
-     * plot- and district-sized polygons this app measures. Note that edges are great
+     * reference on the WGS84 ellipsoid it is not: the sphere's mean radius overstates an
+     * area near the equator, by 0.4% at Ethiopia's latitudes. A figure that must agree
+     * with a GIS comes from [ellipsoidalPolygonArea]. Note that edges are great
      * circles, not rhumb lines — a "rectangle" whose north and south sides follow
      * parallels of latitude encloses slightly less than this returns, because a great
      * circle between two points at equal latitude bulges poleward.
      */
     public fun geodesicPolygonArea(vertices: List<LatLng>): Double =
         abs(signedPolygonArea(vertices))
+
+    /**
+     * Area of a polygon on the WGS84 ellipsoid in square metres, always positive.
+     *
+     * Each latitude is mapped to its authalic latitude, which puts the ellipsoid on a sphere
+     * of equal area, and the spherical formula runs there. Within 0.1% of a WGS84 GIS figure
+     * for a plot or a district anywhere on earth. Degenerate rings are zero, as for
+     * [geodesicPolygonArea].
+     */
+    public fun ellipsoidalPolygonArea(vertices: List<LatLng>): Double {
+        val authalic = vertices.map { LatLng(authalicLatitude(it.latitude), it.longitude) }
+        return abs(signedPolygonArea(authalic)) * authalicAreaScale
+    }
+
+    private fun authalicLatitude(latitude: Double): Double {
+        val ratio = authalicQ(sin(Math.toRadians(latitude))) / polarQ
+        return Math.toDegrees(asin(ratio.coerceIn(-1.0, 1.0)))
+    }
+
+    /** The authalic latitude series' `q` for a latitude's sine. */
+    private fun authalicQ(sinLatitude: Double): Double {
+        val scaled = eccentricity * sinLatitude
+        val logTerm = ln((1.0 - scaled) / (1.0 + scaled)) / (2.0 * eccentricity)
+        return (1.0 - eccentricitySquared) * (sinLatitude / (1.0 - scaled * scaled) - logTerm)
+    }
 
     /**
      * Signed geodesic area: positive when the ring winds counter-clockwise as seen from
@@ -283,4 +310,16 @@ public object GeoMath {
 
     /** Guards the longitude expansion against dividing by zero at the poles. */
     private const val MIN_COS_LATITUDE = 1e-6
+    private const val WGS84_SEMI_MAJOR_AXIS = 6_378_137.0
+    private const val WGS84_FLATTENING = 1.0 / 298.257223563
+
+    // In this order: each is read while the next is initialised.
+    private val eccentricitySquared = WGS84_FLATTENING * (2.0 - WGS84_FLATTENING)
+    private val eccentricity = sqrt(eccentricitySquared)
+    private val polarQ = authalicQ(1.0)
+
+    /** What a square metre on the mean-radius sphere is on the authalic one. */
+    private val authalicAreaScale =
+        WGS84_SEMI_MAJOR_AXIS * WGS84_SEMI_MAJOR_AXIS * polarQ /
+            (2.0 * EARTH_RADIUS_METRES * EARTH_RADIUS_METRES)
 }

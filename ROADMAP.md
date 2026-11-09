@@ -30,7 +30,7 @@ labels in `strings.xml`. Unit tests with known fixtures (1 ha = 4 timad at 0.25;
 ### 38. [P1 · M] Measurement repository and save use case (Phase 10b)
 `MeasurementRepository` in `:core:data` (Room only) and `SaveMeasurementUseCase` in
 `:domain`: a ring of vertices (tapped or walked) is validated (at least 3 distinct vertices,
-non-zero area), its area (`GeoMath.geodesicPolygonArea`) and perimeter computed, its
+non-zero area), its area (`GeoMath.ellipsoidalPolygonArea`, because the spherical formula is 0.4% high at Ethiopia's latitudes) and perimeter computed, its
 vertices stored as GeoJSON, and the row written `pending` with a UUIDv7 and `project_id`
 `local`, as tracks and waypoints are. A name is normalised like a track's. Tests: a
 reference plot from a GIS computation matches within 0.1% (the Phase 10 acceptance for the
