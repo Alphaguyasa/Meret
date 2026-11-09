@@ -29,9 +29,7 @@ public class MeasureRingDraftRepository
     ) : MeasureRingDraft {
         override val vertices: Flow<List<LatLng>> =
             dataStore.data
-                .catch { error ->
-                    if (error is IOException) emit(emptyPreferences()) else throw error
-                }
+                .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
                 .map { it.ring() }
                 .distinctUntilChanged()
 
