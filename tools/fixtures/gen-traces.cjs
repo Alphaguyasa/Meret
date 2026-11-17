@@ -273,4 +273,61 @@ const report = {};
   };
 }
 
+// ------------------------------------------------------- walked rectangle (measuring)
+{
+  // An 80 m x 50 m plot walked clockwise from its south-west corner and back to it, at
+  // 1.4 m/s and 1 Hz: the phase 10 "walk the perimeter" acceptance on the desk. Every 40th
+  // fix is a poor one (reported accuracy 15 m, displaced 12 m outward): bad enough that the
+  // perimeter walker must skip it, good enough that the tracking validity gate keeps it.
+  const EAST_M = 80;
+  const NORTH_M = 50;
+  const sw = START;
+  const nw = offsetMetres(sw, NORTH_M, 0);
+  const ne = offsetMetres(sw, NORTH_M, EAST_M);
+  const se = offsetMetres(sw, 0, EAST_M);
+  const corners = [sw, nw, ne, se];
+
+  const stepMetres = WALK_SPEED_MPS * 1.0;
+  const truth = [sw];
+  const legs = [[sw, nw], [nw, ne], [ne, se], [se, sw]];
+  legs.forEach(([from, to]) => {
+    const legLength = haversine(from, to);
+    const steps = Math.round(legLength / stepMetres);
+    for (let i = 1; i <= steps; i++) {
+      const f = i / steps;
+      truth.push([from[0] + (to[0] - from[0]) * f, from[1] + (to[1] - from[1]) * f]);
+    }
+  });
+
+  const noisy = jitter(truth, 10052026, 1.5);
+  const POOR_EVERY = 40;
+  const centre = [(sw[0] + ne[0]) / 2, (sw[1] + ne[1]) / 2];
+  const withPoor = noisy.map((p, i) => {
+    if (i === 0 || i % POOR_EVERY !== 0) return p;
+    const north = p[0] >= centre[0] ? 12 : -12;
+    const east = p[1] >= centre[1] ? 12 : -12;
+    return offsetMetres(p, north, east);
+  });
+  const times = withPoor.map((_, i) => i * 1000);
+
+  fs.writeFileSync(
+    path.join(outDir, 'walked_rectangle.gpx'),
+    gpx({
+      name: 'Walked rectangle',
+      description:
+        `An ${EAST_M} m x ${NORTH_M} m plot walked clockwise from its south-west corner back to it ` +
+        'at 1.4 m/s, 1 Hz, Gaussian jitter sigma 1.5 m, reported accuracy 4.0 m. Every ' +
+        `${POOR_EVERY}th fix reports 15.0 m and is displaced 12 m outward.`,
+      points: withPoor,
+      times,
+      accuracy: (i) => (i !== 0 && i % POOR_EVERY === 0 ? 15.0 : 4.0),
+    }),
+  );
+  report.rectangle = {
+    points: withPoor.length,
+    poorFixes: withPoor.filter((_, i) => i !== 0 && i % POOR_EVERY === 0).length,
+    corners: corners.map((c) => [Number(c[0].toFixed(9)), Number(c[1].toFixed(9))]),
+  };
+}
+
 console.log(JSON.stringify(report, null, 2));

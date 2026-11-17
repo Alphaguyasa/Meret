@@ -20,13 +20,12 @@ The decision log under "Needs a device".
 
 ## Open
 
-### 40. [P1 · M] Walk-the-perimeter measurement (Phase 10d)
-The same screen in walking mode: vertices are taken from filtered fixes while the worker
-walks the boundary (a new vertex every few metres of movement, fixes worse than the accuracy
-gate skipped, raw fixes never changed). Uses the tracking service so it survives the screen
-going off and process death. Tests replay a GPX fixture of a walked rectangle through
-`ReplayLocationEngine`: the area is within 3% of the fixture's known area (the Phase 10
-acceptance, on the desk; the field check goes in "Needs a device").
+### 40b. [P1 · M] Walk-the-perimeter measurement on the screen (Phase 10d)
+The measure screen in walking mode: «Walk the boundary» starts the tracking service (so it
+survives the screen going off), feeds each processed fix to `PerimeterVertexPicker` (item 40a),
+keeps the vertices in the ring draft so a killed process carries on, and shows the live area as
+the worker walks; «Finish» closes the ring with `PerimeterVertexPicker.ring()` and saves it like
+a tapped plot. en/am strings. The field check goes in "Needs a device".
 
 ### 41. [P2 · S] Saved measurements: list and map overlay (Phase 10e)
 A list of saved measurements (name, area in the chosen unit, date), rename and delete
@@ -130,4 +129,5 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 18. Dependabot: monthly grouped npm updates for `tools/` (limits are per ecosystem, so up to 3 open) | #88 | `7d7bf0f` |
 | 37. Area units: m² below 1,000, hectares to two places, timad at a configurable size, en/am labels | #90 | `088df42` |
 | 38. Save a measurement: `SaveMeasurementUseCase` (three distinct vertices, at least 1 m²), area on the WGS84 ellipsoid, ring stored as GeoJSON, row written `pending` | #91 | `8899f93` |
-| 39. Measure a plot by tapping its corners (`:feature:measure`: ring draft in the preferences file, live area and perimeter, map ring layers, crosshair panel, undo, clear, save with a name) | #92, #93 | `857ca3e`, to come |
+| 39. Measure a plot by tapping its corners (`:feature:measure`: ring draft in the preferences file, live area and perimeter, map ring layers, crosshair panel, undo, clear, save with a name) | #92, #93 | `857ca3e`, `f992d10` |
+| 40a. Walk the perimeter, the vertex rules (`PerimeterVertexPicker`: accepted fixes only, the filtered position, a 10 m accuracy gate, a vertex every 3 m, closing vertices dropped, undo, resume from saved vertices). Phase 10 desk acceptance: a walked 80 m × 50 m rectangle (`walked_rectangle.gpx`) measures within 3% of its area (−1.2%) | to come | to come |

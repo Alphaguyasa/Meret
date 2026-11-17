@@ -5,6 +5,7 @@ import et.alpha.meret.core.common.geo.GeoMath
 import et.alpha.meret.core.location.engine.ReplayLocationEngine
 import et.alpha.meret.core.location.engine.ReplaySpeed
 import et.alpha.meret.core.location.filter.MotionState
+import et.alpha.meret.core.location.filter.PerimeterVertexPicker
 import et.alpha.meret.core.location.filter.ProcessedFix
 import et.alpha.meret.core.location.filter.RejectionReason
 import et.alpha.meret.core.model.LocationProvider
@@ -186,6 +187,45 @@ class ReplayedTraceTest {
     }
 
     /**
+     * Phase 10's walking acceptance on the desk (`BUILD_PLAN.md`): a walked rectangle, measured
+     * from the vertices [PerimeterVertexPicker] takes out of the filtered fixes, comes within 3%
+     * of the plot's known area. The field check is in the decision log under "Needs a device".
+     */
+    @Test
+    fun `a walked rectangle measures within three percent of its known area`() = runTest {
+        val processed = replayThroughPipeline(Traces.WALKED_RECTANGLE)
+        val picker = PerimeterVertexPicker()
+        processed.forEach { picker.offer(it) }
+
+        val truth = GeoMath.ellipsoidalPolygonArea(Traces.RECTANGLE_CORNERS)
+        val measured = GeoMath.ellipsoidalPolygonArea(picker.ring())
+
+        assertThat(processed).hasSize(Traces.RECTANGLE_POINTS)
+        assertThat(abs(measured - truth) / truth).isLessThan(WALKED_AREA_TOLERANCE)
+    }
+
+    /**
+     * The fixture's poor fixes (15 m reported) pass the tracking gate, so they are on the track
+     * as raw rows, but none of them may become a corner of the plot.
+     */
+    @Test
+    fun `a walked perimeter keeps every raw fix and takes no corner from a poor one`() = runTest {
+        val fixes = replay(Traces.WALKED_RECTANGLE)
+        val processed = runPipeline(fixes)
+        val picker = PerimeterVertexPicker()
+        val gate = PerimeterVertexPicker.DEFAULT_MAX_ACCURACY_M
+
+        val cornersFromPoorFixes =
+            processed.count { fix -> picker.offer(fix) != null && fix.point.accuracyMeters > gate }
+
+        assertThat(processed.count { it.wasAccepted && it.point.accuracyMeters > gate })
+            .isEqualTo(Traces.RECTANGLE_POOR_FIXES)
+        assertThat(processed.map { it.point.position }).isEqualTo(fixes.map { it.position })
+        assertThat(cornersFromPoorFixes).isEqualTo(0)
+        assertThat(picker.ring().size).isAtLeast(MIN_WALKED_VERTICES)
+    }
+
+    /**
      * Plays a fixture and returns every fix it produced.
      *
      * The two scopes are not interchangeable, and getting either wrong silently truncates the
@@ -243,6 +283,12 @@ class ReplayedTraceTest {
     private companion object {
         /** The 2% from BUILD_PLAN.md phase 4. */
         const val DISTANCE_TOLERANCE = 0.02
+
+        /** The 3% from BUILD_PLAN.md phase 10, for a walked boundary. */
+        const val WALKED_AREA_TOLERANCE = 0.03
+
+        /** 260 m of boundary at one vertex every 3 m or more: far fewer would mean lost corners. */
+        const val MIN_WALKED_VERTICES = 40
 
         /**
          * How far a surviving filtered point may sit from the nearest point of the clean run.
