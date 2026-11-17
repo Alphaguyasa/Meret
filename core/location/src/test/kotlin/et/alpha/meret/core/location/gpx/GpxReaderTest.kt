@@ -232,7 +232,7 @@ class GpxReaderTest {
     private fun parse(xml: String): GpxTrace = xml.byteInputStream().use { GpxReader.read(it) }
 
     private companion object {
-        /** 2026-03-14T07:30:00Z, the base time in `tools/fixtures/gen-traces.js`. */
+        /** 2026-03-14T07:30:00Z, the base time in `tools/fixtures/gen-traces.cjs`. */
         const val BASE_TIME_MILLIS = 1_773_473_400_000L
     }
 }

@@ -6,12 +6,13 @@ import et.alpha.meret.core.location.engine.GpxSource
 import et.alpha.meret.core.location.filter.FixPipeline
 import et.alpha.meret.core.location.filter.ProcessedFix
 import et.alpha.meret.core.model.TrackingConfig
+import et.alpha.meret.core.model.geo.LatLng
 import java.io.InputStream
 
 /**
  * The GPX fixtures, and the ground truth that goes with them.
  *
- * The numbers below are printed by `tools/fixtures/gen-traces.js`, which generates these files
+ * The numbers below are printed by `tools/fixtures/gen-traces.cjs`, which generates these files
  * from a seeded PRNG. Regenerating produces identical bytes, so these constants stay valid —
  * and if a fixture is ever changed on purpose, the generator prints the new truth rather than
  * leaving somebody to reverse-engineer it from the file.
@@ -26,6 +27,7 @@ internal object Traces {
     const val WALK_WITH_OUTLIERS = "traces/walk_1km_with_outliers.gpx"
     const val STATIONARY_30MIN = "traces/stationary_30min.gpx"
     const val WALK_WITH_GAP = "traces/walk_with_5min_gap.gpx"
+    const val WALKED_RECTANGLE = "traces/walked_rectangle.gpx"
 
     /** Noise-free path length of the clean walk, metres. The figure the chain must recover. */
     const val CLEAN_WALK_TRUTH_METRES = 999.60
@@ -53,6 +55,20 @@ internal object Traces {
     const val GAP_JUMP_METRES = 420.0
 
     const val GAP_SECONDS = 300
+
+    const val RECTANGLE_POINTS = 187
+
+    /** Fixes in the rectangle that report 15 m and sit 12 m outside the boundary. */
+    const val RECTANGLE_POOR_FIXES = 4
+
+    /** The 80 m x 50 m plot the rectangle walks: south-west, north-west, north-east, south-east. */
+    val RECTANGLE_CORNERS =
+        listOf(
+            LatLng(8.9806, 38.7578),
+            LatLng(8.98104966, 38.7578),
+            LatLng(8.981049659, 38.758528386),
+            LatLng(8.980599999, 38.758528385),
+        )
 
     fun open(name: String): InputStream =
         requireNotNull(Traces::class.java.classLoader?.getResourceAsStream(name)) {
