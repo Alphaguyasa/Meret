@@ -50,18 +50,25 @@ public class TrackRecorder
          * Subscribes to [fixes] before returning, so a hot engine flow started afterwards loses
          * nothing. The track row must already exist; resuming one that has points (a service
          * restarted after process death) continues its `seq` numbering and totals.
+         *
+         * [onProcessed] sees every fix the recording processes, outliers included, in order,
+         * on the recording's own coroutine, possibly before its row is written. Measuring a
+         * plot by walking (`PerimeterWalk`) listens here. It must not throw: an exception ends
+         * the recording like a failed write does.
          */
         public fun start(
             scope: CoroutineScope,
             trackId: String,
             config: TrackingConfig,
             fixes: Flow<RawFix>,
+            onProcessed: suspend (ProcessedFix) -> Unit = {},
         ): TrackRecording = TrackRecording(
             scope = scope,
             trackId = trackId,
             config = config,
             fixes = fixes,
             recorder = this,
+            onProcessed = onProcessed,
         )
     }
 
@@ -90,6 +97,7 @@ public class TrackRecording internal constructor(
     private val config: TrackingConfig,
     fixes: Flow<RawFix>,
     recorder: TrackRecorder,
+    private val onProcessed: suspend (ProcessedFix) -> Unit,
 ) {
     private val trackDao = recorder.trackDao
     private val trackPointDao = recorder.trackPointDao
@@ -213,7 +221,9 @@ public class TrackRecording internal constructor(
     private suspend fun record(fix: RawFix) {
         received.value += 1
         if (isPaused) return
-        pending += pipeline.process(fix)
+        val processed = pipeline.process(fix)
+        pending += processed
+        onProcessed(processed)
         if (pending.size >= config.writeBatchSize) flush()
     }
 

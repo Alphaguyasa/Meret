@@ -20,12 +20,12 @@ The decision log under "Needs a device".
 
 ## Open
 
-### 40b. [P1 · M] Walk-the-perimeter measurement on the screen (Phase 10d)
+### 40c. [P1 · M] Walk-the-perimeter measurement on the screen (Phase 10d)
 The measure screen in walking mode: «Walk the boundary» starts the tracking service (so it
-survives the screen going off), feeds each processed fix to `PerimeterVertexPicker` (item 40a),
-keeps the vertices in the ring draft so a killed process carries on, and shows the live area as
-the worker walks; «Finish» closes the ring with `PerimeterVertexPicker.ring()` and saves it like
-a tapped plot. en/am strings. The field check goes in "Needs a device".
+survives the screen going off) with a `PerimeterWalk` (item 40b) listening to the recording,
+and shows the live area from the ring draft as the worker walks; undo and clear go through
+the walk; «Finish» saves `PerimeterWalk.ring()` like a tapped plot and clears the draft.
+en/am strings. The field check goes in "Needs a device".
 
 ### 41. [P2 · S] Saved measurements: list and map overlay (Phase 10e)
 A list of saved measurements (name, area in the chosen unit, date), rename and delete
@@ -131,3 +131,4 @@ low-end phones, key in Android Keystore, migration of existing plaintext DBs).
 | 38. Save a measurement: `SaveMeasurementUseCase` (three distinct vertices, at least 1 m²), area on the WGS84 ellipsoid, ring stored as GeoJSON, row written `pending` | #91 | `8899f93` |
 | 39. Measure a plot by tapping its corners (`:feature:measure`: ring draft in the preferences file, live area and perimeter, map ring layers, crosshair panel, undo, clear, save with a name) | #92, #93 | `857ca3e`, `f992d10` |
 | 40a. Walk the perimeter, the vertex rules (`PerimeterVertexPicker`: accepted fixes only, the filtered position, a 10 m accuracy gate, a vertex every 3 m, closing vertices dropped, undo, resume from saved vertices). Phase 10 desk acceptance: a walked 80 m × 50 m rectangle (`walked_rectangle.gpx`) measures within 3% of its area (−1.2%) | #94 | `0809037` |
+| 40b. Walk the perimeter, the session (`PerimeterWalk` in `:core:data`: every processed fix of the recording offered to the vertex picker, corners kept in the ring draft so a killed walk resumes, a failed write loses nothing, undo and clear; `TrackRecorder.start(onProcessed)`). Desk check: the walked rectangle replayed through a real recording and Room lands in the draft within 3% of its area | #96 | to come |

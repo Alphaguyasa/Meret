@@ -4,8 +4,11 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import et.alpha.meret.core.common.dispatcher.DispatcherProvider
+import et.alpha.meret.core.common.geo.GeoMath
+import et.alpha.meret.core.common.result.AppResult
 import et.alpha.meret.core.common.time.SystemTimeProvider
 import et.alpha.meret.core.common.uuid.UuidV7Generator
+import et.alpha.meret.core.data.measure.PerimeterWalkFactory
 import et.alpha.meret.core.database.MeretDatabase
 import et.alpha.meret.core.database.entity.TrackEntity
 import et.alpha.meret.core.database.entity.TrackPointEntity
@@ -18,6 +21,7 @@ import et.alpha.meret.core.model.LocationProvider
 import et.alpha.meret.core.model.TrackStatus
 import et.alpha.meret.core.model.TrackingConfig
 import et.alpha.meret.core.model.geo.LatLng
+import et.alpha.meret.domain.measure.MeasureRingDraft
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -28,6 +32,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -40,6 +45,7 @@ import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.util.Collections
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
 /**
  * The recorder against real Room (in memory) and real GPX replays.
@@ -229,6 +235,35 @@ class TrackRecorderTest {
         assertThat(checkNotNull(database.trackDao().getTrack(TRACK_ID)).pointCount).isEqualTo(5)
     }
 
+    /**
+     * Measuring by walking, end to end on the desk: the recording hands every processed fix to
+     * a [PerimeterWalk], which keeps the corners in the ring draft. The stored ring measures
+     * within 3% of the plot's known area, like the picker alone does in `:core:location`, and
+     * the recording still writes every raw fix.
+     */
+    @Test
+    fun `a walked boundary fed from the recording is stored and measures the plot`() =
+        runBlocking<Unit> {
+            val draft = InMemoryDraft()
+            val walk = PerimeterWalkFactory(draft).resume()
+            val config = TrackingConfig()
+            val engine = engine(WALKED_RECTANGLE)
+            val recording =
+                recorder().start(scope, TRACK_ID, config, engine.fixes) { walk.offer(it) }
+
+            engine.start(config)
+            val total = fixtureSize(WALKED_RECTANGLE)
+            withTimeout(TIMEOUT_MS) { recording.fixesReceived.first { it == total } }
+            engine.stop()
+            recording.stop()
+
+            val truth = GeoMath.ellipsoidalPolygonArea(RECTANGLE_CORNERS)
+            val measured = GeoMath.ellipsoidalPolygonArea(walk.ring())
+            assertThat(draft.ring.value).isEqualTo(walk.vertices)
+            assertThat(abs(measured - truth) / truth).isLessThan(WALKED_AREA_TOLERANCE)
+            assertThat(database.trackPointDao().countPoints(TRACK_ID)).isEqualTo(total)
+        }
+
     /** Replays a whole fixture through a recording and stops it. Returns what the engine emitted. */
     private suspend fun replay(trace: String): List<RawFix> {
         val config = TrackingConfig()
@@ -299,6 +334,17 @@ class TrackRecorderTest {
         updatedAt = BASE_MILLIS,
     )
 
+    private class InMemoryDraft : MeasureRingDraft {
+        val ring = MutableStateFlow<List<LatLng>>(emptyList())
+
+        override val vertices: Flow<List<LatLng>> = ring
+
+        override suspend fun update(transform: (List<LatLng>) -> List<LatLng>): AppResult<Unit> {
+            ring.value = transform(ring.value)
+            return AppResult.Success(Unit)
+        }
+    }
+
     private class SingleThreadDispatchers(
         dispatcher: CoroutineDispatcher,
     ) : DispatcherProvider {
@@ -316,6 +362,17 @@ class TrackRecorderTest {
         val TRACES = File("../location/src/test/resources/traces")
         const val CLEAN_WALK = "clean_walk_1km.gpx"
         const val WALK_WITH_OUTLIERS = "walk_1km_with_outliers.gpx"
+        const val WALKED_RECTANGLE = "walked_rectangle.gpx"
+        const val WALKED_AREA_TOLERANCE = 0.03
+
+        /** The 80 m x 50 m plot the rectangle walks, as `core/location`'s `Traces` has it. */
+        val RECTANGLE_CORNERS =
+            listOf(
+                LatLng(8.9806, 38.7578),
+                LatLng(8.98104966, 38.7578),
+                LatLng(8.981049659, 38.758528386),
+                LatLng(8.980599999, 38.758528385),
+            )
 
         const val NEVER = 3_600_000L
         const val TIMEOUT_MS = 30_000L
